@@ -1,5 +1,6 @@
 #include <string.h>
 #include <stdio.h>
+#include <sys/param.h>
 #include "esp_log.h"
 #include "esp_wifi.h"
 #include "esp_event.h"
@@ -257,13 +258,13 @@ static void start_ota_server(void)
     config.lru_purge_enable = true;
 
     if (httpd_start(&g_ota_server, &config) == ESP_OK) {
-        httpd_register_uri_handler(g_ota_server, (httpd_uri_t){
+        httpd_register_uri_handler(g_ota_server, &(httpd_uri_t){
             .uri = "/", .method = HTTP_GET, .handler = ota_get_handler });
-        httpd_register_uri_handler(g_ota_server, (httpd_uri_t){
+        httpd_register_uri_handler(g_ota_server, &(httpd_uri_t){
             .uri = "/update", .method = HTTP_POST, .handler = ota_update_handler });
-        httpd_register_uri_handler(g_ota_server, (httpd_uri_t){
+        httpd_register_uri_handler(g_ota_server, &(httpd_uri_t){
             .uri = "/factory_reset", .method = HTTP_POST, .handler = ota_factory_reset_handler });
-        httpd_register_uri_handler(g_ota_server, (httpd_uri_t){
+        httpd_register_uri_handler(g_ota_server, &(httpd_uri_t){
             .uri = "/rollback", .method = HTTP_POST, .handler = ota_rollback_handler });
         ESP_LOGI(TAG, "OTA HTTP server started");
     }
@@ -294,7 +295,7 @@ bool rid_ota_check_and_run(rid_config_t *cfg)
         gpio_config_t io_conf = {
             .pin_bit_mask = (1ULL << cfg->ota_trigger_gpio),
             .mode = GPIO_MODE_INPUT,
-            .pull_up_enable = true,
+            .pull_up_en = true,
         };
         gpio_config(&io_conf);
         vTaskDelay(pdMS_TO_TICKS(10));

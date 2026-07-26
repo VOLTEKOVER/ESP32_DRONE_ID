@@ -1,6 +1,9 @@
 #include <string.h>
 #include "esp_log.h"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcpp"
 #include "driver/twai.h"
+#pragma GCC diagnostic pop
 #include "esp_timer.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"

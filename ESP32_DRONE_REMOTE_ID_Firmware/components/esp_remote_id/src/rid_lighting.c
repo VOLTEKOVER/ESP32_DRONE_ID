@@ -67,8 +67,8 @@ void rid_lighting_init(const int8_t pins[RID_LIGHTING_MAX_OUTPUTS],
         gpio_config_t io_conf = {
             .pin_bit_mask = (1ULL << pins[i]),
             .mode = GPIO_MODE_OUTPUT,
-            .pull_down_enable = false,
-            .pull_up_enable = false,
+            .pull_down_en = false,
+            .pull_up_en = false,
             .intr_type = GPIO_INTR_DISABLE,
         };
         gpio_config(&io_conf);
