@@ -4,11 +4,6 @@ url: "https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID"
 documentation: "https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID"
 repository: "https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID.git"
 
-dependencies:
-  idf: ">=5.0"
-  espressif/cJSON:
-    version: ">=1.7.15"
-
 tags:
   - "drone"
   - "remote-id"
