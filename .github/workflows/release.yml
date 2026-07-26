@@ -64,9 +64,67 @@ jobs:
             ESP32_DRONE_REMOTE_ID_Firmware/build/esp-drone-remoteid.bin
           retention-days: 30
 
+  build-ridhub-windows:
+    name: RID Hub (Windows)
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: RID_Hub
+
+      - name: Build Windows installer
+        run: npx electron-builder --win --publish never
+        working-directory: RID_Hub
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: ridhub-windows
+          path: RID_Hub/release/*.exe
+          retention-days: 30
+
+  build-ridhub-linux:
+    name: RID Hub (Linux)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: RID_Hub
+
+      - name: Build Linux AppImage
+        run: npx electron-builder --linux --publish never
+        working-directory: RID_Hub
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Linux artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: ridhub-linux
+          path: RID_Hub/release/*.AppImage
+          retention-days: 30
+
   create-release:
     name: Create Release
-    needs: build
+    needs: [build, build-ridhub-windows, build-ridhub-linux]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -89,6 +147,12 @@ jobs:
           path: artifacts
           pattern: firmware-*
 
+      - name: Download RID Hub artifacts
+        uses: actions/download-artifact@v8
+        with:
+          path: artifacts
+          pattern: ridhub-*
+
       - name: Get version
         run: echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_ENV
         shell: bash
@@ -110,6 +174,11 @@ jobs:
             target=$(basename "$dir" | sed 's/firmware-//')
             mkdir -p "release/firmware/$target"
             cp -r "$dir"* "release/firmware/$target/"
+          done
+          # RID Hub desktop apps
+          for dir in artifacts/ridhub-*/; do
+            [ -d "$dir" ] || continue
+            cp -r "$dir"* release/
           done
         shell: bash
 
@@ -212,6 +281,8 @@ jobs:
           done
           echo "" >> release-notes.md
           echo "| \`manifest.json\` | WebSerial installer |" >> release-notes.md
+          echo "| \`RID Hub Setup $VERSION.exe\` | Windows desktop app |" >> release-notes.md
+          echo "| \`RID Hub $VERSION.AppImage\` | Linux desktop app |" >> release-notes.md
           echo "" >> release-notes.md
           echo "Flash via browser at https://VOLTEKOVER.github.io/ESP_DRONE_REMOTEID/" >> release-notes.md
           echo "" >> release-notes.md
@@ -240,6 +311,8 @@ jobs:
             release/firmware-*.zip
             release/firmware/manifest.json
             release/firmware/*/*.bin
+            release/*.exe
+            release/*.AppImage
 
       - name: Prepare Pages deploy
         run: |
