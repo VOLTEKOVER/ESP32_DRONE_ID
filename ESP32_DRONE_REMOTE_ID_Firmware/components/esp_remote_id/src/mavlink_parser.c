@@ -235,13 +235,101 @@ bool mavlink_parser_get(rid_gps_data_t *gps)
                 case MAVLINK_MSG_ID_OPEN_DRONE_ID_MESSAGE_PACK: {
                     mavlink_open_drone_id_message_pack_t pack;
                     mavlink_msg_open_drone_id_message_pack_decode(&msg, &pack);
-                    for (int p = 0; p < pack.msg_pack_size && p < 9; p++) {
-                        if (pack.single_message_size == 0) break;
-                        const uint8_t *submsg = pack.messages + p * 25;
-                        if (submsg[0] == 0) break;
-                        switch (submsg[0]) {
-                        case 0:  break;
-                        default: break;
+                    if (pack.single_message_size == 0 || pack.single_message_size != ODID_MESSAGE_SIZE) break;
+                    if (pack.msg_pack_size == 0 || pack.msg_pack_size > ODID_PACK_MAX_MESSAGES) break;
+
+                    ODID_MessagePack_encoded encoded;
+                    memset(&encoded, 0, sizeof(encoded));
+                    encoded.SingleMessageSize = pack.single_message_size;
+                    encoded.MsgPackSize = pack.msg_pack_size;
+                    memcpy(encoded.Messages, pack.messages,
+                           pack.msg_pack_size * ODID_MESSAGE_SIZE);
+
+                    ODID_UAS_Data uas;
+                    memset(&uas, 0, sizeof(uas));
+                    if (decodeMessagePack(&uas, &encoded) != 0) break;
+
+                    for (int p = 0; p < pack.msg_pack_size && p < ODID_PACK_MAX_MESSAGES; p++) {
+                        ODID_Message_encoded *m = &encoded.Messages[p];
+                        switch (m->rawData[0]) {
+                        case 0: {
+                            ODID_BasicID_data basic;
+                            decodeBasicIDMessage(&basic, &m->basicId);
+                            int id_len = strlen(basic.UASID);
+                            if (id_len > ESP_RID_MAX_STR_LEN) id_len = ESP_RID_MAX_STR_LEN;
+                            memcpy(g_last_identity.uas_id, basic.UASID, id_len);
+                            g_last_identity.uas_id[id_len] = '\0';
+                            g_last_identity.id_type = basic.IDType;
+                            g_last_identity.ua_type = basic.UAType;
+                            g_last_identity_update = xTaskGetTickCount() * portTICK_PERIOD_MS;
+                            break;
+                        }
+                        case 1: {
+                            ODID_Location_data loc;
+                            decodeLocationMessage(&loc, &m->location);
+                            if (loc.Latitude != 0 || loc.Longitude != 0) {
+                                g_last_gps.latitude = loc.Latitude;
+                                g_last_gps.longitude = loc.Longitude;
+                                g_last_gps.altitude_msl = loc.AltitudeGeo;
+                                g_last_gps.altitude_relative = loc.Height;
+                                g_last_gps.altitude_baro = loc.AltitudeBaro;
+                                g_last_gps.speed = loc.SpeedHorizontal;
+                                g_last_gps.speed_vertical = loc.SpeedVertical;
+                                g_last_gps.heading = (int16_t)loc.Direction;
+                                g_last_gps.fix_type = 3;
+                                g_last_update = xTaskGetTickCount() * portTICK_PERIOD_MS;
+                            }
+                            break;
+                        }
+                        case 2: {
+                            ODID_Auth_data auth;
+                            decodeAuthMessage(&auth, &m->auth);
+                            if (auth.DataPage < ODID_AUTH_MAX_PAGES) {
+                                memcpy(g_last_identity.ext_auth_pages[auth.DataPage],
+                                       m->auth.AuthData, ODID_MESSAGE_SIZE);
+                                g_last_identity.ext_auth_last_page = auth.LastPageIndex;
+                                g_last_identity.ext_auth_pages_received |= (1 << auth.DataPage);
+                                g_last_identity.has_ext_auth = true;
+                                g_last_identity_update = xTaskGetTickCount() * portTICK_PERIOD_MS;
+                            }
+                            break;
+                        }
+                        case 3: {
+                            ODID_SelfID_data selfid;
+                            decodeSelfIDMessage(&selfid, &m->selfId);
+                            int text_len = strlen(selfid.Description);
+                            if (text_len > ESP_RID_MAX_STR_LEN) text_len = ESP_RID_MAX_STR_LEN;
+                            memcpy(g_last_identity.self_id_text, selfid.Description, text_len);
+                            g_last_identity.self_id_text[text_len] = '\0';
+                            g_last_identity.self_id_desc_type = selfid.DescriptionType;
+                            g_last_identity.has_self_id = true;
+                            g_last_identity_update = xTaskGetTickCount() * portTICK_PERIOD_MS;
+                            break;
+                        }
+                        case 4: {
+                            ODID_System_data sys;
+                            decodeSystemMessage(&sys, &m->system);
+                            if (sys.OperatorLatitude != 0 || sys.OperatorLongitude != 0) {
+                                g_operator_lat = sys.OperatorLatitude;
+                                g_operator_lon = sys.OperatorLongitude;
+                                g_operator_alt = sys.OperatorAltitudeGeo;
+                                g_operator_location_update = xTaskGetTickCount() * portTICK_PERIOD_MS;
+                            }
+                            g_last_gps.satellites = sys.AreaCount;
+                            break;
+                        }
+                        case 5: {
+                            ODID_OperatorID_data op;
+                            decodeOperatorIDMessage(&op, &m->operatorId);
+                            int op_len = strlen(op.OperatorId);
+                            if (op_len > ESP_RID_MAX_STR_LEN) op_len = ESP_RID_MAX_STR_LEN;
+                            memcpy(g_last_identity.operator_id, op.OperatorId, op_len);
+                            g_last_identity.operator_id[op_len] = '\0';
+                            g_last_identity_update = xTaskGetTickCount() * portTICK_PERIOD_MS;
+                            break;
+                        }
+                        default:
+                            break;
                         }
                     }
                     break;

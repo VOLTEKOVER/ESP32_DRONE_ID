@@ -27,6 +27,7 @@
 #include "rid_lighting.h"
 #include "rid_dronecan.h"
 #include "rid_mavlink_usb.h"
+#include "esp_task_wdt.h"
 
 #define TAG "ESP_RID"
 
@@ -86,24 +87,9 @@ static void default_config(rid_config_t *cfg)
     cfg->options = 0;
     cfg->lock_level = 0;
 
-    cfg->led_r_gpio =
-#ifdef CONFIG_RID_LED_R_GPIO
-        CONFIG_RID_LED_R_GPIO;
-#else
-        -1;
-#endif
-    cfg->led_g_gpio =
-#ifdef CONFIG_RID_LED_G_GPIO
-        CONFIG_RID_LED_G_GPIO;
-#else
-        -1;
-#endif
-    cfg->led_b_gpio =
-#ifdef CONFIG_RID_LED_B_GPIO
-        CONFIG_RID_LED_B_GPIO;
-#else
-        -1;
-#endif
+    cfg->led_r_gpio = -1;
+    cfg->led_g_gpio = -1;
+    cfg->led_b_gpio = -1;
 
     cfg->ws2812_gpio = -1;
     cfg->ws2812_brightness = 16;
@@ -414,6 +400,8 @@ static void rid_task(void *arg)
     uint32_t log_cycle = 0;
     bool had_gps = false;
 
+    esp_task_wdt_add(NULL);
+
     while (g_running) {
         rid_gps_data_t gps_data;
         rid_protocol_t proto = RID_PROTOCOL_UNKNOWN;
@@ -625,6 +613,7 @@ static void rid_task(void *arg)
         }
 
         vTaskDelay(pdMS_TO_TICKS(100));
+        esp_task_wdt_reset();
     }
 
     vTaskDelete(NULL);

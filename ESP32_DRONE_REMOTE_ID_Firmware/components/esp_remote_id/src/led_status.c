@@ -39,9 +39,9 @@ static const struct state_entry {
     [RID_LED_ERROR]  = { { 255,   0,   0 }, PAT_BLINK_4HZ,   "ERROR"   },
 };
 
-static int r_pin = CONFIG_RID_LED_R_GPIO;
-static int g_pin = CONFIG_RID_LED_G_GPIO;
-static int b_pin = CONFIG_RID_LED_B_GPIO;
+static int r_pin = RID_LED_PIN_NC;
+static int g_pin = RID_LED_PIN_NC;
+static int b_pin = RID_LED_PIN_NC;
 static bool initialized = false;
 
 static rid_led_state_t current_state = RID_LED_BOOT;

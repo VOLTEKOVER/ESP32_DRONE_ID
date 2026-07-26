@@ -18,6 +18,7 @@
 #include "protocol_detect.h"
 #include "esp_efuse.h"
 #include "led_status.h"
+#include "cJSON.h"
 
 #define TAG "WEB_CFG"
 #define BUF_SIZE 4096
@@ -29,6 +30,30 @@ extern const char config_html_end[] asm("_binary_config_html_end");
 #define config_html_size ((size_t)(config_html_end - config_html_start))
 
 static httpd_handle_t g_server = NULL;
+
+#define SIG_RATE_MAX_FAILS   10
+#define SIG_RATE_WINDOW_MS   60000
+
+static uint32_t s_sig_fail_times[SIG_RATE_MAX_FAILS];
+static int s_sig_fail_count = 0;
+
+static bool sig_rate_check(void)
+{
+    uint32_t now = xTaskGetTickCount() * portTICK_PERIOD_MS;
+    int valid = 0;
+    for (int i = 0; i < s_sig_fail_count; i++) {
+        if ((now - s_sig_fail_times[i]) < SIG_RATE_WINDOW_MS)
+            s_sig_fail_times[valid++] = s_sig_fail_times[i];
+    }
+    s_sig_fail_count = valid;
+    return s_sig_fail_count < SIG_RATE_MAX_FAILS;
+}
+
+static void sig_rate_record_fail(void)
+{
+    if (s_sig_fail_count < SIG_RATE_MAX_FAILS)
+        s_sig_fail_times[s_sig_fail_count++] = xTaskGetTickCount() * portTICK_PERIOD_MS;
+}
 
 static int get_lock_level(void)
 {
@@ -99,124 +124,169 @@ static void log_init(void)
     s_orig_vprintf = esp_log_set_vprintf(log_vprintf);
 }
 
-static char *json_str(const char *json, const char *key)
-{
-    char pat[64];
-    snprintf(pat, sizeof(pat), "\"%s\":\"", key);
-    const char *p = strstr(json, pat);
-    if (!p) return NULL;
-    p += strlen(pat);
-    const char *e = strchr(p, '"');
-    if (!e) return NULL;
-    int len = e - p;
-    char *v = (char *)malloc(len + 1);
-    if (!v) return NULL;
-    memcpy(v, p, len);
-    v[len] = '\0';
-    return v;
-}
-
-static int json_int(const char *json, const char *key)
-{
-    char pat[64];
-    snprintf(pat, sizeof(pat), "\"%s\":", key);
-    const char *p = strstr(json, pat);
-    if (!p) return 0;
-    p += strlen(pat);
-    while (*p == ' ') p++;
-    return atoi(p);
-}
-
-static float json_float(const char *json, const char *key)
-{
-    char pat[64];
-    snprintf(pat, sizeof(pat), "\"%s\":", key);
-    const char *p = strstr(json, pat);
-    if (!p) return 0;
-    p += strlen(pat);
-    while (*p == ' ') p++;
-    return (float)atof(p);
-}
-
 static void apply_json(rid_config_t *cfg, const char *json)
 {
-    char *tmp;
+    cJSON *root = cJSON_Parse(json);
+    if (!root) return;
 
-    tmp = json_str(json, "uas_id"); if (tmp) { strncpy(cfg->uas_id, tmp, ESP_RID_MAX_STR_LEN); free(tmp); }
-    tmp = json_str(json, "operator_id"); if (tmp) { strncpy(cfg->operator_id, tmp, ESP_RID_MAX_STR_LEN); free(tmp); }
-    tmp = json_str(json, "self_id_text"); if (tmp) { strncpy(cfg->self_id_text, tmp, ESP_RID_MAX_STR_LEN); free(tmp); }
-    tmp = json_str(json, "uas_id_2"); if (tmp) { strncpy(cfg->uas_id_2, tmp, ESP_RID_MAX_STR_LEN); free(tmp); }
+    cJSON *item;
 
-    int iv = json_int(json, "id_type"); if (iv > 0) cfg->id_type = (uint8_t)iv;
-    iv = json_int(json, "ua_type"); if (iv > 0) cfg->ua_type = (uint8_t)iv;
-    iv = json_int(json, "id_type_2"); if (iv > 0) cfg->id_type_2 = (uint8_t)iv;
-    iv = json_int(json, "ua_type_2"); if (iv > 0) cfg->ua_type_2 = (uint8_t)iv;
+    item = cJSON_GetObjectItem(root, "uas_id");
+    if (cJSON_IsString(item)) strncpy(cfg->uas_id, item->valuestring, ESP_RID_MAX_STR_LEN);
+    item = cJSON_GetObjectItem(root, "operator_id");
+    if (cJSON_IsString(item)) strncpy(cfg->operator_id, item->valuestring, ESP_RID_MAX_STR_LEN);
+    item = cJSON_GetObjectItem(root, "self_id_text");
+    if (cJSON_IsString(item)) strncpy(cfg->self_id_text, item->valuestring, ESP_RID_MAX_STR_LEN);
+    item = cJSON_GetObjectItem(root, "uas_id_2");
+    if (cJSON_IsString(item)) strncpy(cfg->uas_id_2, item->valuestring, ESP_RID_MAX_STR_LEN);
 
-    if (strstr(json, "\"protocol\"")) {
-        int p = json_int(json, "protocol");
+    item = cJSON_GetObjectItem(root, "id_type");
+    if (cJSON_IsNumber(item)) cfg->id_type = (uint8_t)item->valueint;
+    item = cJSON_GetObjectItem(root, "ua_type");
+    if (cJSON_IsNumber(item)) cfg->ua_type = (uint8_t)item->valueint;
+    item = cJSON_GetObjectItem(root, "id_type_2");
+    if (cJSON_IsNumber(item)) cfg->id_type_2 = (uint8_t)item->valueint;
+    item = cJSON_GetObjectItem(root, "ua_type_2");
+    if (cJSON_IsNumber(item)) cfg->ua_type_2 = (uint8_t)item->valueint;
+
+    item = cJSON_GetObjectItem(root, "protocol");
+    if (cJSON_IsNumber(item)) {
+        int p = item->valueint;
         if (p >= 1 && p <= 4) cfg->protocol = (rid_protocol_t)p;
         else cfg->protocol = RID_PROTOCOL_AUTO;
     }
-    iv = json_int(json, "tx_modes"); cfg->tx_modes = (uint8_t)iv;
-    iv = json_int(json, "wifi_channel"); if (iv >= 1 && iv <= 13) cfg->wifi_channel = (uint8_t)iv;
-    iv = json_int(json, "webserver_en"); cfg->webserver_en = (uint8_t)iv;
-    iv = json_int(json, "mavlink_sysid"); cfg->mavlink_sysid = (uint8_t)iv;
-    iv = json_int(json, "bcast_powerup"); cfg->bcast_powerup = (uint8_t)iv;
-    iv = json_int(json, "options"); cfg->options = (uint8_t)iv;
-    iv = json_int(json, "lock_level");
 
-    /* If transitioning to level 2, burn eFuse for permanence */
-    if (iv >= 2) {
-        uint8_t efuse_data[4] = {0};
-        esp_efuse_read_block(EFUSE_BLK3, efuse_data, 0, 32);
-        uint32_t magic = (uint32_t)efuse_data[0] | ((uint32_t)efuse_data[1] << 8)
-                       | ((uint32_t)efuse_data[2] << 16) | ((uint32_t)efuse_data[3] << 24);
-        if (magic != EFUSE_LOCK_MAGIC) {
-            uint32_t val = EFUSE_LOCK_MAGIC;
-            esp_err_t err = esp_efuse_write_block(EFUSE_BLK3, &val, 0, 32);
-            if (err == ESP_OK) {
-                ESP_LOGI(TAG, "eFuse permanent lock burned");
-            } else {
-                ESP_LOGE(TAG, "eFuse write failed: %s", esp_err_to_name(err));
+    item = cJSON_GetObjectItem(root, "tx_modes");
+    if (cJSON_IsNumber(item)) cfg->tx_modes = (uint8_t)item->valueint;
+    item = cJSON_GetObjectItem(root, "wifi_channel");
+    if (cJSON_IsNumber(item) && item->valueint >= 1 && item->valueint <= 13)
+        cfg->wifi_channel = (uint8_t)item->valueint;
+    item = cJSON_GetObjectItem(root, "webserver_en");
+    if (cJSON_IsNumber(item)) cfg->webserver_en = (uint8_t)item->valueint;
+    item = cJSON_GetObjectItem(root, "mavlink_sysid");
+    if (cJSON_IsNumber(item)) cfg->mavlink_sysid = (uint8_t)item->valueint;
+    item = cJSON_GetObjectItem(root, "bcast_powerup");
+    if (cJSON_IsNumber(item)) cfg->bcast_powerup = (uint8_t)item->valueint;
+    item = cJSON_GetObjectItem(root, "options");
+    if (cJSON_IsNumber(item)) cfg->options = (uint8_t)item->valueint;
+
+    item = cJSON_GetObjectItem(root, "lock_level");
+    if (cJSON_IsNumber(item)) {
+        int iv = item->valueint;
+        if (iv >= 2) {
+            uint8_t efuse_data[4] = {0};
+            esp_efuse_read_block(EFUSE_BLK3, efuse_data, 0, 32);
+            uint32_t magic = (uint32_t)efuse_data[0] | ((uint32_t)efuse_data[1] << 8)
+                           | ((uint32_t)efuse_data[2] << 16) | ((uint32_t)efuse_data[3] << 24);
+            if (magic != EFUSE_LOCK_MAGIC) {
+                uint32_t val = EFUSE_LOCK_MAGIC;
+                esp_err_t err = esp_efuse_write_block(EFUSE_BLK3, &val, 0, 32);
+                if (err == ESP_OK) ESP_LOGI(TAG, "eFuse permanent lock burned");
+                else ESP_LOGE(TAG, "eFuse write failed: %s", esp_err_to_name(err));
             }
+            cfg->lock_level = 2;
+        } else if (iv >= 1) {
+            cfg->lock_level = (int8_t)iv;
+        } else {
+            cfg->lock_level = 0;
         }
-        cfg->lock_level = 2;
-    } else if (iv >= 1) {
-        cfg->lock_level = (int8_t)iv;
-    } else {
-        cfg->lock_level = 0;
     }
-    iv = json_int(json, "led_r_gpio"); cfg->led_r_gpio = (int8_t)iv;
-    iv = json_int(json, "led_g_gpio"); cfg->led_g_gpio = (int8_t)iv;
-    iv = json_int(json, "led_b_gpio"); cfg->led_b_gpio = (int8_t)iv;
-    if (json_int(json, "baud_rate") > 0) cfg->baud_rate = (uint32_t)json_int(json, "baud_rate");
 
-    float fv = json_float(json, "wifi_power_dbm"); if (fv >= 2 && fv <= 20) cfg->wifi_power_dbm = fv;
-    fv = json_float(json, "wifi_bcn_rate_hz"); if (fv >= 0 && fv <= 5) cfg->wifi_bcn_rate_hz = fv;
-    fv = json_float(json, "wifi_nan_rate_hz"); if (fv >= 0 && fv <= 5) cfg->wifi_nan_rate_hz = fv;
-    fv = json_float(json, "ble4_rate_hz"); if (fv >= 0 && fv <= 5) cfg->ble4_rate_hz = fv;
-    fv = json_float(json, "ble4_power_dbm"); if (fv >= -27 && fv <= 18) cfg->ble4_power_dbm = fv;
-    fv = json_float(json, "ble5_rate_hz"); if (fv >= 0 && fv <= 5) cfg->ble5_rate_hz = fv;
-    fv = json_float(json, "ble5_power_dbm"); if (fv >= -27 && fv <= 18) cfg->ble5_power_dbm = fv;
+    item = cJSON_GetObjectItem(root, "led_r_gpio");
+    if (cJSON_IsNumber(item)) cfg->led_r_gpio = (int8_t)item->valueint;
+    item = cJSON_GetObjectItem(root, "led_g_gpio");
+    if (cJSON_IsNumber(item)) cfg->led_g_gpio = (int8_t)item->valueint;
+    item = cJSON_GetObjectItem(root, "led_b_gpio");
+    if (cJSON_IsNumber(item)) cfg->led_b_gpio = (int8_t)item->valueint;
 
-    double dv = json_float(json, "operator_lat"); if (dv != 0) cfg->operator_lat = dv;
-    dv = json_float(json, "operator_lon"); if (dv != 0) cfg->operator_lon = dv;
-    fv = json_float(json, "operator_alt"); cfg->operator_alt = fv;
+    item = cJSON_GetObjectItem(root, "uart_port");
+    if (cJSON_IsNumber(item)) cfg->uart_port = (uint8_t)item->valueint;
+    item = cJSON_GetObjectItem(root, "tx_pin");
+    if (cJSON_IsNumber(item)) cfg->tx_pin = (uint8_t)item->valueint;
+    item = cJSON_GetObjectItem(root, "rx_pin");
+    if (cJSON_IsNumber(item)) cfg->rx_pin = (uint8_t)item->valueint;
 
-    tmp = json_str(json, "wifi_ssid"); if (tmp) { strncpy(cfg->wifi_ssid, tmp, ESP_RID_MAX_STR_LEN); free(tmp); }
-    tmp = json_str(json, "wifi_password"); if (tmp) { strncpy(cfg->wifi_password, tmp, ESP_RID_MAX_STR_LEN); free(tmp); }
+    item = cJSON_GetObjectItem(root, "baud_rate");
+    if (cJSON_IsNumber(item) && item->valueint > 0) cfg->baud_rate = (uint32_t)item->valueint;
+
+    item = cJSON_GetObjectItem(root, "wifi_power_dbm");
+    if (cJSON_IsNumber(item) && item->valuedouble >= 2 && item->valuedouble <= 20) cfg->wifi_power_dbm = (float)item->valuedouble;
+    item = cJSON_GetObjectItem(root, "wifi_bcn_rate_hz");
+    if (cJSON_IsNumber(item) && item->valuedouble >= 0 && item->valuedouble <= 5) cfg->wifi_bcn_rate_hz = (float)item->valuedouble;
+    item = cJSON_GetObjectItem(root, "wifi_nan_rate_hz");
+    if (cJSON_IsNumber(item) && item->valuedouble >= 0 && item->valuedouble <= 5) cfg->wifi_nan_rate_hz = (float)item->valuedouble;
+    item = cJSON_GetObjectItem(root, "ble4_rate_hz");
+    if (cJSON_IsNumber(item) && item->valuedouble >= 0 && item->valuedouble <= 5) cfg->ble4_rate_hz = (float)item->valuedouble;
+    item = cJSON_GetObjectItem(root, "ble4_power_dbm");
+    if (cJSON_IsNumber(item) && item->valuedouble >= -27 && item->valuedouble <= 18) cfg->ble4_power_dbm = (float)item->valuedouble;
+    item = cJSON_GetObjectItem(root, "ble5_rate_hz");
+    if (cJSON_IsNumber(item) && item->valuedouble >= 0 && item->valuedouble <= 5) cfg->ble5_rate_hz = (float)item->valuedouble;
+    item = cJSON_GetObjectItem(root, "ble5_power_dbm");
+    if (cJSON_IsNumber(item) && item->valuedouble >= -27 && item->valuedouble <= 18) cfg->ble5_power_dbm = (float)item->valuedouble;
+
+    item = cJSON_GetObjectItem(root, "operator_lat");
+    if (cJSON_IsNumber(item)) cfg->operator_lat = item->valuedouble;
+    item = cJSON_GetObjectItem(root, "operator_lon");
+    if (cJSON_IsNumber(item)) cfg->operator_lon = item->valuedouble;
+    item = cJSON_GetObjectItem(root, "operator_alt");
+    if (cJSON_IsNumber(item)) cfg->operator_alt = (float)item->valuedouble;
+
+    item = cJSON_GetObjectItem(root, "wifi_ssid");
+    if (cJSON_IsString(item)) strncpy(cfg->wifi_ssid, item->valuestring, ESP_RID_MAX_STR_LEN);
+    item = cJSON_GetObjectItem(root, "wifi_password");
+    if (cJSON_IsString(item)) strncpy(cfg->wifi_password, item->valuestring, ESP_RID_MAX_STR_LEN);
+
+    item = cJSON_GetObjectItem(root, "ws2812_gpio");
+    if (cJSON_IsNumber(item)) cfg->ws2812_gpio = (int8_t)item->valueint;
+    item = cJSON_GetObjectItem(root, "ws2812_brightness");
+    if (cJSON_IsNumber(item)) cfg->ws2812_brightness = (uint8_t)item->valueint;
+
+    char pin_name[20], pat_name[20], ph_name[20];
+    for (int i = 0; i < 5; i++) {
+        snprintf(pin_name, sizeof(pin_name), "lighting_pin_%d", i);
+        snprintf(pat_name, sizeof(pat_name), "lighting_pattern_%d", i);
+        snprintf(ph_name, sizeof(ph_name), "lighting_phase_%d", i);
+        item = cJSON_GetObjectItem(root, pin_name);
+        if (cJSON_IsNumber(item)) cfg->lighting_pins[i] = (int8_t)item->valueint;
+        item = cJSON_GetObjectItem(root, pat_name);
+        if (cJSON_IsNumber(item)) cfg->lighting_patterns[i] = (uint8_t)item->valueint;
+        item = cJSON_GetObjectItem(root, ph_name);
+        if (cJSON_IsNumber(item)) cfg->lighting_phase_offsets[i] = (int16_t)item->valueint;
+    }
+
+    item = cJSON_GetObjectItem(root, "dronecan_rx_gpio");
+    if (cJSON_IsNumber(item)) cfg->dronecan_rx_gpio = (int8_t)item->valueint;
+    item = cJSON_GetObjectItem(root, "dronecan_tx_gpio");
+    if (cJSON_IsNumber(item)) cfg->dronecan_tx_gpio = (int8_t)item->valueint;
+    item = cJSON_GetObjectItem(root, "dronecan_bitrate");
+    if (cJSON_IsNumber(item) && item->valueint > 0) cfg->dronecan_bitrate = (uint32_t)item->valueint;
+
+    item = cJSON_GetObjectItem(root, "mavlink_usb_enable");
+    if (cJSON_IsNumber(item)) cfg->mavlink_usb_enable = (bool)item->valueint;
+
+    item = cJSON_GetObjectItem(root, "ota_trigger_gpio");
+    if (cJSON_IsNumber(item)) cfg->ota_trigger_gpio = (int8_t)item->valueint;
+
+    item = cJSON_GetObjectItem(root, "start_delay_ms");
+    if (cJSON_IsNumber(item) && item->valueint >= 0) cfg->start_delay_ms = (uint32_t)item->valueint;
+
+    item = cJSON_GetObjectItem(root, "auth_private_key");
+    if (cJSON_IsString(item)) strncpy(cfg->auth_private_key, item->valuestring, sizeof(cfg->auth_private_key) - 1);
 
     char kname[16];
     for (int i = 1; i <= ESP_RID_NUM_KEYS; i++) {
         snprintf(kname, sizeof(kname), "public_key_%d", i);
-        tmp = json_str(json, kname);
-        if (tmp) { strncpy(cfg->public_keys[i - 1], tmp, ESP_RID_MAX_KEY_LEN); free(tmp); }
+        item = cJSON_GetObjectItem(root, kname);
+        if (cJSON_IsString(item)) strncpy(cfg->public_keys[i - 1], item->valuestring, ESP_RID_MAX_KEY_LEN);
     }
+
+    cJSON_Delete(root);
 }
 
 static void config_to_json(const rid_config_t *c, char *buf, size_t sz)
 {
-    snprintf(buf, sz,
+    int off = 0;
+    off += snprintf(buf + off, sz - off,
         "{"
         "\"protocol\":%u,"
         "\"uas_id\":\"%s\",\"id_type\":%u,\"ua_type\":%u,\"operator_id\":\"%s\",\"self_id_text\":\"%s\","
@@ -230,8 +300,16 @@ static void config_to_json(const rid_config_t *c, char *buf, size_t sz)
         "\"operator_lat\":%.6f,\"operator_lon\":%.6f,\"operator_alt\":%.1f,"
         "\"options\":%u,\"lock_level\":%d,"
         "\"led_r_gpio\":%d,\"led_g_gpio\":%d,\"led_b_gpio\":%d,"
+        "\"uart_port\":%u,\"tx_pin\":%u,\"rx_pin\":%u,"
+        "\"ws2812_gpio\":%d,\"ws2812_brightness\":%u,"
+        "\"dronecan_rx_gpio\":%d,\"dronecan_tx_gpio\":%d,\"dronecan_bitrate\":%lu,"
+        "\"mavlink_usb_enable\":%s,\"ota_trigger_gpio\":%d,"
+        "\"start_delay_ms\":%lu,"
         "\"public_key_1\":\"%s\",\"public_key_2\":\"%s\","
-        "\"public_key_3\":\"%s\",\"public_key_4\":\"%s\",\"public_key_5\":\"%s\""
+        "\"public_key_3\":\"%s\",\"public_key_4\":\"%s\",\"public_key_5\":\"%s\","
+        "\"lighting_pin_0\":%d,\"lighting_pin_1\":%d,\"lighting_pin_2\":%d,\"lighting_pin_3\":%d,\"lighting_pin_4\":%d,"
+        "\"lighting_pattern_0\":%u,\"lighting_pattern_1\":%u,\"lighting_pattern_2\":%u,\"lighting_pattern_3\":%u,\"lighting_pattern_4\":%u,"
+        "\"lighting_phase_0\":%d,\"lighting_phase_1\":%d,\"lighting_phase_2\":%d,\"lighting_phase_3\":%d,\"lighting_phase_4\":%d"
         "}",
         (unsigned)c->protocol,
         c->uas_id, c->id_type, c->ua_type, c->operator_id, c->self_id_text,
@@ -245,8 +323,16 @@ static void config_to_json(const rid_config_t *c, char *buf, size_t sz)
         c->operator_lat, c->operator_lon, (double)c->operator_alt,
         c->options, c->lock_level,
         c->led_r_gpio, c->led_g_gpio, c->led_b_gpio,
+        c->uart_port, c->tx_pin, c->rx_pin,
+        c->ws2812_gpio, c->ws2812_brightness,
+        c->dronecan_rx_gpio, c->dronecan_tx_gpio, (unsigned long)c->dronecan_bitrate,
+        c->mavlink_usb_enable ? "true" : "false", c->ota_trigger_gpio,
+        (unsigned long)c->start_delay_ms,
         c->public_keys[0], c->public_keys[1],
-        c->public_keys[2], c->public_keys[3], c->public_keys[4]);
+        c->public_keys[2], c->public_keys[3], c->public_keys[4],
+        c->lighting_pins[0], c->lighting_pins[1], c->lighting_pins[2], c->lighting_pins[3], c->lighting_pins[4],
+        c->lighting_patterns[0], c->lighting_patterns[1], c->lighting_patterns[2], c->lighting_patterns[3], c->lighting_patterns[4],
+        c->lighting_phase_offsets[0], c->lighting_phase_offsets[1], c->lighting_phase_offsets[2], c->lighting_phase_offsets[3], c->lighting_phase_offsets[4]);
 }
 
 static void state_to_json(const rid_state_t *s, char *buf, size_t sz)
@@ -395,6 +481,13 @@ static esp_err_t handle_post_config(httpd_req_t *req)
     body[ret] = '\0';
 
     if (get_lock_level() >= 1) {
+        if (!sig_rate_check()) {
+            free(body);
+            httpd_resp_set_type(req, "application/json");
+            httpd_resp_send(req, "{\"status\":\"rate_limited\"}", 23);
+            return ESP_OK;
+        }
+
         char sig_hdr[512] = {0};
         size_t hdr_len = httpd_req_get_hdr_value_len(req, "X-Signature");
         if (hdr_len > 0 && hdr_len < sizeof(sig_hdr)) {
@@ -405,6 +498,7 @@ static esp_err_t handle_post_config(httpd_req_t *req)
         esp_rid_get_config(&cfg);
 
         if (!verify_signed_body(body, sig_hdr, &cfg)) {
+            sig_rate_record_fail();
             free(body);
             httpd_resp_set_type(req, "application/json");
             httpd_resp_send(req, "{\"status\":\"invalid_signature\"}", 33);
@@ -444,6 +538,12 @@ static esp_err_t handle_index(httpd_req_t *req)
 static esp_err_t handle_factory_reset(httpd_req_t *req)
 {
     if (get_lock_level() >= 1) {
+        if (!sig_rate_check()) {
+            httpd_resp_set_type(req, "application/json");
+            httpd_resp_send(req, "{\"status\":\"rate_limited\"}", 23);
+            return ESP_OK;
+        }
+
         char sig_hdr[512] = {0};
         size_t hdr_len = httpd_req_get_hdr_value_len(req, "X-Signature");
         if (hdr_len > 0 && hdr_len < sizeof(sig_hdr)) {
@@ -452,6 +552,7 @@ static esp_err_t handle_factory_reset(httpd_req_t *req)
         rid_config_t cfg;
         esp_rid_get_config(&cfg);
         if (!verify_signed_body("factory_reset", sig_hdr, &cfg)) {
+            sig_rate_record_fail();
             httpd_resp_set_type(req, "application/json");
             httpd_resp_send(req, "{\"status\":\"invalid_signature\"}", 33);
             return ESP_OK;

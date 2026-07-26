@@ -43,6 +43,8 @@ idf_component_register(
         esp_driver_twai
         mbedtls
         efuse
+        cJSON
+        esp_task_wdt
     EMBED_TXTFILES
         "webui/config.html"
 )

@@ -6,16 +6,6 @@
 
 #define RID_LED_PIN_NC  -1
 
-#ifndef CONFIG_RID_LED_R_GPIO
-#define CONFIG_RID_LED_R_GPIO RID_LED_PIN_NC
-#endif
-#ifndef CONFIG_RID_LED_G_GPIO
-#define CONFIG_RID_LED_G_GPIO RID_LED_PIN_NC
-#endif
-#ifndef CONFIG_RID_LED_B_GPIO
-#define CONFIG_RID_LED_B_GPIO RID_LED_PIN_NC
-#endif
-
 typedef enum {
     RID_LED_BOOT,
     RID_LED_NO_GPS,
