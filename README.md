@@ -71,6 +71,10 @@
 | **Storage** | Persistent NVS configuration, eFuse tamper detection |
 | **Dashboard** | Dark/light mode, responsive (mobile/tablet/desktop) |
 
+<p align="center">
+  <img src="docs/images/dashboard.png" alt="RID Hub Dashboard" width="820">
+</p>
+
 ### Hardware & Lighting
 | Feature | Details |
 |---------|---------|

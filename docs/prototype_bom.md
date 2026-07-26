@@ -50,7 +50,7 @@ Connects in 5 seconds, zero soldering.
 
 Everything connects with Dupont cables. **No soldering required.** Anyone can replicate this.
 
-## Pin Configuration (via menuconfig or web UI)
+## Pin Configuration (via web UI)
 
 ```
 GPS TX  → GPIO 18

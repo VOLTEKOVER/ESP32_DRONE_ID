@@ -844,25 +844,44 @@ idf.py -p COM3 monitor</pre>
 &#x251c;&#x2500;&#x2500; main/                          # Application entry point
 &#x2502;   &#x2514;&#x2500;&#x2500; main.c                     # Init, demo mode, splash
 &#x251c;&#x2500;&#x2500; components/esp_remote_id/      # Core component
-&#x2502;   &#x251c;&#x2500;&#x2500; include/                   # 14 header files
+&#x2502;   &#x251c;&#x2500;&#x2500; include/                   # 20 header files
 &#x2502;   &#x2502;   &#x2514;&#x2500;&#x2500; esp_remote_id.h        # Public API + structs
-&#x2502;   &#x251c;&#x2500;&#x2500; src/
+&#x2502;   &#x251c;&#x2500;&#x2500; src/                        # 25 source files
 &#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; esp_remote_id.c       # Orchestrator (rate limiting, task loop)
 &#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; nvs_storage.c         # Config persistence (17 keys, 26 params)
 &#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; web_config.c          # HTTP server + REST API + OTA + eFuse lock
-&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; protocol_detect.c     # Auto-detect: MAVLink/MSP/NMEA
-&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; mavlink_parser.c      # MAVLink + ODID messages (ardupilotmega dialect)
+&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; protocol_detect.c     # Auto-detect: MAVLink/MSP/NMEA + cache
+&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; mavlink_parser.c      # MAVLink + MESSAGE_PACK + ODID messages
 &#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; msp_parser.c          # MSP v1 (RAW_GPS, ATTITUDE)
-&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; nmea_parser.c         # NMEA 0183 (GGA, RMC, VTG)
+&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; nmea_parser.c         # NMEA 0183 (GGA, RMC, VTG) comma parser
 &#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; mav2odid.c            # Intel MAVLink-to-ODID conversion
 &#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; rid_patrol.c          # Demo GPS patrol simulation
+&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; rid_auth.c            # Ed25519 signing (ASTM F3411-22a)
+&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; rid_kalman.c          # 1D&#xd7;3 Kalman filter (lat/lon/alt)
+&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; rid_ota.c             # OTA update server (SHA-256 verify)
+&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; rid_dronecan.c        # DroneCAN CAN bus (TWAI decode)
+&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; rid_lighting.c        # GPIO lighting (5-ch pattern)
+&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; rid_mavlink_usb.c     # MAVLink over USB serial
+&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; rid_mavlink_tx.c      # MAVLink telemetry TX
+&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; rid_security.c        # Signature verification (cJSON)
 &#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; opendroneid.c         # Intel ODID encode/decode (1477 lines)
 &#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; wifi.c               # IEEE 802.11 frame builder (Intel lib)
-&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; wifi_tx.c            # WiFi Beacon + NAN transmitter
+&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; wifi_tx.c            # WiFi Beacon + NAN transmitter + mutex
 &#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; ble_tx.c             # BLE 4.0 legacy + BLE 5.0 LR Coded PHY
 &#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; led_status.c          # RGB LED (3 configurable GPIOs)
+&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; led_ws2812.c          # WS2812 addressable RGB (RMT driver)
+&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; cli.c                 # UART CLI REPL (char-by-char input)
+&#x2502;   &#x2502;   &#x2514;&#x2500;&#x2500; uart_mirror.c         # UART debug mirror
 &#x2502;   &#x251c;&#x2500;&#x2500; mavlink/                   # MAVLink v2 C dialects (ardupilotmega)
 &#x2502;   &#x2514;&#x2500;&#x2500; webui/config.html          # Embedded web UI (~1520 lines)
+&#x251c;&#x2500;&#x2500; RID_Hub/                         # Ground station (Electron)
+&#x2502;   &#x251c;&#x2500;&#x2500; main.js                    # Electron main process (IPC)
+&#x2502;   &#x251c;&#x2500;&#x2500; src/
+&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; decoder.js               # ASTM F3411-22a decoder
+&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; tracker.js               # Device tracking + CSV/KML
+&#x2502;   &#x2502;   &#x2514;&#x2500;&#x2500; capture.js               # WiFi/BLE/Serial capture
+&#x2502;   &#x2514;&#x2500;&#x2500; renderer/src/
+&#x2502;       &#x2514;&#x2500;&#x2500; App.tsx                    # React 19 + Ant Design 6
 &#x251c;&#x2500;&#x2500; ESP_DRONE_REMOTEID_Analyzer/ # Python WiFi beacon analyzer
 &#x2502;   &#x251c;&#x2500;&#x2500; capture.py               # Scapy-based WiFi capture
 &#x2502;   &#x251c;&#x2500;&#x2500; decoder.py               # Pure Python ODID decoder (510 lines)
@@ -873,12 +892,14 @@ idf.py -p COM3 monitor</pre>
 &#x2502;   &#x2514;&#x2500;&#x2500; requirements.txt
 &#x251c;&#x2500;&#x2500; docs/                          # GitHub Pages site
 &#x2502;   &#x251c;&#x2500;&#x2500; index.html                 # Wiki + WebSerial installer
+&#x2502;   &#x251c;&#x2500;&#x2500; guide.html                 # Technical guide (sections 1-16)
 &#x2502;   &#x251c;&#x2500;&#x2500; config(demo).html           # Standalone config demo
+&#x2502;   &#x251c;&#x2500;&#x2500; prototype_bom.md            # Hardware BOM + wiring
+&#x2502;   &#x251c;&#x2500;&#x2500; shared.css                  # Shared styles
 &#x2502;   &#x251c;&#x2500;&#x2500; manifest.json              # WebSerial manifest (3 targets)
-&#x2502;   &#x2514;&#x2500;&#x2500; images/                    # Logo + FC icons
+&#x2502;   &#x2514;&#x2500;&#x2500; images/                    # Logo + dashboard + FC icons
 &#x251c;&#x2500;&#x2500; .github/workflows/            # CI/CD (build.yml + release.yml)
-&#x251c;&#x2500;&#x2500; .vscode/                      # Editor config
-&#x2514;&#x2500;&#x2500; todolist/softwarestatus.md     # Per-file analysis</pre>
+&#x251c;&#x2500;&#x2500; todolist/softwarestatus.md     # Per-file analysis</pre>
 </div>
 </div>
 
@@ -1336,10 +1357,10 @@ sudo ip link set wlan0 up</pre>
 <tr><th>Function</th><th>ESP32</th><th>ESP32-S3</th><th>ESP32-C6</th></tr>
 <tr><td>UART RX (default)</td><td>GPIO16</td><td>GPIO18</td><td>GPIO7</td></tr>
 <tr><td>Alt UART RX</td><td>4,26</td><td>4,5</td><td>0,1</td></tr>
-<tr><td>RGB LED R/G/B</td><td colspan="3">Configurable via Kconfig (any GPIO, default -1)</td></tr>
+<tr><td>RGB LED R/G/B</td><td colspan="3">Configurable via web UI (any GPIO, default -1)</td></tr>
 <tr><td>Boot button</td><td>GPIO0</td><td>GPIO0</td><td>GPIO9</td></tr>
 </table>
-<p>UART pins are configured in <code>main.c</code> via <code>uart_param_t</code>. RGB LED pins are set via menuconfig (<code>RID_LED_R/G/B_GPIO</code>).</p>
+<p>UART pins are configured in <code>main.c</code> via <code>uart_param_t</code>. RGB LED pins are set via the web UI at <code>192.168.4.1</code>.</p>
 </div>
 </div>
 
