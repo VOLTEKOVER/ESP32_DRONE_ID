@@ -52,6 +52,7 @@ typedef struct __mavlink_command_cancel_t {
  * @param command  Command ID (of command to cancel).
  * @return length of the message in bytes (excluding serial stream start sign)
  */
+MAVLINK_WIP
 static inline uint16_t mavlink_msg_command_cancel_pack(uint8_t system_id, uint8_t component_id, mavlink_message_t* msg,
                                uint8_t target_system, uint8_t target_component, uint16_t command)
 {
@@ -76,6 +77,45 @@ static inline uint16_t mavlink_msg_command_cancel_pack(uint8_t system_id, uint8_
 }
 
 /**
+ * @brief Pack a command_cancel message
+ * @param system_id ID of this system
+ * @param component_id ID of this component (e.g. 200 for IMU)
+ * @param status MAVLink status structure
+ * @param msg The MAVLink message to compress the data into
+ *
+ * @param target_system  System executing long running command. Should not be broadcast (0).
+ * @param target_component  Component executing long running command.
+ * @param command  Command ID (of command to cancel).
+ * @return length of the message in bytes (excluding serial stream start sign)
+ */
+static inline uint16_t mavlink_msg_command_cancel_pack_status(uint8_t system_id, uint8_t component_id, mavlink_status_t *_status, mavlink_message_t* msg,
+                               uint8_t target_system, uint8_t target_component, uint16_t command)
+{
+#if MAVLINK_NEED_BYTE_SWAP || !MAVLINK_ALIGNED_FIELDS
+    char buf[MAVLINK_MSG_ID_COMMAND_CANCEL_LEN];
+    _mav_put_uint16_t(buf, 0, command);
+    _mav_put_uint8_t(buf, 2, target_system);
+    _mav_put_uint8_t(buf, 3, target_component);
+
+        memcpy(_MAV_PAYLOAD_NON_CONST(msg), buf, MAVLINK_MSG_ID_COMMAND_CANCEL_LEN);
+#else
+    mavlink_command_cancel_t packet;
+    packet.command = command;
+    packet.target_system = target_system;
+    packet.target_component = target_component;
+
+        memcpy(_MAV_PAYLOAD_NON_CONST(msg), &packet, MAVLINK_MSG_ID_COMMAND_CANCEL_LEN);
+#endif
+
+    msg->msgid = MAVLINK_MSG_ID_COMMAND_CANCEL;
+#if MAVLINK_CRC_EXTRA
+    return mavlink_finalize_message_buffer(msg, system_id, component_id, _status, MAVLINK_MSG_ID_COMMAND_CANCEL_MIN_LEN, MAVLINK_MSG_ID_COMMAND_CANCEL_LEN, MAVLINK_MSG_ID_COMMAND_CANCEL_CRC);
+#else
+    return mavlink_finalize_message_buffer(msg, system_id, component_id, _status, MAVLINK_MSG_ID_COMMAND_CANCEL_MIN_LEN, MAVLINK_MSG_ID_COMMAND_CANCEL_LEN);
+#endif
+}
+
+/**
  * @brief Pack a command_cancel message on a channel
  * @param system_id ID of this system
  * @param component_id ID of this component (e.g. 200 for IMU)
@@ -86,6 +126,7 @@ static inline uint16_t mavlink_msg_command_cancel_pack(uint8_t system_id, uint8_
  * @param command  Command ID (of command to cancel).
  * @return length of the message in bytes (excluding serial stream start sign)
  */
+MAVLINK_WIP
 static inline uint16_t mavlink_msg_command_cancel_pack_chan(uint8_t system_id, uint8_t component_id, uint8_t chan,
                                mavlink_message_t* msg,
                                    uint8_t target_system,uint8_t target_component,uint16_t command)
@@ -118,6 +159,7 @@ static inline uint16_t mavlink_msg_command_cancel_pack_chan(uint8_t system_id, u
  * @param msg The MAVLink message to compress the data into
  * @param command_cancel C-struct to read the message contents from
  */
+MAVLINK_WIP
 static inline uint16_t mavlink_msg_command_cancel_encode(uint8_t system_id, uint8_t component_id, mavlink_message_t* msg, const mavlink_command_cancel_t* command_cancel)
 {
     return mavlink_msg_command_cancel_pack(system_id, component_id, msg, command_cancel->target_system, command_cancel->target_component, command_cancel->command);
@@ -132,9 +174,24 @@ static inline uint16_t mavlink_msg_command_cancel_encode(uint8_t system_id, uint
  * @param msg The MAVLink message to compress the data into
  * @param command_cancel C-struct to read the message contents from
  */
+MAVLINK_WIP
 static inline uint16_t mavlink_msg_command_cancel_encode_chan(uint8_t system_id, uint8_t component_id, uint8_t chan, mavlink_message_t* msg, const mavlink_command_cancel_t* command_cancel)
 {
     return mavlink_msg_command_cancel_pack_chan(system_id, component_id, chan, msg, command_cancel->target_system, command_cancel->target_component, command_cancel->command);
+}
+
+/**
+ * @brief Encode a command_cancel struct with provided status structure
+ *
+ * @param system_id ID of this system
+ * @param component_id ID of this component (e.g. 200 for IMU)
+ * @param status MAVLink status structure
+ * @param msg The MAVLink message to compress the data into
+ * @param command_cancel C-struct to read the message contents from
+ */
+static inline uint16_t mavlink_msg_command_cancel_encode_status(uint8_t system_id, uint8_t component_id, mavlink_status_t* _status, mavlink_message_t* msg, const mavlink_command_cancel_t* command_cancel)
+{
+    return mavlink_msg_command_cancel_pack_status(system_id, component_id, _status, msg,  command_cancel->target_system, command_cancel->target_component, command_cancel->command);
 }
 
 /**
@@ -147,6 +204,7 @@ static inline uint16_t mavlink_msg_command_cancel_encode_chan(uint8_t system_id,
  */
 #ifdef MAVLINK_USE_CONVENIENCE_FUNCTIONS
 
+MAVLINK_WIP
 static inline void mavlink_msg_command_cancel_send(mavlink_channel_t chan, uint8_t target_system, uint8_t target_component, uint16_t command)
 {
 #if MAVLINK_NEED_BYTE_SWAP || !MAVLINK_ALIGNED_FIELDS
@@ -171,6 +229,7 @@ static inline void mavlink_msg_command_cancel_send(mavlink_channel_t chan, uint8
  * @param chan MAVLink channel to send the message
  * @param struct The MAVLink struct to serialize
  */
+MAVLINK_WIP
 static inline void mavlink_msg_command_cancel_send_struct(mavlink_channel_t chan, const mavlink_command_cancel_t* command_cancel)
 {
 #if MAVLINK_NEED_BYTE_SWAP || !MAVLINK_ALIGNED_FIELDS
@@ -182,12 +241,13 @@ static inline void mavlink_msg_command_cancel_send_struct(mavlink_channel_t chan
 
 #if MAVLINK_MSG_ID_COMMAND_CANCEL_LEN <= MAVLINK_MAX_PAYLOAD_LEN
 /*
-  This variant of _send() can be used to save stack space by re-using
+  This variant of _send() can be used to save stack space by reusing
   memory from the receive buffer.  The caller provides a
   mavlink_message_t which is the size of a full mavlink message. This
   is usually the receive buffer for the channel, and allows a reply to an
   incoming message with minimum stack space usage.
  */
+MAVLINK_WIP
 static inline void mavlink_msg_command_cancel_send_buf(mavlink_message_t *msgbuf, mavlink_channel_t chan,  uint8_t target_system, uint8_t target_component, uint16_t command)
 {
 #if MAVLINK_NEED_BYTE_SWAP || !MAVLINK_ALIGNED_FIELDS
@@ -218,6 +278,7 @@ static inline void mavlink_msg_command_cancel_send_buf(mavlink_message_t *msgbuf
  *
  * @return  System executing long running command. Should not be broadcast (0).
  */
+MAVLINK_WIP
 static inline uint8_t mavlink_msg_command_cancel_get_target_system(const mavlink_message_t* msg)
 {
     return _MAV_RETURN_uint8_t(msg,  2);
@@ -228,6 +289,7 @@ static inline uint8_t mavlink_msg_command_cancel_get_target_system(const mavlink
  *
  * @return  Component executing long running command.
  */
+MAVLINK_WIP
 static inline uint8_t mavlink_msg_command_cancel_get_target_component(const mavlink_message_t* msg)
 {
     return _MAV_RETURN_uint8_t(msg,  3);
@@ -238,6 +300,7 @@ static inline uint8_t mavlink_msg_command_cancel_get_target_component(const mavl
  *
  * @return  Command ID (of command to cancel).
  */
+MAVLINK_WIP
 static inline uint16_t mavlink_msg_command_cancel_get_command(const mavlink_message_t* msg)
 {
     return _MAV_RETURN_uint16_t(msg,  0);
@@ -249,6 +312,7 @@ static inline uint16_t mavlink_msg_command_cancel_get_command(const mavlink_mess
  * @param msg The message to decode
  * @param command_cancel C-struct to decode the message contents into
  */
+MAVLINK_WIP
 static inline void mavlink_msg_command_cancel_decode(const mavlink_message_t* msg, mavlink_command_cancel_t* command_cancel)
 {
 #if MAVLINK_NEED_BYTE_SWAP || !MAVLINK_ALIGNED_FIELDS
