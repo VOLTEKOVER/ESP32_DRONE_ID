@@ -45,7 +45,6 @@ idf_component_register(
         mbedtls
         efuse
         cjson
-        esp_task_wdt
     EMBED_TXTFILES
         "webui/config.html"
 )
