@@ -90,8 +90,12 @@ extern "C" {
 #define MAX_LON         180     // Maximum longitude
 #define MIN_ALT         (-1000) // Minimum altitude
 #define MAX_ALT         31767.5f// Maximum altitude
+#ifndef INV_ALT
 #define INV_ALT         MIN_ALT // Invalid altitude
+#endif
+#ifndef MAX_TIMESTAMP
 #define MAX_TIMESTAMP   (60 * 60) // 1 hour in seconds
+#endif
 #define INV_TIMESTAMP   0xFFFF  // Invalid, No Value or Unknown Timestamp
 #define MAX_AREA_RADIUS 2550
 

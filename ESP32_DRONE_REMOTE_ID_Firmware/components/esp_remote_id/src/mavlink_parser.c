@@ -286,7 +286,7 @@ bool mavlink_parser_get(rid_gps_data_t *gps)
                             decodeAuthMessage(&auth, &m->auth);
                             if (auth.DataPage < ODID_AUTH_MAX_PAGES) {
                                 memcpy(g_last_identity.ext_auth_pages[auth.DataPage],
-                                       m->auth.AuthData, ODID_MESSAGE_SIZE);
+                                       m->auth.page_non_zero.AuthData, ODID_MESSAGE_SIZE);
                                 g_last_identity.ext_auth_last_page = auth.LastPageIndex;
                                 g_last_identity.ext_auth_pages_received |= (1 << auth.DataPage);
                                 g_last_identity.has_ext_auth = true;
@@ -297,11 +297,11 @@ bool mavlink_parser_get(rid_gps_data_t *gps)
                         case 3: {
                             ODID_SelfID_data selfid;
                             decodeSelfIDMessage(&selfid, &m->selfId);
-                            int text_len = strlen(selfid.Description);
+                            int text_len = strlen(selfid.Desc);
                             if (text_len > ESP_RID_MAX_STR_LEN) text_len = ESP_RID_MAX_STR_LEN;
-                            memcpy(g_last_identity.self_id_text, selfid.Description, text_len);
+                            memcpy(g_last_identity.self_id_text, selfid.Desc, text_len);
                             g_last_identity.self_id_text[text_len] = '\0';
-                            g_last_identity.self_id_desc_type = selfid.DescriptionType;
+                            g_last_identity.self_id_desc_type = selfid.DescType;
                             g_last_identity.has_self_id = true;
                             g_last_identity_update = xTaskGetTickCount() * portTICK_PERIOD_MS;
                             break;
