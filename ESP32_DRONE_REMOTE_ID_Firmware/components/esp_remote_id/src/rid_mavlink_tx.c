@@ -27,8 +27,9 @@ static void send_mavlink_message(mavlink_message_t *msg)
     }
 }
 
-void rid_mavlink_tx_task(void)
+void rid_mavlink_tx_task(void *pvParameters)
 {
+    (void)pvParameters;
     int64_t last_heartbeat = 0;
     int64_t last_op_loc = 0;
 

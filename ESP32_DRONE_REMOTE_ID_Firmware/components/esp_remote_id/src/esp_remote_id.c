@@ -485,7 +485,7 @@ static void rid_task(void *arg)
                     gps_data.latitude != 0.0 && gps_data.longitude != 0.0) {
                     g_state.takeoff_lat = gps_data.latitude;
                     g_state.takeoff_lon = gps_data.longitude;
-                    g_state.takeoff_alt = gps_data.altitude;
+                    g_state.takeoff_alt = gps_data.altitude_msl;
                     g_state.takeoff_captured = true;
                 }
 
