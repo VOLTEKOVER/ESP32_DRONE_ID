@@ -197,9 +197,20 @@ jobs:
           for dir in artifacts/firmware-*/; do
             [ -d "$dir" ] || continue
             target=$(basename "$dir" | sed 's/firmware-//')
-            echo "| \`firmware-${target}-${VERSION}.zip\` | ${target} |" >> release-notes.md
+            echo "| \`firmware-${target}-${VERSION}.zip\` | ${target} (bootloader + partition + app) |" >> release-notes.md
           done
 
+          echo "" >> release-notes.md
+          echo "Individual \`.bin\` files are also available for each target:" >> release-notes.md
+          echo "" >> release-notes.md
+          for dir in artifacts/firmware-*/; do
+            [ -d "$dir" ] || continue
+            target=$(basename "$dir" | sed 's/firmware-//')
+            echo "| \`bootloader.bin\` | ${target} offset 0x$( [ "$target" = "esp32" ] && echo 1000 || echo 0 ) |" >> release-notes.md
+            echo "| \`partition-table.bin\` | ${target} offset 0x8000 |" >> release-notes.md
+            echo "| \`esp-drone-remoteid.bin\` | ${target} offset 0x20000 |" >> release-notes.md
+          done
+          echo "" >> release-notes.md
           echo "| \`manifest.json\` | WebSerial installer |" >> release-notes.md
           echo "" >> release-notes.md
           echo "Flash via browser at https://VOLTEKOVER.github.io/ESP_DRONE_REMOTEID/" >> release-notes.md
@@ -228,6 +239,7 @@ jobs:
           files: |
             release/firmware-*.zip
             release/firmware/manifest.json
+            release/firmware/*/*.bin
 
       - name: Prepare Pages deploy
         run: |
