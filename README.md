@@ -18,8 +18,16 @@
 
 <p align="center">
   <b>ASTM F3411-22a / ASD-STAN prEN 4709-002</b> Open DroneID transmitter.<br>
-  Parses <b>MAVLink · MSP · NMEA · DroneCAN</b> from any flight controller.<br>
+  Parses <b>MAVLink &middot; MSP &middot; NMEA &middot; DroneCAN</b> from any flight controller.<br>
   Broadcasts via <b>WiFi Beacon + NAN + BLE 4.0/5.0</b> with Kalman filter, Ed25519 auth, SHA-256 OTA verification, and security hardening.
+</p>
+
+<p align="center">
+  <b>Vendored Dependencies</b><br>
+  <a href="https://github.com/mavlink/c_library_v2"><code>MAVLink c_library_v2</code></a> Jul 2026 &middot;
+  <a href="https://github.com/opendroneid/core-c"><code>OpenDroneID core-c</code></a> Protocol v2 &middot;
+  <a href="https://components.espressif.com/components/espressif/cjson"><code>cJSON</code></a> ^1.7.19 &middot;
+  <a href="https://github.com/espressif/esp-idf"><code>ESP-IDF</code></a> v6.0.1
 </p>
 
 <p align="center">
