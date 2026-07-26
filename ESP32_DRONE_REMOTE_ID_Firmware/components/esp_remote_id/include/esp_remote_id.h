@@ -191,6 +191,12 @@ typedef struct {
 
     /* Auth status */
     bool auth_enabled;
+
+    /* Takeoff location (captured once at first 3D fix, per ASTM F3411) */
+    double takeoff_lat;
+    double takeoff_lon;
+    float takeoff_alt;
+    bool takeoff_captured;
 } rid_state_t;
 
 void esp_rid_init(void);

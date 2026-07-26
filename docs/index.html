@@ -405,8 +405,8 @@ footer .fw-copy{font-size:.92em;color:var(--text-muted)}
 <div class="hero">
 <img class="logo-hero" src="images/logo.svg" alt="ESP DRONE REMOTEID">
 <h1>ESP DRONE REMOTEID <span style="font-size:.5em;color:#c62828;font-weight:700">[BETA]</span></h1>
-<p>Universal ASTM F3411-22a Open DroneID transmitter &mdash; WiFi Beacon &middot; BLE 4.0/5.0 &middot; MAVLink &middot; MSP &middot; NMEA</p>
-<div class="version-bar" style="border-color:#f57c00;background:#fff3e0;color:#e65100">&#x26a0; BETA &mdash; v1.0.0-beta &middot; Core functionality complete, demo mode verified, FC hardware testing in progress</div>
+<p>Universal ASTM F3411-22a Open DroneID transmitter &mdash; WiFi Beacon &middot; BLE 4.0/5.0 &middot; MAVLink &middot; MSP &middot; NMEA &middot; Security hardened</p>
+<div class="version-bar" style="border-color:#f57c00;background:#fff3e0;color:#e65100">&#x26a0; BETA &mdash; v1.0.0-beta &middot; All 21 ESPsquawk fork fixes ported, security hardening complete, FC hardware testing in progress</div>
 <div class="gh-btns">
   <a class="github-button" href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID" data-show-count="true" data-size="large" aria-label="Star VOLTEKOVER/ESP_DRONE_REMOTEID on GitHub">Star</a>
   <a class="github-button" href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/fork" data-show-count="true" data-size="large" aria-label="Fork VOLTEKOVER/ESP_DRONE_REMOTEID on GitHub">Fork</a>
@@ -432,7 +432,7 @@ footer .fw-copy{font-size:.92em;color:var(--text-muted)}
 <div class="release-bar">
 <div class="rl-wrap">
 <div style="padding:12px 0;text-align:center">
-  <span style="font-size:.85em;color:#888">&#x1f6a7; Beta release v1.0.0-beta. All features implemented (demo mode, OTA with SHA-256, eFuse lock, 3 ESP32 targets). FC hardware verification in progress. See the <a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/blob/main/todolist/softwarestatus.md">software status</a> for details.</span>
+  <span style="font-size:.85em;color:#888">&#x1f6a7; Beta release v1.0.0-beta. All 21 ESPsquawk fork fixes ported. Security hardening: cJSON, rate limiting, SHA-256 + Ed25519 OTA verification, rid_security module. 3 ESP32 targets. FC hardware verification in progress. See the <a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/blob/main/todolist/softwarestatus.md">software status</a> for details.</span>
 </div>
 </div>
 </div>
@@ -494,19 +494,22 @@ footer .fw-copy{font-size:.92em;color:var(--text-muted)}
 <h4>What is ESP DRONE REMOTEID?</h4>
 <p>ESP DRONE REMOTEID is an open-source firmware being developed to transform any ESP32 microcontroller into a universal Remote ID transmitter targeting <b>ASTM F3411-22a</b> (USA) and <b>ASD-STAN prEN 4709-002</b> (EU) standards. It is designed to read GPS position data from a flight controller via UART and broadcast ASTM-standard Open Drone ID messages over WiFi Beacon (802.11) and Bluetooth Low Energy (BLE 4.0 and BLE 5.0 Coded PHY).</p>
 
-<div class="callout"><strong>&#x26a0; Development Status:</strong> The firmware code is feature-complete for v1.0.0-beta. A <b>built-in demo mode</b> simulates a GPS patrol over Rome (Colosseum) so you can test the full config UI, OTA flow, and telemetry dashboard without flight controller hardware. Actual flight controller (FC) hardware verification with MAVLink/MSP/NMEA is ongoing. See the <a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/blob/main/todolist/softwarestatus.md">software status</a> for the complete per-file analysis.</div>
+<div class="callout"><strong>&#x26a0; Development Status:</strong> The firmware code is feature-complete for v1.0.0-beta. All 21 ESPsquawk fork security and functionality fixes have been ported. A <b>built-in demo mode</b> simulates a GPS patrol over Rome (Colosseum) so you can test the full config UI, OTA flow, and telemetry dashboard without flight controller hardware. Actual flight controller (FC) hardware verification with MAVLink/MSP/NMEA is ongoing. See the <a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/blob/main/todolist/softwarestatus.md">software status</a> for the complete per-file analysis.</div>
 
 <h4>Implemented Features</h4>
 <ul>
 <li><b>Triple protocol input:</b> MAVLink (ArduPilot), MSP (Betaflight/iNAV), NMEA 0183 parsers</li>
 <li><b>Automatic protocol detection</b> on boot &mdash; no manual switching needed</li>
-<li><b>Dual radio broadcast:</b> WiFi Beacon (802.11) + WiFi NAN + BLE 4.0 + BLE 5.0 Long Range Coded PHY</li>
+<li><b>Dual radio broadcast:</b> WiFi Beacon (802.11) + WiFi NAN + BLE 4.0 + BLE 5.0 Long Range Coded PHY (dual instances)</li>
 <li><b>Built-in demo mode</b> &mdash; GPS patrol simulation for testing without FC hardware</li>
 <li><b>Built-in WiFi Access Point</b> with web configuration at 192.168.4.1</li>
-<li><b>Over-the-Air (OTA) updates</b> with mandatory SHA-256 checksum validation</li>
-<li><b>Security lock levels:</b> level 0 (open), level 1 (signed commands), level 2 (eFuse permanent)</li>
+<li><b>Over-the-Air (OTA) updates</b> with client-side SHA-256 + Ed25519 signature verification</li>
+<li><b>Security hardening:</b> cJSON parser, rate limiting (10 fails/60s), strncpy null-termination, PSA Crypto init</li>
+<li><b>Shared security module:</b> <code>rid_security.c/h</code> for SHA-256 + Ed25519 verification</li>
+<li><b>Takeoff location capture:</b> first 3D GPS fix stored as operator reference position</li>
+<li><b>Security lock levels:</b> level 0 (open), level 1 (Ed25519 signed commands), level 2 (eFuse permanent)</li>
 <li><b>eFuse permanent lock:</b> one-time irreversible level 2 burn with "RID!" magic</li>
-<li><b>26 configurable parameters</b> matching ArduRemoteID feature set</li>
+<li><b>50+ configurable parameters</b> via web UI (identity, transmission, WiFi AP, security, lighting)</li>
 <li><b>Browser-based flashing</b> via WebSerial &mdash; no toolchain needed</li>
 <li><b>3 ESP32 targets</b> via CI: ESP32, ESP32-S3, ESP32-C6</li>
 </ul>
@@ -533,8 +536,8 @@ footer .fw-copy{font-size:.92em;color:var(--text-muted)}
 <tr><td>UART</td><td>UART2 (GPIO16 RX default), baud 9600-921600</td></tr>
 <tr><td>Protocols</td><td>MAVLink v1/v2 (ardupilotmega), MSP v1, NMEA 0183</td></tr>
 <tr><td>Config</td><td>WiFi AP + REST API on port 80</td></tr>
-<tr><td>Persistence</td><td>NVS flash memory (17 keys, 26 params)</td></tr>
-<tr><td>Security</td><td>3 lock levels (0=open, 1=signed, 2=eFuse permanent), OTA SHA-256</td></tr>
+<tr><td>Persistence</td><td>NVS flash memory (17 keys, 50+ params)</td></tr>
+<tr><td>Security</td><td>3 lock levels (0=open, 1=Ed25519 signed, 2=eFuse permanent), OTA SHA-256 + Ed25519, cJSON, rate limiting</td></tr>
 <tr><td>Power</td><td>5V via USB or FC BEC (~150 mA)</td></tr>
 </table>
 

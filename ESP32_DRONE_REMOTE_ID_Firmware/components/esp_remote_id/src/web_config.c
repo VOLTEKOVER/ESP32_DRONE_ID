@@ -19,6 +19,7 @@
 #include "esp_efuse.h"
 #include "led_status.h"
 #include "cJSON.h"
+#include "rid_security.h"
 
 #define TAG "WEB_CFG"
 #define BUF_SIZE 4096
@@ -132,13 +133,13 @@ static void apply_json(rid_config_t *cfg, const char *json)
     cJSON *item;
 
     item = cJSON_GetObjectItem(root, "uas_id");
-    if (cJSON_IsString(item)) strncpy(cfg->uas_id, item->valuestring, ESP_RID_MAX_STR_LEN);
+    if (cJSON_IsString(item)) { strncpy(cfg->uas_id, item->valuestring, ESP_RID_MAX_STR_LEN); cfg->uas_id[ESP_RID_MAX_STR_LEN] = '\0'; }
     item = cJSON_GetObjectItem(root, "operator_id");
-    if (cJSON_IsString(item)) strncpy(cfg->operator_id, item->valuestring, ESP_RID_MAX_STR_LEN);
+    if (cJSON_IsString(item)) { strncpy(cfg->operator_id, item->valuestring, ESP_RID_MAX_STR_LEN); cfg->operator_id[ESP_RID_MAX_STR_LEN] = '\0'; }
     item = cJSON_GetObjectItem(root, "self_id_text");
-    if (cJSON_IsString(item)) strncpy(cfg->self_id_text, item->valuestring, ESP_RID_MAX_STR_LEN);
+    if (cJSON_IsString(item)) { strncpy(cfg->self_id_text, item->valuestring, ESP_RID_MAX_STR_LEN); cfg->self_id_text[ESP_RID_MAX_STR_LEN] = '\0'; }
     item = cJSON_GetObjectItem(root, "uas_id_2");
-    if (cJSON_IsString(item)) strncpy(cfg->uas_id_2, item->valuestring, ESP_RID_MAX_STR_LEN);
+    if (cJSON_IsString(item)) { strncpy(cfg->uas_id_2, item->valuestring, ESP_RID_MAX_STR_LEN); cfg->uas_id_2[ESP_RID_MAX_STR_LEN] = '\0'; }
 
     item = cJSON_GetObjectItem(root, "id_type");
     if (cJSON_IsNumber(item)) cfg->id_type = (uint8_t)item->valueint;
@@ -168,7 +169,7 @@ static void apply_json(rid_config_t *cfg, const char *json)
     item = cJSON_GetObjectItem(root, "bcast_powerup");
     if (cJSON_IsNumber(item)) cfg->bcast_powerup = (uint8_t)item->valueint;
     item = cJSON_GetObjectItem(root, "options");
-    if (cJSON_IsNumber(item)) cfg->options = (uint8_t)item->valueint;
+    if (cJSON_IsNumber(item)) cfg->options = (uint16_t)item->valueint;
 
     item = cJSON_GetObjectItem(root, "lock_level");
     if (cJSON_IsNumber(item)) {
@@ -232,9 +233,9 @@ static void apply_json(rid_config_t *cfg, const char *json)
     if (cJSON_IsNumber(item)) cfg->operator_alt = (float)item->valuedouble;
 
     item = cJSON_GetObjectItem(root, "wifi_ssid");
-    if (cJSON_IsString(item)) strncpy(cfg->wifi_ssid, item->valuestring, ESP_RID_MAX_STR_LEN);
+    if (cJSON_IsString(item)) { strncpy(cfg->wifi_ssid, item->valuestring, ESP_RID_MAX_STR_LEN); cfg->wifi_ssid[ESP_RID_MAX_STR_LEN] = '\0'; }
     item = cJSON_GetObjectItem(root, "wifi_password");
-    if (cJSON_IsString(item)) strncpy(cfg->wifi_password, item->valuestring, ESP_RID_MAX_STR_LEN);
+    if (cJSON_IsString(item)) { strncpy(cfg->wifi_password, item->valuestring, ESP_RID_MAX_STR_LEN); cfg->wifi_password[ESP_RID_MAX_STR_LEN] = '\0'; }
 
     item = cJSON_GetObjectItem(root, "ws2812_gpio");
     if (cJSON_IsNumber(item)) cfg->ws2812_gpio = (int8_t)item->valueint;
@@ -271,13 +272,13 @@ static void apply_json(rid_config_t *cfg, const char *json)
     if (cJSON_IsNumber(item) && item->valueint >= 0) cfg->start_delay_ms = (uint32_t)item->valueint;
 
     item = cJSON_GetObjectItem(root, "auth_private_key");
-    if (cJSON_IsString(item)) strncpy(cfg->auth_private_key, item->valuestring, sizeof(cfg->auth_private_key) - 1);
+    if (cJSON_IsString(item)) { strncpy(cfg->auth_private_key, item->valuestring, sizeof(cfg->auth_private_key) - 1); cfg->auth_private_key[sizeof(cfg->auth_private_key) - 1] = '\0'; }
 
     char kname[16];
     for (int i = 1; i <= ESP_RID_NUM_KEYS; i++) {
         snprintf(kname, sizeof(kname), "public_key_%d", i);
         item = cJSON_GetObjectItem(root, kname);
-        if (cJSON_IsString(item)) strncpy(cfg->public_keys[i - 1], item->valuestring, ESP_RID_MAX_KEY_LEN);
+        if (cJSON_IsString(item)) { strncpy(cfg->public_keys[i - 1], item->valuestring, ESP_RID_MAX_KEY_LEN); cfg->public_keys[i - 1][ESP_RID_MAX_KEY_LEN] = '\0'; }
     }
 
     cJSON_Delete(root);
@@ -343,6 +344,7 @@ static void state_to_json(const rid_state_t *s, char *buf, size_t sz)
         "\"alt\":%.1f,\"speed\":%.1f,\"heading\":%d,\"satellites\":%u,\"fix_type\":%u,"
         "\"tx_total\":%lu,\"tx_wifi_bcn\":%lu,\"tx_wifi_nan\":%lu,"
         "\"tx_ble4\":%lu,\"tx_ble5\":%lu,"
+        "\"takeoff_captured\":%s,\"takeoff_lat\":%.6f,\"takeoff_lon\":%.6f,\"takeoff_alt\":%.1f,"
         "\"uptime_ms\":%lu"
         "}",
         ESP_RID_VERSION,
@@ -353,111 +355,14 @@ static void state_to_json(const rid_state_t *s, char *buf, size_t sz)
         (unsigned long)s->transmissions_count,
         (unsigned long)s->wifi_bcn_count, (unsigned long)s->wifi_nan_count,
         (unsigned long)s->ble4_count, (unsigned long)s->ble5_count,
+        s->takeoff_captured ? "true" : "false",
+        s->takeoff_lat, s->takeoff_lon, (double)s->takeoff_alt,
         (unsigned long)s->last_update_ms);
-}
-
-static const char b64_tab[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-
-static int b64_decode(const char *in, size_t in_len, uint8_t *out, size_t out_size)
-{
-    int len = 0;
-    uint8_t buf[4];
-    int buf_i = 0;
-    for (size_t i = 0; i < in_len && in[i] != '='; i++) {
-        char c = in[i];
-        const char *p = strchr(b64_tab, c);
-        if (!p) continue;
-        buf[buf_i++] = (uint8_t)(p - b64_tab);
-        if (buf_i == 4) {
-            if (len >= (int)out_size) return -1;
-            out[len++] = (buf[0] << 2) | (buf[1] >> 4);
-            if (len >= (int)out_size) return -1;
-            out[len++] = (buf[1] << 4) | (buf[2] >> 2);
-            if (len >= (int)out_size) return -1;
-            out[len++] = (buf[2] << 6) | buf[3];
-            buf_i = 0;
-        }
-    }
-    if (buf_i >= 2) {
-        if (len >= (int)out_size) return -1;
-        out[len++] = (buf[0] << 2) | (buf[1] >> 4);
-    }
-    if (buf_i >= 3) {
-        if (len >= (int)out_size) return -1;
-        out[len++] = (buf[1] << 4) | (buf[2] >> 2);
-    }
-    return len;
 }
 
 static bool verify_signed_body(const char *body, const char *sig_b64, const rid_config_t *cfg)
 {
-    if (!body || !sig_b64 || !*sig_b64 || !cfg) return false;
-
-    size_t b64_len = strlen(sig_b64);
-    size_t sig_max = (b64_len * 3) / 4 + 4;
-    uint8_t *sig = (uint8_t *)malloc(sig_max);
-    if (!sig) return false;
-
-    int sig_len = b64_decode(sig_b64, b64_len, sig, sig_max);
-    if (sig_len <= 0) { free(sig); return false; }
-
-    uint8_t hash[32];
-    size_t hash_len;
-    if (psa_hash_compute(PSA_ALG_SHA_256, (const uint8_t *)body, strlen(body),
-                         hash, sizeof(hash), &hash_len) != PSA_SUCCESS) {
-        free(sig);
-        return false;
-    }
-
-    bool verified = false;
-    for (int i = 0; i < ESP_RID_NUM_KEYS; i++) {
-        const char *key_str = cfg->public_keys[i];
-        if (!key_str || !*key_str) continue;
-
-        mbedtls_pk_context pk;
-        mbedtls_pk_init(&pk);
-
-        int ret;
-        size_t key_len = strlen(key_str);
-
-        /* Try as PEM or DER first */
-        ret = mbedtls_pk_parse_public_key(&pk, (const uint8_t *)key_str, key_len);
-        if (ret != 0) {
-            /* Try after stripping PUBLIC_KEYV1: prefix */
-            const char *prefix = "PUBLIC_KEYV1:";
-            size_t plen = strlen(prefix);
-            if (key_len > plen && strncasecmp(key_str, prefix, plen) == 0) {
-                const char *payload = key_str + plen;
-                size_t payload_len = key_len - plen;
-                uint8_t *key_bin = (uint8_t *)malloc(payload_len);
-                if (key_bin) {
-                    int key_bin_len = b64_decode(payload, payload_len, key_bin, payload_len);
-                    if (key_bin_len > 0) {
-                        mbedtls_pk_free(&pk);
-                        mbedtls_pk_init(&pk);
-                        ret = mbedtls_pk_parse_public_key(&pk, key_bin, key_bin_len);
-                    }
-                    free(key_bin);
-                }
-            }
-        }
-
-        if (ret != 0) {
-            mbedtls_pk_free(&pk);
-            continue;
-        }
-
-        ret = mbedtls_pk_verify(&pk, MBEDTLS_MD_SHA256, hash, hash_len, sig, sig_len);
-        mbedtls_pk_free(&pk);
-
-        if (ret == 0) {
-            verified = true;
-            break;
-        }
-    }
-
-    free(sig);
-    return verified;
+    return rid_security_verify_signed_body(body, sig_b64, cfg);
 }
 
 static esp_err_t handle_get_config(httpd_req_t *req)
@@ -565,35 +470,14 @@ static esp_err_t handle_factory_reset(httpd_req_t *req)
     return ESP_OK;
 }
 
-static const char hex_chars[] = "0123456789abcdef";
-
 static void bytes_to_hex(const uint8_t *bytes, size_t len, char *out)
 {
-    for (size_t i = 0; i < len; i++) {
-        out[i * 2]     = hex_chars[(bytes[i] >> 4) & 0xF];
-        out[i * 2 + 1] = hex_chars[bytes[i] & 0xF];
-    }
-    out[len * 2] = '\0';
+    rid_security_bytes_to_hex(bytes, len, out);
 }
 
 static bool hex_to_bytes(const char *hex, uint8_t *out, size_t out_len)
 {
-    size_t hex_len = strlen(hex);
-    if (hex_len != out_len * 2) return false;
-    for (size_t i = 0; i < out_len; i++) {
-        char hi = hex[i * 2], lo = hex[i * 2 + 1];
-        uint8_t b = 0;
-        if (hi >= '0' && hi <= '9') b = (hi - '0') << 4;
-        else if (hi >= 'a' && hi <= 'f') b = (hi - 'a' + 10) << 4;
-        else if (hi >= 'A' && hi <= 'F') b = (hi - 'A' + 10) << 4;
-        else return false;
-        if (lo >= '0' && lo <= '9') b |= (lo - '0');
-        else if (lo >= 'a' && lo <= 'f') b |= (lo - 'a' + 10);
-        else if (lo >= 'A' && lo <= 'F') b |= (lo - 'A' + 10);
-        else return false;
-        out[i] = b;
-    }
-    return true;
+    return rid_security_hex_to_bytes(hex, out, out_len);
 }
 
 static esp_err_t handle_ota(httpd_req_t *req)

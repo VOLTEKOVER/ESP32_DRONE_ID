@@ -432,8 +432,8 @@ footer .fw-copy{font-size:.92em;color:var(--text-muted)}
 <div class="hero">
 <img class="logo-hero" src="images/logo.svg" alt="ESP DRONE REMOTEID">
 <h1>ESP DRONE REMOTEID <span style="font-size:.5em;color:#c62828;font-weight:700">[BETA]</span></h1>
-<p>Universal ASTM F3411-22a Open DroneID transmitter &mdash; WiFi Beacon &middot; BLE 4.0/5.0 &middot; MAVLink &middot; MSP &middot; NMEA</p>
-<div class="version-bar" style="border-color:#f57c00;background:#fff3e0;color:#e65100">&#x26a0; BETA &mdash; v1.0.0-beta &middot; Core functionality complete, demo mode verified, FC hardware testing in progress</div>
+<p>Universal ASTM F3411-22a Open DroneID transmitter &mdash; WiFi Beacon &middot; BLE 4.0/5.0 &middot; MAVLink &middot; MSP &middot; NMEA &middot; Security hardened</p>
+<div class="version-bar" style="border-color:#f57c00;background:#fff3e0;color:#e65100">&#x26a0; BETA &mdash; v1.0.0-beta &middot; All 21 ESPsquawk fork fixes ported, security hardening complete, FC hardware testing in progress</div>
 <div class="gh-btns">
   <a class="github-button" href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID" data-show-count="true" data-size="large" aria-label="Star VOLTEKOVER/ESP_DRONE_REMOTEID on GitHub">Star</a>
   <a class="github-button" href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/fork" data-show-count="true" data-size="large" aria-label="Fork VOLTEKOVER/ESP_DRONE_REMOTEID on GitHub">Fork</a>
@@ -459,7 +459,7 @@ footer .fw-copy{font-size:.92em;color:var(--text-muted)}
 <div class="release-bar">
 <div class="rl-wrap">
 <div style="padding:12px 0;text-align:center">
-  <span style="font-size:.85em;color:#888">&#x1f6a7; Beta release v1.0.0-beta. All features implemented (demo mode, OTA with SHA-256, eFuse lock, 3 ESP32 targets). FC hardware verification in progress. See the <a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/blob/main/todolist/softwarestatus.md">software status</a> for details.</span>
+  <span style="font-size:.85em;color:#888">&#x1f6a7; Beta release v1.0.0-beta. All 21 ESPsquawk fork fixes ported. Security hardening: cJSON, rate limiting, SHA-256 + Ed25519 OTA verification, rid_security module. 3 ESP32 targets. FC hardware verification in progress. See the <a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/blob/main/todolist/softwarestatus.md">software status</a> for details.</span>
 </div>
 </div>
 </div>
@@ -858,7 +858,8 @@ idf.py -p COM3 monitor</pre>
 &#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; rid_patrol.c          # Demo GPS patrol simulation
 &#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; rid_auth.c            # Ed25519 signing (ASTM F3411-22a)
 &#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; rid_kalman.c          # 1D&#xd7;3 Kalman filter (lat/lon/alt)
-&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; rid_ota.c             # OTA update server (SHA-256 verify)
+&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; rid_ota.c             # OTA update server (SHA-256 + Ed25519)
+&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; rid_security.c        # Shared verification (SHA-256, Ed25519, hex)
 &#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; rid_dronecan.c        # DroneCAN CAN bus (TWAI decode)
 &#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; rid_lighting.c        # GPIO lighting (5-ch pattern)
 &#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; rid_mavlink_usb.c     # MAVLink over USB serial
@@ -1002,10 +1003,10 @@ idf.py -p COM3 monitor</pre>
 <span class="arrow">&#x25bc;</span>
 </div>
 <div class="gs-body">
-<div class="callout"><strong>&#x1f4a1; Status:</strong> OTA is implemented with mandatory SHA-256 checksum validation via <code>X-Expected-SHA256</code> header. The firmware has a dual-OTA partition scheme (factory + ota_0) for safe rollback. Tested in demo mode; hardware OTA verification in progress.</div>
+<div class="callout"><strong>&#x1f4a1; Status:</strong> OTA is implemented with client-side SHA-256 verification (Web Crypto API) and server-side Ed25519 signature verification (lock level &ge; 1). The web UI computes a SHA-256 hash of the firmware binary before upload and sends it via the <code>X-Expected-SHA256</code> header. The <code>rid_security.c</code> module handles all cryptographic verification. Dual-OTA partition scheme (factory + ota_0) ensures safe rollback.</div>
 
 <h4>Over-the-Air Firmware Update</h4>
-<p>The ESP DRONE REMOTEID aims to support updating firmware wirelessly through the web interface. No USB cable would be needed once the initial firmware is flashed.</p>
+<p>The ESP DRONE REMOTEID supports updating firmware wirelessly through the web interface. No USB cable is needed once the initial firmware is flashed. The upload process includes cryptographic verification to prevent corrupt or malicious firmware.</p>
 
 <h4>Prerequisites</h4>
 <ul>
@@ -1020,9 +1021,18 @@ idf.py -p COM3 monitor</pre>
 <li>Open the Web UI at <code>http://192.168.4.1</code>.</li>
 <li>Scroll to the <b>Firmware Update</b> section.</li>
 <li>Click <b>Select .bin file</b> and choose your firmware binary.</li>
+<li>The browser computes a <b>SHA-256 hash</b> of the file (via Web Crypto API) and sends it as the <code>X-Expected-SHA256</code> header.</li>
 <li>Click <b>Upload Firmware</b>.</li>
 <li>Wait for the upload to complete (~30 seconds for a 1 MB firmware). The progress text will update.</li>
+<li>The server verifies the SHA-256 hash matches the received binary. If lock level &ge; 1, an Ed25519 signature (<code>X-Signature</code> header) is also required.</li>
 <li>On success, the device reboots automatically into the new firmware.</li>
+</ol>
+
+<h4>Verification Flow</h4>
+<p>The OTA update uses a two-layer verification process implemented in <code>rid_security.c</code>:</p>
+<ol>
+<li><b>SHA-256 integrity check:</b> The browser computes SHA-256 of the firmware binary before upload. The server independently computes SHA-256 of the received data and compares it to the <code>X-Expected-SHA256</code> header. Mismatches are rejected immediately.</li>
+<li><b>Ed25519 signature (lock level &ge; 1):</b> When lock level is 1 or 2, an <code>X-Signature</code> header containing an Ed25519 signature over the SHA-256 hash must be provided. The signature is verified against the configured public keys.</li>
 </ol>
 
 <h4>How It Works</h4>
@@ -1031,37 +1041,41 @@ idf.py -p COM3 monitor</pre>
 <div class="guide-diagram">
 <pre class="mermaid">
 flowchart LR
-  Browser["Browser / cURL<br/>HTTP POST /ota<br/>firmware.bin"]
+  Browser["Browser<br/>HTTP POST /ota<br/>firmware.bin<br/>X-Expected-SHA256"]
 
-  Server["ESP32 Web Server<br/>Receives binary<br/>SHA-256 validation<br/>Writes to OTA partition<br/>Sets boot partition<br/>esp_restart()"]
+  Server["ESP32 Web Server<br/>SHA-256 verify<br/>Ed25519 verify (L1+)<br/>Writes to OTA partition<br/>Sets boot partition<br/>esp_restart()"]
 
   subgraph Flash["Flash Memory — Dual-OTA Scheme"]
     direction TB
     Boot["Bootloader"]
-    OTA0["OTA_0 (active)<br/>▶ Running"]
-    OTA1["OTA_1 (new)<br/>⬆ Writing..."]
+    OTA0["OTA_0 (active)"]
+    OTA1["OTA_1 (new)"]
     NVS["NVS / Config"]
   end
 
   Rollback["Rollback:<br/>boot from OTA_0"]
 
-  Browser -->|Upload| Server
+  Browser -->|Upload + hash| Server
   Server -->|Write firmware| OTA1
   OTA1 -.->|On failure| Rollback
 </pre>
-<div class="diag-cap">OTA update flow: binary uploaded from browser → written to inactive OTA partition → device reboots into new firmware. Failed updates automatically roll back.</div>
+<div class="diag-cap">OTA update flow: browser computes SHA-256 → sent as X-Expected-SHA256 header → server verifies hash + optional Ed25519 signature → writes to inactive partition → reboots. Failed updates roll back automatically.</div>
 </div>
 
 <ol>
 <li>The web server receives the firmware binary in an HTTP POST to <code>/ota</code>.</li>
-<li>It writes the binary to the OTA partition (the inactive slot in a dual-OTA partition scheme).</li>
-<li>On success, it sets the OTA partition as the boot partition and calls <code>esp_restart()</code>.</li>
+<li>It verifies the SHA-256 hash of the received data against the <code>X-Expected-SHA256</code> header using the <code>rid_security.c</code> module.</li>
+<li>If lock level &ge; 1, it also verifies the Ed25519 signature against configured public keys.</li>
+<li>On success, it writes the binary to the OTA partition (the inactive slot in a dual-OTA partition scheme).</li>
+<li>It sets the OTA partition as the boot partition and calls <code>esp_restart()</code>.</li>
 <li>The ESP32 boots from the new firmware. If the update fails, it falls back to the previous firmware.</li>
 </ol>
 
 <h4>Safety</h4>
 <ul>
 <li>The ESP32 has two OTA partitions and one factory partition. If an OTA update fails, the device will fall back to the previous firmware.</li>
+<li>SHA-256 verification prevents corrupt or incomplete firmware from being applied.</li>
+<li>Ed25519 signature verification (lock level &ge; 1) prevents unauthorized firmware changes.</li>
 <li>Always use a firmware built for your specific ESP32 target. Flashing an ESP32-S3 binary to an ESP32 will fail.</li>
 <li>Keep the device powered during the update. Do not disconnect or reset.</li>
 <li>If the update fails, you can always recover via USB serial flashing.</li>
@@ -1071,6 +1085,8 @@ flowchart LR
 <table>
 <tr><th>Problem</th><th>Solution</th></tr>
 <tr><td>"OTA begin failed"</td><td>The OTA partition may be corrupted. Reflash via USB and try again.</td></tr>
+<tr><td>"SHA-256 mismatch"</td><td>The computed hash does not match the uploaded binary. Re-select the file and try again. Ensure the file was not corrupted during download.</td></tr>
+<tr><td>"Signature verification failed"</td><td>Lock level &ge; 1 is active. Ensure you provide a valid Ed25519 signature in the <code>X-Signature</code> header, or lower the lock level to 0.</td></tr>
 <tr><td>Upload stalls</td><td>Move closer to the ESP32 for better WiFi signal, or use USB flashing.</td></tr>
 <tr><td>Device does not reboot</td><td>Power-cycle the device manually.</td></tr>
 <tr><td>Firmware does not work after OTA</td><td>The binary may be for the wrong target. Flash the correct binary via USB.</td></tr>
@@ -1085,25 +1101,38 @@ flowchart LR
 <span class="arrow">&#x25bc;</span>
 </div>
 <div class="gs-body">
-<div class="callout"><strong>&#x1f4a1; Status:</strong> All three lock levels are implemented. Level 2 burns "RID!" magic to EFUSE_BLK3 and is one-time irreversible. Level 1 enforces ECDSA P-256 signature verification via the <code>X-Signature</code> header. Use with caution.</div>
+<div class="callout"><strong>&#x1f4a1; Status:</strong> All three lock levels are implemented. Level 2 burns "RID!" magic to EFUSE_BLK3 and is one-time irreversible. Level 1 enforces Ed25519 signature verification via the <code>X-Signature</code> header. Shared verification logic is in <code>rid_security.c/h</code> (SHA-256 + Ed25519 + hex utilities). Rate limiting protects against brute-force attacks (10 fails per 60s sliding window).</div>
 
 <h4>Lock Levels</h4>
 <p>The firmware implements three lock levels to prevent unauthorized configuration changes:</p>
 <table>
 <tr><th>Level</th><th>Name</th><th>Effect</th></tr>
 <tr><td>0</td><td>Normal</td><td>All configuration changes are allowed via web UI and REST API. No authentication required.</td></tr>
-<tr><td>1</td><td>Locked</td><td>Configuration changes require signed commands authenticated with a configured public key. Unsigned POST requests to <code>/api/config</code> are rejected.</td></tr>
+<tr><td>1</td><td>Locked</td><td>Configuration changes require Ed25519-signed commands authenticated with a configured public key. Unsigned POST requests to <code>/api/config</code> are rejected. OTA updates require <code>X-Signature</code> header.</td></tr>
 <tr><td>2</td><td>eFuse Permanent</td><td>Same as Level 1, but the lock level is burned into eFuse and cannot be changed. This is an <b>irreversible</b> operation. Only use when the device is in its final deployment configuration.</td></tr>
 </table>
 
+<h4>Security Hardening (ESPsquawk Fixes)</h4>
+<p>The following security improvements were ported from the ESPsquawk fork and are now part of the firmware:</p>
+<table>
+<tr><th>Fix</th><th>File</th><th>Description</th></tr>
+<tr><td>cJSON parser</td><td><code>web_config.c</code></td><td>All web API JSON inputs parsed with cJSON instead of naive <code>strstr()</code> — prevents injection attacks</td></tr>
+<tr><td>Rate limiting</td><td><code>web_config.c</code></td><td>Sliding window: 10 failed signature attempts per 60 seconds, then lockout</td></tr>
+<tr><td>strncpy null-term</td><td><code>web_config.c</code></td><td>All 9 string fields explicitly null-terminated after <code>strncpy</code></td></tr>
+<tr><td>PSA Crypto init</td><td><code>main.c</code></td><td><code>psa_crypto_init()</code> called at boot for ESP-IDF v5+ crypto API</td></tr>
+<tr><td>Shared module</td><td><code>rid_security.c/h</code></td><td><code>verify_sha256()</code>, <code>verify_signed_body()</code>, <code>bytes_to_hex()</code>, <code>hex_to_bytes()</code></td></tr>
+<tr><td>Ed25519 bit check</td><td><code>rid_auth.c</code></td><td>Validates signature length is exactly 256 bits (32 bytes)</td></tr>
+<tr><td>OTA SHA-256</td><td><code>rid_ota.c</code></td><td>SHA-256 hash mandatory, Ed25519 signature required when lock level &ge; 1</td></tr>
+</table>
+
 <h4>Public Key Authentication</h4>
-<p>Up to 5 public keys can be configured (in PEM or raw base64 format). These keys are used to verify signed configuration commands when lock level 1 or 2 is active.</p>
+<p>Up to 5 public keys can be configured (in PEM or raw base64 format). These keys are used to verify Ed25519-signed configuration commands when lock level 1 or 2 is active.</p>
 <p>To generate a key pair:</p>
-<pre># Generate private key
-openssl ecparam -name prime256v1 -genkey -out private.pem
+<pre># Generate Ed25519 private key
+openssl genpkey -algorithm ed25519 -out private.pem
 
 # Extract public key
-openssl ec -in private.pem -pubout -out public.pem
+openssl pkey -in private.pem -pubout -out public.pem
 
 # The public key content (base64) goes into the public_key fields
 cat public.pem</pre>
@@ -1112,9 +1141,9 @@ cat public.pem</pre>
 <p>When lock level &ge; 1, any POST to <code>/api/config</code> must include a signature header:</p>
 <pre>curl -X POST http://192.168.4.1/api/config \
   -H "Content-Type: application/json" \
-  -H "X-Signature: &lt;base64-signature&gt;" \
+  -H "X-Signature: &lt;base64-ed25519-signature&gt;" \
   -d '{"uas_id":"RID-12345678"}'</pre>
-<p>The signature is an ECDSA signature over the SHA-256 hash of the JSON body, using the P-256 (secp256r1) curve.</p>
+<p>The signature is an Ed25519 signature over the SHA-256 hash of the JSON body. Failed signature attempts are rate-limited (10 per 60s sliding window).</p>
 
 <h4>WiFi Security</h4>
 <p>The configuration access point can be password-protected. Set a WiFi password in the Web UI to prevent unauthorized access to the configuration interface. The password is stored in NVS and can be up to 20 characters.</p>
@@ -1436,6 +1465,8 @@ sudo ip link set wlan0 up</pre>
 <li>Keep the ESP32 powered via USB during OTA (battery power may drop during the erase/write cycle).</li>
 <li>Ensure the firmware <code>.bin</code> is built for the correct ESP32 target.</li>
 <li>The OTA partition must be at least as large as the firmware binary. Default partition table supports ~1.5 MB firmware.</li>
+<li>"SHA-256 mismatch" — re-select the firmware file and try again. The file may have been corrupted during download.</li>
+<li>"Signature verification failed" — lock level &ge; 1 is active. Lower lock level to 0 for unsigned OTA, or provide a valid Ed25519 signature.</li>
 </ul>
 </div>
 </div>

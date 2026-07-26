@@ -23,6 +23,7 @@ idf_component_register(
         "src/rid_lighting.c"
         "src/rid_dronecan.c"
         "src/rid_mavlink_usb.c"
+        "src/rid_security.c"
     INCLUDE_DIRS
         "include"
         "mavlink"

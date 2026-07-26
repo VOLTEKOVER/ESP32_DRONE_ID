@@ -145,9 +145,6 @@ void esp_rid_init(void)
 
     memset(&g_state, 0, sizeof(rid_state_t));
 
-    /* Apply BLE TX power (default 9 dBm) */
-    ble_tx_set_power(9);
-
     /* Startup delay */
     if (g_config.start_delay_ms > 0) {
         ESP_LOGI(TAG, "Startup delay %lu ms", (unsigned long)g_config.start_delay_ms);
@@ -162,8 +159,11 @@ void esp_rid_init(void)
 
     esp_netif_init();
 
-    wifi_tx_init();
+    wifi_tx_init(&g_config);
     ble_tx_init();
+
+    /* Apply BLE TX power after BLE controller is initialized */
+    ble_tx_set_power(9);
 
     /* MAVLink bidirectional link */
     if (g_config.options & (RID_OPT_MAVLINK_ARM_STATUS | RID_OPT_MAVLINK_OP_LOC_LOOP)) {
@@ -230,6 +230,8 @@ void esp_rid_set_config(const rid_config_t *config)
         mavlink_parser_set_sysid_filter(g_config.mavlink_sysid);
         led_status_reconfigure(g_config.led_r_gpio, g_config.led_g_gpio, g_config.led_b_gpio);
         led_ws2812_init(g_config.ws2812_gpio, g_config.ws2812_brightness);
+        ble_tx_set_power(g_config.ble4_power_dbm > 0 ? (int8_t)g_config.ble4_power_dbm : 9);
+        wifi_tx_reconfigure_ap(&g_config);
         xSemaphoreGive(g_lock);
     }
 }
@@ -477,6 +479,14 @@ static void rid_task(void *arg)
                     snprintf(g_state.identity.uas_id_2, sizeof(g_state.identity.uas_id_2), "%s", g_config.uas_id_2);
                     g_state.identity.id_type_2 = g_config.id_type_2;
                     g_state.identity.ua_type_2 = g_config.ua_type_2;
+                }
+
+                if (!g_state.takeoff_captured && gps_data.fix_type >= 3 &&
+                    gps_data.latitude != 0.0 && gps_data.longitude != 0.0) {
+                    g_state.takeoff_lat = gps_data.latitude;
+                    g_state.takeoff_lon = gps_data.longitude;
+                    g_state.takeoff_alt = gps_data.altitude;
+                    g_state.takeoff_captured = true;
                 }
 
                 /* Update operator location from MAVLink */

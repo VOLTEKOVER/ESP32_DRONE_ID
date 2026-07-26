@@ -21,6 +21,9 @@ static bool g_initialized = false;
 static uint8_t g_mac[6];
 static uint8_t g_message_counter = 0;
 static ODID_UAS_Data g_uas_data;
+static char g_ssid[33] = "ESP-RID";
+static uint8_t g_ssid_len = 7;
+static uint8_t g_channel = 6;
 
 
 static void generate_random_mac(uint8_t mac[6])
@@ -59,7 +62,7 @@ static ODID_Vertical_accuracy_t vert_acc_from_gps(uint8_t fix_type, uint8_t sate
     return ODID_VER_ACC_45_METER;
 }
 
-void wifi_tx_init(void)
+void wifi_tx_init(const rid_config_t *cfg)
 {
     if (g_initialized) return;
 
@@ -70,8 +73,8 @@ void wifi_tx_init(void)
 
     esp_netif_create_default_wifi_ap();
 
-    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-    ESP_ERROR_CHECK(esp_wifi_init(&cfg));
+    wifi_init_config_t wifi_cfg = WIFI_INIT_CONFIG_DEFAULT();
+    ESP_ERROR_CHECK(esp_wifi_init(&wifi_cfg));
 
     read_mac_from_efuse(g_mac);
     esp_base_mac_addr_set(g_mac);
@@ -79,26 +82,42 @@ void wifi_tx_init(void)
     ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_AP));
 
-    wifi_config_t ap_config = {
-        .ap = {
-            .ssid = "ESP-RID",
-            .ssid_len = 7,
-            .channel = 6,
-            .authmode = WIFI_AUTH_OPEN,
-            .max_connection = 4,
-            .beacon_interval = 100,
-        },
-    };
+    wifi_config_t ap_config = {0};
+    const char *ssid = (cfg && cfg->wifi_ssid[0] != '\0') ? cfg->wifi_ssid : "ESP-RID";
+    size_t ssid_len = strlen(ssid);
+    if (ssid_len > 32) ssid_len = 32;
+    memcpy(ap_config.ap.ssid, ssid, ssid_len);
+    ap_config.ap.ssid_len = ssid_len;
+    ap_config.ap.channel = (cfg && cfg->wifi_channel > 0) ? cfg->wifi_channel : 6;
+
+    if (cfg && cfg->wifi_password[0] != '\0') {
+        ap_config.ap.authmode = WIFI_AUTH_WPA2_PSK;
+        size_t pass_len = strlen(cfg->wifi_password);
+        if (pass_len > 63) pass_len = 63;
+        memcpy(ap_config.ap.password, cfg->wifi_password, pass_len);
+    } else {
+        ap_config.ap.authmode = WIFI_AUTH_OPEN;
+    }
+
+    ap_config.ap.max_connection = 4;
+    ap_config.ap.beacon_interval = 100;
+
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &ap_config));
     ESP_ERROR_CHECK(esp_wifi_start());
 
     esp_wifi_set_bandwidth(WIFI_IF_AP, WIFI_BW20);
-    esp_wifi_set_max_tx_power(80);
 
-    esp_wifi_set_promiscuous(true);
+    int8_t power_dbm = (cfg && cfg->wifi_power_dbm > 0) ? (int8_t)cfg->wifi_power_dbm : 8;
+    esp_wifi_set_max_tx_power(power_dbm * 4);
+
+    memcpy(g_ssid, ap_config.ap.ssid, ap_config.ap.ssid_len);
+    g_ssid[ap_config.ap.ssid_len] = '\0';
+    g_ssid_len = ap_config.ap.ssid_len;
+    g_channel = ap_config.ap.channel;
 
     g_initialized = true;
-    ESP_LOGI(TAG, "WiFi TX initialized, MAC: %02x:%02x:%02x:%02x:%02x:%02x",
+    ESP_LOGI(TAG, "WiFi TX initialized, SSID: %s, CH: %d, MAC: %02x:%02x:%02x:%02x:%02x:%02x",
+             ap_config.ap.ssid, ap_config.ap.channel,
              g_mac[0], g_mac[1], g_mac[2],
              g_mac[3], g_mac[4], g_mac[5]);
 }
@@ -106,6 +125,42 @@ void wifi_tx_init(void)
 void wifi_tx_get_mac(uint8_t mac[6])
 {
     memcpy(mac, g_mac, 6);
+}
+
+void wifi_tx_reconfigure_ap(const rid_config_t *cfg)
+{
+    if (!g_initialized || !cfg) return;
+
+    wifi_config_t ap_config = {0};
+    const char *ssid = (cfg->wifi_ssid[0] != '\0') ? cfg->wifi_ssid : "ESP-RID";
+    size_t ssid_len = strlen(ssid);
+    if (ssid_len > 32) ssid_len = 32;
+    memcpy(ap_config.ap.ssid, ssid, ssid_len);
+    ap_config.ap.ssid_len = ssid_len;
+    ap_config.ap.channel = (cfg->wifi_channel > 0) ? cfg->wifi_channel : 6;
+
+    if (cfg->wifi_password[0] != '\0') {
+        ap_config.ap.authmode = WIFI_AUTH_WPA2_PSK;
+        size_t pass_len = strlen(cfg->wifi_password);
+        if (pass_len > 63) pass_len = 63;
+        memcpy(ap_config.ap.password, cfg->wifi_password, pass_len);
+    } else {
+        ap_config.ap.authmode = WIFI_AUTH_OPEN;
+    }
+    ap_config.ap.max_connection = 4;
+    ap_config.ap.beacon_interval = 100;
+
+    esp_wifi_set_config(WIFI_IF_AP, &ap_config);
+
+    int8_t power_dbm = (cfg->wifi_power_dbm > 0) ? (int8_t)cfg->wifi_power_dbm : 8;
+    esp_wifi_set_max_tx_power(power_dbm * 4);
+
+    memcpy(g_ssid, ap_config.ap.ssid, ap_config.ap.ssid_len);
+    g_ssid[ap_config.ap.ssid_len] = '\0';
+    g_ssid_len = ap_config.ap.ssid_len;
+    g_channel = ap_config.ap.channel;
+
+    ESP_LOGI(TAG, "AP reconfigured: SSID=%s CH=%d", g_ssid, g_channel);
 }
 
 static void populate_uas_data(ODID_UAS_Data *d, rid_gps_data_t *gps, rid_identity_t *identity)
@@ -136,8 +191,8 @@ static void populate_uas_data(ODID_UAS_Data *d, rid_gps_data_t *gps, rid_identit
     d->Location.VertAccuracy = vert_acc_from_gps(gps->fix_type, gps->satellites);
 
     d->SystemValid = 1;
-    d->System.OperatorLatitude = (gps->operator_lat != 0.0) ? gps->operator_lat : gps->latitude;
-    d->System.OperatorLongitude = (gps->operator_lon != 0.0) ? gps->operator_lon : gps->longitude;
+    d->System.OperatorLatitude = gps->operator_lat;
+    d->System.OperatorLongitude = gps->operator_lon;
     d->System.AreaCount = 0;
     d->System.AreaRadius = 0;
 
@@ -161,7 +216,7 @@ bool wifi_tx_transmit(rid_gps_data_t *gps, rid_identity_t *identity)
     uint8_t counter = g_message_counter++;
     int length = odid_wifi_build_message_pack_beacon_frame(
         &g_uas_data, (char *)g_mac,
-        "ESP-RID", 7, 100, counter,
+        g_ssid, g_ssid_len, 100, counter,
         buffer, sizeof(buffer));
 
     if (length > 0) {

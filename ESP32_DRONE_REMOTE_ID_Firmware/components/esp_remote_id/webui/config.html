@@ -13,6 +13,7 @@
 :root{--bg:#121212;--card-bg:#1e1e1e;--card-border:#333;--txt:#e0e0e0;--txt-sec:#aaa;--txt-muted:#777;--line:#333;--hover:#2a2a2a;--input-bg:#2a2a2a;--input-border:#444;--shadow:rgba(0,0,0,.2);--accent:#fff}
 }
 [data-theme="dark"]{--bg:#121212;--card-bg:#1e1e1e;--card-border:#333;--txt:#e0e0e0;--txt-sec:#aaa;--txt-muted:#777;--line:#333;--hover:#2a2a2a;--input-bg:#2a2a2a;--input-border:#444;--shadow:rgba(0,0,0,.2);--accent:#fff}
+*,*::before,*::after{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{height:100dvh;overflow:hidden}
 html{background:var(--bg);background-image:radial-gradient(ellipse at 20% 50%,rgba(21,101,192,.04) 0%,transparent 50%),radial-gradient(ellipse at 80% 50%,rgba(46,125,50,.04) 0%,transparent 50%)}
@@ -1137,6 +1138,9 @@ var currentView = 'dashboard';
 
 function $(id){return document.getElementById(id)}
 
+function haptic(){try{navigator.vibrate(10)}catch(e){}}
+document.addEventListener('click',function(e){if(e.target.closest('button,.btn,.btn-sm,.btn-danger,.btn-save-all,.hdr-btn,.nav-item,.ota-zone,.chk label'))haptic()},true);
+
 /* ---------- View modes ---------- */
 function setView(v){
   currentView = v;
@@ -1623,16 +1627,27 @@ var f=$('fwfile').files[0]
 if(!f){showMsg('Select a .bin file first',1);return}
 var btn=$('ota-btn');
 btn.classList.add('loading');btn.disabled=true;
-$('ota_progress').textContent='Uploading... ('+(f.size/1024).toFixed(0)+' KB)'
+$('ota_progress').textContent='Computing hash...'
 var r=new FileReader()
 r.onload=function(e){
-fetch('/ota',{method:'POST',body:e.target.result,headers:{'Content-Type':'application/octet-stream'}})
-.then(r=>r.text()).then(t=>{
+var buf=e.target.result;
+var bytes=new Uint8Array(buf);
+var parts=[];
+for(var i=0;i<bytes.length;i+=65536){parts.push(bytes.subarray(i,i+65536))}
+Promise.all(parts.map(function(p){return crypto.subtle.digest('SHA-256',p)})).then(function(chunks){
+var total=new Uint8Array(0);
+for(var i=0;i<chunks.length;i++){
+var tmp=new Uint8Array(total.length+new Uint8Array(chunks[i]).length);
+tmp.set(total);tmp.set(new Uint8Array(chunks[i]),total.length);total=tmp;
+}
+var hex='';for(var i=0;i<total.length;i++){hex+=('0'+total[i].toString(16)).slice(-2)}
+$('ota_progress').textContent='Uploading... ('+(f.size/1024).toFixed(0)+' KB)'
+return fetch('/ota',{method:'POST',body:buf,headers:{'Content-Type':'application/octet-stream','X-Expected-SHA256':hex}})
+}).then(function(r){return r.text()}).then(function(t){
 $('ota_progress').textContent=t;
 showMsg('OTA complete, rebooting...');
 btn.classList.remove('loading');btn.disabled=false
-})
-.catch(function(e){
+}).catch(function(e){
 $('ota_progress').textContent='';
 showMsg('OTA failed: '+e.message,1);
 btn.classList.remove('loading');btn.disabled=false

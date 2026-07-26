@@ -7,6 +7,7 @@
 #include "esp_timer.h"
 #include "esp_efuse.h"
 #include "sdkconfig.h"
+#include "psa/crypto.h"
 
 #define TAG "MAIN"
 
@@ -99,6 +100,7 @@ static void print_splash(void)
 
 void app_main(void)
 {
+    psa_crypto_init();
     fix_mac_if_needed();
     esp_rid_init();
     esp_rid_start();

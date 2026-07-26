@@ -54,6 +54,16 @@ bool rid_auth_init(const char *pem_key)
         return false;
     }
 
+    /* Validate Ed25519 key bit-length (must be exactly 256 bits = 32 bytes) */
+    size_t key_bitlen = mbedtls_pk_get_bitlen(&g_pk);
+    if (key_bitlen != 256) {
+        ESP_LOGW(TAG, "Ed25519 key has invalid bit-length: %u (expected 256)", (unsigned)key_bitlen);
+        mbedtls_pk_free(&g_pk);
+        g_auth_enabled = false;
+        g_auth_initialized = true;
+        return false;
+    }
+
     g_auth_enabled = true;
     g_auth_initialized = true;
     ESP_LOGI(TAG, "Ed25519 auth initialized");

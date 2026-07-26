@@ -13,6 +13,8 @@
 #include "freertos/task.h"
 #include "rid_ota.h"
 #include "esp_remote_id.h"
+#include "rid_security.h"
+#include "psa/crypto.h"
 
 #define TAG "RID_OTA"
 
@@ -49,8 +51,46 @@ static esp_err_t ota_get_handler(httpd_req_t *req)
     return ESP_OK;
 }
 
+static rid_config_t *s_ota_cfg = NULL;
+
 static esp_err_t ota_update_handler(httpd_req_t *req)
 {
+    /* Read lock level */
+    int lock_level = 0;
+    if (s_ota_cfg) lock_level = s_ota_cfg->lock_level;
+
+    /* At lock_level >= 2, reject OTA from GPIO mode too */
+    if (lock_level >= 2) {
+        httpd_resp_set_type(req, "text/html");
+        httpd_resp_send(req, "<html><body><h1>OTA Rejected</h1><p>Device permanently locked.</p></body></html>", -1);
+        return ESP_OK;
+    }
+
+    /* Read X-Expected-SHA256 header (mandatory at every lock level) */
+    char expected_hex[65] = {0};
+    bool has_expected = false;
+    size_t hdr_len = httpd_req_get_hdr_value_len(req, "X-Expected-SHA256");
+    if (hdr_len > 0 && hdr_len <= 64) {
+        httpd_req_get_hdr_value_str(req, "X-Expected-SHA256", expected_hex, sizeof(expected_hex));
+        has_expected = true;
+    }
+
+    /* Read X-Signature header (required at lock_level >= 1) */
+    char sig_hdr[512] = {0};
+    bool has_sig = false;
+    size_t sig_hdr_len = httpd_req_get_hdr_value_len(req, "X-Signature");
+    if (sig_hdr_len > 0 && sig_hdr_len < sizeof(sig_hdr)) {
+        httpd_req_get_hdr_value_str(req, "X-Signature", sig_hdr, sizeof(sig_hdr));
+        has_sig = true;
+    }
+
+    /* Require signature at lock_level >= 1 */
+    if (lock_level >= 1 && !has_sig) {
+        httpd_resp_set_type(req, "text/html");
+        httpd_resp_send(req, "<html><body><h1>OTA Rejected</h1><p>Signature required at lock level >= 1.</p></body></html>", -1);
+        return ESP_OK;
+    }
+
     esp_ota_handle_t ota_handle = 0;
     const esp_partition_t *update_part = esp_ota_get_next_update_partition(NULL);
     if (!update_part) {
@@ -64,6 +104,23 @@ static esp_err_t ota_update_handler(httpd_req_t *req)
         return ESP_FAIL;
     }
 
+    /* Compute running SHA-256 hash */
+    psa_hash_operation_t sha_ctx = psa_hash_operation_init();
+    if (psa_hash_setup(&sha_ctx, PSA_ALG_SHA_256) != PSA_SUCCESS) {
+        esp_ota_abort(ota_handle);
+        httpd_resp_send_500(req);
+        return ESP_FAIL;
+    }
+
+    /* Also buffer entire body for signature verification if needed */
+    uint8_t *body_buf = NULL;
+    size_t body_len = 0;
+    size_t body_cap = 0;
+    if (lock_level >= 1) {
+        body_cap = req->content_len > 0 ? req->content_len : 512 * 1024;
+        body_buf = (uint8_t *)malloc(body_cap);
+    }
+
     char buf[OTA_BUF_SIZE];
     int remaining = req->content_len;
     bool success = false;
@@ -74,27 +131,95 @@ static esp_err_t ota_update_handler(httpd_req_t *req)
             if (recv == HTTPD_SOCK_ERR_TIMEOUT) continue;
             break;
         }
-        if (esp_ota_write(ota_handle, buf, recv) != ESP_OK) break;
+
+        if (psa_hash_update(&sha_ctx, (const unsigned char *)buf, recv) != PSA_SUCCESS) {
+            psa_hash_abort(&sha_ctx);
+            if (body_buf) free(body_buf);
+            esp_ota_abort(ota_handle);
+            httpd_resp_send_500(req);
+            return ESP_FAIL;
+        }
+
+        if (body_buf && body_len + recv <= body_cap) {
+            memcpy(body_buf + body_len, buf, recv);
+            body_len += recv;
+        }
+
+        if (esp_ota_write(ota_handle, buf, recv) != ESP_OK) {
+            psa_hash_abort(&sha_ctx);
+            if (body_buf) free(body_buf);
+            esp_ota_abort(ota_handle);
+            httpd_resp_send_500(req);
+            return ESP_FAIL;
+        }
         remaining -= recv;
     }
 
-    if (remaining <= 0) {
-        esp_ota_end(ota_handle);
-        if (esp_ota_set_boot_partition(update_part) == ESP_OK) {
-            success = true;
-        }
-    } else {
+    /* Verify SHA-256 hash (mandatory at every lock level) */
+    uint8_t hash[32];
+    size_t hash_len;
+    if (psa_hash_finish(&sha_ctx, hash, sizeof(hash), &hash_len) != PSA_SUCCESS) {
+        if (body_buf) free(body_buf);
         esp_ota_abort(ota_handle);
+        httpd_resp_sendstr(req, "OTA failed: SHA-256 finalize error");
+        return ESP_FAIL;
     }
 
+    if (!has_expected) {
+        if (body_buf) free(body_buf);
+        esp_ota_abort(ota_handle);
+        httpd_resp_sendstr(req, "OTA rejected: X-Expected-SHA256 header required");
+        return ESP_FAIL;
+    }
+
+    {
+        uint8_t expected_hash[32];
+        if (!rid_security_hex_to_bytes(expected_hex, expected_hash, 32) ||
+            memcmp(hash, expected_hash, 32) != 0) {
+            char got_hex[65];
+            rid_security_bytes_to_hex(hash, 32, got_hex);
+            if (body_buf) free(body_buf);
+            esp_ota_abort(ota_handle);
+            char err_msg[192];
+            snprintf(err_msg, sizeof(err_msg),
+                "SHA-256 mismatch\nexpected: %s\nreceived: %s",
+                expected_hex, got_hex);
+            httpd_resp_set_type(req, "text/plain");
+            httpd_resp_sendstr(req, err_msg);
+            return ESP_FAIL;
+        }
+    }
+
+    /* Verify signature at lock_level >= 1 */
+    if (lock_level >= 1 && body_buf) {
+        char *body_str = (char *)malloc(body_len + 1);
+        if (body_str) {
+            memcpy(body_str, body_buf, body_len);
+            body_str[body_len] = '\0';
+            bool sig_ok = rid_security_verify_signed_body(body_str, sig_hdr, s_ota_cfg);
+            free(body_str);
+            if (!sig_ok) {
+                free(body_buf);
+                esp_ota_abort(ota_handle);
+                httpd_resp_sendstr(req, "OTA rejected: invalid signature");
+                return ESP_FAIL;
+            }
+        }
+    }
+
+    if (body_buf) free(body_buf);
+
+    if (remaining > 0 || esp_ota_end(ota_handle) != ESP_OK || esp_ota_set_boot_partition(update_part) != ESP_OK) {
+        httpd_resp_send_500(req);
+        return ESP_OK;
+    }
+
+    success = true;
     if (success) {
         httpd_resp_set_type(req, "text/html");
-        const char *ok = "<html><body><h1>Update OK</h1><p>Rebooting...</p></body></html>";
-        httpd_resp_send(req, ok, strlen(ok));
+        httpd_resp_send(req, "<html><body><h1>Update OK</h1><p>Rebooting...</p></body></html>", -1);
         vTaskDelay(pdMS_TO_TICKS(500));
         esp_restart();
-    } else {
-        httpd_resp_send_500(req);
     }
 
     return ESP_OK;
@@ -182,6 +307,7 @@ bool rid_ota_check_and_run(rid_config_t *cfg)
 
     ESP_LOGI(TAG, "Entering OTA mode");
     g_ota_mode = true;
+    s_ota_cfg = cfg;
 
     esp_netif_init();
     esp_event_loop_create_default();
