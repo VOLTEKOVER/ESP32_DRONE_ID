@@ -80,15 +80,11 @@ bool rid_dronecan_init(int rx_gpio, int tx_gpio, uint32_t bitrate)
         (gpio_num_t)tx_gpio, (gpio_num_t)rx_gpio, TWAI_MODE_NORMAL);
     g_config.rx_queue_len = 10;
 
-    twai_timing_config_t t_config;
-    if (bitrate == 1000000)
-        t_config = TWAI_TIMING_CONFIG_1MBITS();
-    else if (bitrate == 500000)
-        t_config = TWAI_TIMING_CONFIG_500KBITS();
+    twai_timing_config_t t_config = TWAI_TIMING_CONFIG_1MBITS();
+    if (bitrate == 500000)
+        t_config = (twai_timing_config_t)TWAI_TIMING_CONFIG_500KBITS();
     else if (bitrate == 250000)
-        t_config = TWAI_TIMING_CONFIG_250KBITS();
-    else
-        t_config = TWAI_TIMING_CONFIG_1MBITS();
+        t_config = (twai_timing_config_t)TWAI_TIMING_CONFIG_250KBITS();
 
     twai_filter_config_t f_config = TWAI_FILTER_CONFIG_ACCEPT_ALL();
 

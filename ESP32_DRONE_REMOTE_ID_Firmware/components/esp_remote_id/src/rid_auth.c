@@ -1,8 +1,7 @@
 #include <string.h>
 #include "esp_log.h"
+#include "esp_random.h"
 #include "mbedtls/pk.h"
-#include "mbedtls/ctr_drbg.h"
-#include "mbedtls/entropy.h"
 #include "mbedtls/error.h"
 #include "rid_auth.h"
 
@@ -11,22 +10,20 @@
 static bool g_auth_initialized = false;
 static bool g_auth_enabled = false;
 static mbedtls_pk_context g_pk;
-static mbedtls_ctr_drbg_context g_drbg;
-static mbedtls_entropy_context g_entropy;
+
+static int esp_rng(void *ctx, unsigned char *buf, size_t len)
+{
+    (void)ctx;
+    return (esp_random(buf, len) == (int)len) ? 0 : -1;
+}
 
 bool rid_auth_init(const char *pem_key)
 {
     if (g_auth_initialized) {
         mbedtls_pk_free(&g_pk);
-        mbedtls_ctr_drbg_free(&g_drbg);
-        mbedtls_entropy_free(&g_entropy);
     }
 
     mbedtls_pk_init(&g_pk);
-    mbedtls_entropy_init(&g_entropy);
-    mbedtls_ctr_drbg_init(&g_drbg);
-
-    mbedtls_ctr_drbg_seed(&g_drbg, mbedtls_entropy_func, &g_entropy, NULL, 0);
 
     if (!pem_key || pem_key[0] == '\0') {
         ESP_LOGW(TAG, "No auth private key configured");
@@ -36,7 +33,8 @@ bool rid_auth_init(const char *pem_key)
     }
 
     int ret = mbedtls_pk_parse_key(&g_pk, (const unsigned char *)pem_key,
-                                   strlen(pem_key) + 1, NULL, 0);
+                                   strlen(pem_key) + 1, NULL, 0,
+                                   esp_rng, NULL);
     if (ret != 0) {
         char err[128];
         mbedtls_strerror(ret, err, sizeof(err));
@@ -84,7 +82,7 @@ bool rid_auth_sign_message(uint8_t msg_type, const uint8_t *msg_data, uint8_t ms
     size_t sig_len = sizeof(sig);
 
     int ret = mbedtls_pk_sign(&g_pk, MBEDTLS_MD_NONE, msg_data, msg_len,
-                             sig, &sig_len, mbedtls_ctr_drbg_random, &g_drbg);
+                             sig, &sig_len, esp_rng, NULL);
     if (ret != 0) {
         char err[128];
         mbedtls_strerror(ret, err, sizeof(err));
