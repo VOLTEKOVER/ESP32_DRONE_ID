@@ -804,16 +804,21 @@ function filterGuide(val){
     var h3=s.querySelector('.gs-header h3');
     if(h3){
       var orig=h3.getAttribute('data-orig');
-      if(!orig){orig=h3.innerHTML;h3.setAttribute('data-orig',orig)}
+      if(!orig){orig=h3.textContent;h3.setAttribute('data-orig',orig)}
       if(match&&q){
-        var idx=orig.toLowerCase().indexOf(q);
-        if(idx>-1){h3.innerHTML=orig.slice(0,idx)+'<mark>'+orig.slice(idx,idx+q.length)+'</mark>'+orig.slice(idx+q.length)}
-        else{h3.innerHTML=orig}
-      }else{h3.innerHTML=orig}
+        var lower=orig.toLowerCase();
+        var idx=lower.indexOf(q);
+        if(idx>-1){
+          h3.textContent='';
+          h3.appendChild(document.createTextNode(orig.slice(0,idx)));
+          var m=document.createElement('mark');m.textContent=orig.slice(idx,idx+q.length);h3.appendChild(m);
+          h3.appendChild(document.createTextNode(orig.slice(idx+q.length)));
+        }else{h3.textContent=orig}
+      }else{h3.textContent=orig}
     }
     if(!match||!q){
       s.querySelectorAll('.gs-body [data-orig]').forEach(function(n){
-        n.innerHTML=n.getAttribute('data-orig');n.removeAttribute('data-orig')
+        n.textContent=n.getAttribute('data-orig');n.removeAttribute('data-orig')
       });
     }
   });
