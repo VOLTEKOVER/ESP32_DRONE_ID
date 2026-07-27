@@ -24,6 +24,6 @@ jobs:
           esp_idf_version: v5.2
 
       - name: Install Node.js (per la parte web/docs)
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '20'
