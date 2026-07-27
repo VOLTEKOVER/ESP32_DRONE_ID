@@ -41,6 +41,21 @@
 
 ---
 
+> [!CAUTION]
+> ## ⚠️ NO RELEASE UNTIL SECURITY AUDIT IS COMPLETE
+>
+> **This firmware has NOT been security tested yet.**
+> No official release will be published until a full security audit
+> (penetration testing, firmware analysis, protocol fuzzing) has been
+> performed and all critical/high findings are resolved.
+>
+> **Do NOT use this in production aircraft.**
+> Use only for development and testing on the ground.
+>
+> See [SECURITY.md](SECURITY.md) for details.
+
+---
+
 ## Table of Contents
 
 1. [Quick Start](#-quick-start)
