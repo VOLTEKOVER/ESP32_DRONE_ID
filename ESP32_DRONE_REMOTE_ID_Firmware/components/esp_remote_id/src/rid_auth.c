@@ -1,21 +1,18 @@
 #include <string.h>
 #include "esp_log.h"
-#include "esp_random.h"
 #include "mbedtls/pk.h"
 #include "mbedtls/error.h"
 #include "rid_auth.h"
 
 #define TAG "RID_AUTH"
 
+#ifndef ODID_AUTH_PAGE_DATA_SIZE
+#define ODID_AUTH_PAGE_DATA_SIZE (ODID_AUTH_PAGE_SIZE - 5)
+#endif
+
 static bool g_auth_initialized = false;
 static bool g_auth_enabled = false;
 static mbedtls_pk_context g_pk;
-
-static int esp_rng(void *ctx, unsigned char *buf, size_t len)
-{
-    (void)ctx;
-    return (esp_random(buf, len) == (int)len) ? 0 : -1;
-}
 
 bool rid_auth_init(const char *pem_key)
 {
@@ -33,8 +30,7 @@ bool rid_auth_init(const char *pem_key)
     }
 
     int ret = mbedtls_pk_parse_key(&g_pk, (const unsigned char *)pem_key,
-                                   strlen(pem_key) + 1, NULL, 0,
-                                   esp_rng, NULL);
+                                   strlen(pem_key) + 1, NULL, 0);
     if (ret != 0) {
         char err[128];
         mbedtls_strerror(ret, err, sizeof(err));
@@ -44,15 +40,6 @@ bool rid_auth_init(const char *pem_key)
         return false;
     }
 
-    if (!mbedtls_pk_can_do(&g_pk, MBEDTLS_PK_ED25519)) {
-        ESP_LOGW(TAG, "Key is not Ed25519");
-        mbedtls_pk_free(&g_pk);
-        g_auth_enabled = false;
-        g_auth_initialized = true;
-        return false;
-    }
-
-    /* Validate Ed25519 key bit-length (must be exactly 256 bits = 32 bytes) */
     size_t key_bitlen = mbedtls_pk_get_bitlen(&g_pk);
     if (key_bitlen != 256) {
         ESP_LOGW(TAG, "Ed25519 key has invalid bit-length: %u (expected 256)", (unsigned)key_bitlen);
@@ -79,10 +66,10 @@ bool rid_auth_sign_message(uint8_t msg_type, const uint8_t *msg_data, uint8_t ms
     if (!g_auth_enabled || !g_auth_initialized) return false;
 
     uint8_t sig[RID_AUTH_SIG_SIZE];
-    size_t sig_len = sizeof(sig);
+    size_t sig_len = 0;
 
     int ret = mbedtls_pk_sign(&g_pk, MBEDTLS_MD_NONE, msg_data, msg_len,
-                             sig, &sig_len, esp_rng, NULL);
+                             sig, sizeof(sig), &sig_len);
     if (ret != 0) {
         char err[128];
         mbedtls_strerror(ret, err, sizeof(err));
