@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation
+    url: https://VOLTEKOVER.github.io/ESP_DRONE_REMOTEID/guide.html
+    about: Check the user guide before opening an issue
+  - name: Quick Start
+    url: https://VOLTEKOVER.github.io/ESP_DRONE_REMOTEID/#quick-start
+    about: Flash and configure your first beacon in minutes

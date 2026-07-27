@@ -1,8 +1,8 @@
 ## Description
 
-Please include a summary of the changes and which issue is fixed.
+<!-- Summary of changes and which issue is fixed. -->
 
-Fixes # (issue)
+Fixes #
 
 ## Type of change
 
@@ -12,27 +12,30 @@ Fixes # (issue)
 - [ ] Documentation update
 - [ ] Build / CI change
 
+## Component affected
+
+- [ ] Firmware (esp_remote_id)
+- [ ] RID Hub (desktop app)
+- [ ] Web configuration
+- [ ] Documentation (docs/)
+- [ ] CI / workflows
+
 ## Checklist
 
-- [ ] My code follows the project's coding style
-- [ ] I have tested my changes on real hardware (specify model below)
-- [ ] I have updated the documentation (docs/) if needed
-- [ ] The build passes for all targets (esp32, esp32s3, esp32c3)
+- [ ] I have tested my changes on real hardware
+- [ ] The build passes for all targets (esp32, esp32s3, esp32c6)
+- [ ] I have updated the documentation if needed
 - [ ] My changes do not add new compiler warnings
+- [ ] I have searched existing PRs for duplicates
 
 ## Hardware tested on
 
+<!-- Check all that apply -->
+
 - [ ] ESP32 (xtensa)
 - [ ] ESP32-S3 (xtensa)
-- [ ] ESP32-C3 (riscv)
-
-## Protocol(s) affected
-
-- [ ] MAVLink
-- [ ] MSP
-- [ ] NMEA clone
-- [ ] None (core/system change)
+- [ ] ESP32-C6 (riscv)
 
 ## Additional context
 
-Add any other context about the pull request here.
+<!-- Wiring diagrams, screenshots, serial output, etc. -->
