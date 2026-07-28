@@ -89,8 +89,20 @@ header nav a:hover{background:var(--surface-hover);color:var(--text)}
   .hero h1{font-size:1.3em}
   .hero p{font-size:.82em}
   header{padding:10px 0}
-  header nav a{padding:4px 6px;font-size:.7em}
   .logo-hero{width:42px;height:42px}
+}
+
+/* ---------- MOBILE NAV ---------- */
+#hamburger{display:none;background:none;border:none;color:var(--text);font-size:1.3em;cursor:pointer;padding:4px 10px;border-radius:var(--radius-sm);align-items:center;z-index:101;line-height:1}
+#hamburger:hover{background:var(--surface-hover)}
+@media(max-width:768px){
+  #hamburger{display:inline-flex}
+  header nav{display:none}
+  header nav.open{display:flex;flex-direction:column;position:fixed;top:0;left:0;right:0;background:var(--surface);border-bottom:1px solid var(--border);padding:70px 16px 20px;z-index:100;box-shadow:var(--shadow-lg);gap:4px}
+  header nav.open a{padding:12px 14px;font-size:.88em;border-radius:var(--radius-sm);min-height:44px}
+  header #dark-toggle{padding:6px 10px;min-height:40px;font-size:1em}
+  .mobile-nav-backdrop{position:fixed;inset:0;z-index:99;background:rgba(0,0,0,.3);opacity:0;visibility:hidden;transition:opacity .3s ease,visibility .3s ease}
+  .mobile-nav-backdrop.open{opacity:1;visibility:visible}
 }
 @media(min-width:601px) and (max-width:900px){
   .hero h1{font-size:1.9em}
@@ -387,6 +399,7 @@ footer .fw-copy{font-size:.92em;color:var(--text-muted)}
 <a href="#" class="brand" aria-label="ESP DRONE REMOTEID home">
 <img class="logo-img" src="images/logo%20con%20scritta.svg" alt="ESP DRONE REMOTEID">
 </a>
+<button id="hamburger" onclick="toggleMobileNav()" aria-label="Toggle navigation menu">&#x2630;</button>
 <nav aria-label="Main navigation">
 <a href="#build">Install</a>
 <a href="#guide">Quick Start</a>
@@ -396,10 +409,12 @@ footer .fw-copy{font-size:.92em;color:var(--text-muted)}
 <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8"/></svg>
 </a>
 <a href="config(demo).html">Configurator Live Demo</a>
-<button id="dark-toggle" onclick="toggleDark()" aria-label="Toggle dark mode">&#x263e;</button>
 </nav>
+<button id="dark-toggle" onclick="toggleDark()" aria-label="Toggle dark mode">&#x263e;</button>
 </div>
 </header>
+
+<div class="mobile-nav-backdrop" id="mobile-nav-backdrop" onclick="closeMobileNav()"></div>
 
 <div class="wrap">
 <div class="hero">
@@ -866,6 +881,18 @@ sections.forEach(function(s){
 });
 function toggleToc(){tocPanel.classList.toggle('open')}
 
+// --- MOBILE NAV ---
+function toggleMobileNav(){
+  var nav=document.querySelector('header nav');var back=document.getElementById('mobile-nav-backdrop');
+  var isOpen=nav.classList.toggle('open');back.classList.toggle('open',isOpen);
+  document.getElementById('hamburger').innerHTML=isOpen?'&#x2715;':'&#x2630;';
+}
+function closeMobileNav(){
+  document.querySelector('header nav').classList.remove('open');
+  document.getElementById('mobile-nav-backdrop').classList.remove('open');
+  document.getElementById('hamburger').innerHTML='&#x2630;';
+}
+
 // --- KEYBOARD SHORTCUTS ---
 var searchInput = document.getElementById('guide-search');
 document.addEventListener('keydown',function(e){
@@ -873,6 +900,7 @@ document.addEventListener('keydown',function(e){
     e.preventDefault();searchInput.focus()
   }
   if(e.key==='Escape'){
+    if(document.querySelector('header nav').classList.contains('open')){closeMobileNav()}
     document.querySelectorAll('.guide-section.open').forEach(function(s){s.classList.remove('open')});
     if(tocPanel.classList.contains('open')){tocPanel.classList.remove('open')}
     if(searchInput.value){searchInput.value='';filterGuide('')}
