@@ -44,9 +44,9 @@ body:
     attributes:
       label: Component affected
       options:
-        - Firmware (ESP32)
+        - Firmware (ESP32 / S3 / C6)
+        - Web UI (config.html)
         - RID Hub (desktop app)
-        - Web configuration
         - Documentation
         - Build / CI
     validations:
@@ -91,6 +91,15 @@ body:
       label: Hardware
       description: "ESP32 model, board, antenna, flight controller, GPS"
       placeholder: "ESP32-WROOM-32, generic dev board, PCB antenna, Pixhawk, BN-880"
+    validations:
+      required: false
+
+  - type: input
+    id: peripherals
+    attributes:
+      label: Peripherals connected
+      description: "LEDs, WS2812, lighting outputs, CAN devices, GPS modules"
+      placeholder: "RGB LED on GPIO2, WS2812 on GPIO4, 2x lighting outputs"
     validations:
       required: false
 

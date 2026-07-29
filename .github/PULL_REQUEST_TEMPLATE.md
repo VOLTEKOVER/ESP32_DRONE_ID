@@ -15,8 +15,8 @@ Fixes #
 ## Component affected
 
 - [ ] Firmware (esp_remote_id)
+- [ ] Web UI (config.html / guide.html)
 - [ ] RID Hub (desktop app)
-- [ ] Web configuration
 - [ ] Documentation (docs/)
 - [ ] CI / workflows
 
@@ -24,8 +24,10 @@ Fixes #
 
 - [ ] I have tested my changes on real hardware
 - [ ] The build passes for all targets (esp32, esp32s3, esp32c6)
-- [ ] I have updated the documentation if needed
+- [ ] I have updated the documentation (docs/, README) if needed
+- [ ] I have updated softwarestatus.md if files were added/changed
 - [ ] My changes do not add new compiler warnings
+- [ ] I have considered security implications
 - [ ] I have searched existing PRs for duplicates
 
 ## Hardware tested on
