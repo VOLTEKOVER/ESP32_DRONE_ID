@@ -165,7 +165,8 @@ input.error+.errmsg,select.error+.errmsg{display:block}
 .chk{display:flex;gap:4px;flex-wrap:wrap;margin:4px 0}
 .chk label{display:inline-flex;align-items:center;gap:4px;font-size:.73em;width:auto;margin:0;cursor:pointer;background:var(--hover);padding:4px 10px;border-radius:4px;border:1px solid var(--line);text-transform:none;color:var(--txt-sec);transition:background .2s}
 .chk label:hover{background:var(--card-border)}
-.chk input{width:auto}
+.chk input[type=checkbox]{width:auto;appearance:auto;-webkit-appearance:auto}
+input[type=checkbox]{width:auto;appearance:auto;-webkit-appearance:auto}
 pre{background:var(--hover);padding:16px;border-radius:6px;font-size:.78em;overflow-x:auto;line-height:1.6;margin-top:8px;font-family:'Cascadia Code','Fira Code','Consolas',monospace;border:1px solid var(--line)}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 @media(max-width:750px){.grid2{grid-template-columns:1fr}}
