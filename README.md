@@ -109,7 +109,7 @@
 | **OTA updates** | WiFi AP with client-side SHA-256 (Web Crypto) + Ed25519 signature verification |
 | **Security hardening** | cJSON parser, rate limiting (10 fails/60s), strncpy null-term, `psa_crypto_init()` |
 | **Shared security** | `rid_security.c/h` module: SHA-256, Ed25519, hex utilities |
-| **Configuration** | 50+ parameters: UAS ID, rates, power, public keys, auth, lock, lighting |
+| **Configuration** | 70+ parameters: UAS ID, rates, power, public keys, auth, lock, lighting |
 
 ### User Interface
 
@@ -307,7 +307,7 @@ ESP_DRONE_REMOTEID/
 - `rid_security.c/h` shared verification module (SHA-256 + Ed25519 + hex utils)
 - Takeoff location capture (first 3D fix stored as operator reference)
 - WS2812 RGB LED (RMT driver) + GPIO lighting (5-ch)
-- Web UI + REST API + CLI (14 commands, 50+ configurable params)
+- Web UI + REST API + CLI (14 commands, 70+ configurable params)
 - NVS persistence + 3-tier eFuse lock levels
 - Task watchdog (WDT reset in main loop)
 - RID Hub ground station (Electron + React 19 + release builds)

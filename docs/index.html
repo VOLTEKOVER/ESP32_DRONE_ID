@@ -525,9 +525,19 @@ footer .fw-copy{font-size:.92em;color:var(--text-muted)}
 <li><b>Takeoff location capture:</b> first 3D GPS fix stored as operator reference position</li>
 <li><b>Security lock levels:</b> level 0 (open), level 1 (Ed25519 signed commands), level 2 (eFuse permanent)</li>
 <li><b>eFuse permanent lock:</b> one-time irreversible level 2 burn with "RID!" magic</li>
-<li><b>50+ configurable parameters</b> via web UI (identity, transmission, WiFi AP, security, lighting)</li>
+<li><b>70+ configurable parameters</b> via web UI (identity, transmission, WiFi AP, serial, lighting, DroneCAN, security)</li>
 <li><b>Browser-based flashing</b> via WebSerial &mdash; no toolchain needed</li>
 <li><b>3 ESP32 targets</b> via CI: ESP32, ESP32-S3, ESP32-C6</li>
+<li><b>WS2812 addressable RGB LED</b> &mdash; RMT-driven with configurable GPIO and brightness</li>
+<li><b>5 independent GPIO lighting outputs</b> &mdash; 6 patterns (OFF, SOLID, BLINK_SLOW, BLINK_FAST, ARMED, GPS_FLASH) with phase offset per channel</li>
+<li><b>DroneCAN (CAN Bus)</b> &mdash; TWAI driver, configurable RX/TX GPIOs, 1 Mbps default bitrate</li>
+<li><b>MAVLink USB transport</b> &mdash; bidirectional MAVLink over USB CDC (S3/C6)</li>
+<li><b>Configurable UART port, TX and RX pins</b> &mdash; select any GPIO for serial data</li>
+<li><b>OTA trigger GPIO</b> &mdash; boot-time GPIO to enter OTA update mode</li>
+<li><b>Configurable startup delay</b> &mdash; delay transmission start up to 30 s</li>
+<li><b>1D &times; 3 Kalman position filter</b> &mdash; smooths lat/lon/alt with 3 s timeout</li>
+<li><b>Ed25519 authentication pages</b> &mdash; ASTM F3411-22a signed authentication</li>
+<li><b>9 option bits</b> &mdash; force ARM, no save BasicID, print MAVLink RID, demo mode, Kalman filter, Ed25519 auth, MAVLink arm status, MAVLink op loc loopback, identity ready gate</li>
 </ul>
 
 <h4>Regulatory Compliance</h4>
@@ -549,12 +559,17 @@ footer .fw-copy{font-size:.92em;color:var(--text-muted)}
 <tr><td>BLE 4.0</td><td>Legacy advertising (SCAN_IND), configurable rate 0-5 Hz</td></tr>
 <tr><td>BLE 5.0</td><td>Coded PHY (S=8) long range, 0-5 Hz, S3/C6 only</td></tr>
 <tr><td>Demo mode</td><td>Built-in GPS patrol simulation (Rome Colosseum, 200m radius)</td></tr>
-<tr><td>UART</td><td>UART2 (GPIO16 RX default), baud 9600-921600</td></tr>
-<tr><td>Protocols</td><td>MAVLink v1/v2 (ardupilotmega), MSP v1, NMEA 0183</td></tr>
+<tr><td>UART</td><td>UART2 (GPIO16 RX default), baud 9600-921600, configurable TX/RX pins</td></tr>
+<tr><td>Protocols</td><td>MAVLink v1/v2 (ardupilotmega), MSP v1, NMEA 0183, DroneCAN</td></tr>
 <tr><td>Config</td><td>WiFi AP + REST API on port 80</td></tr>
-<tr><td>Persistence</td><td>NVS flash memory (17 keys, 50+ params)</td></tr>
+<tr><td>Persistence</td><td>NVS flash memory (17 keys, 70+ params)</td></tr>
 <tr><td>Security</td><td>3 lock levels (0=open, 1=Ed25519 signed, 2=eFuse permanent), OTA SHA-256 + Ed25519, cJSON, rate limiting</td></tr>
 <tr><td>Power</td><td>5V via USB or FC BEC (~150 mA)</td></tr>
+<tr><td>WS2812 LED</td><td>Addressable RGB, configurable GPIO + brightness 0-100%</td></tr>
+<tr><td>GPIO Lighting</td><td>5 outputs, 6 patterns (OFF/SOLID/BLINK_SLOW/BLINK_FAST/ARMED/GPS_FLASH), per-channel phase offset</td></tr>
+<tr><td>DroneCAN</td><td>CAN bus, configurable RX/TX GPIO, 1 Mbps default bitrate</td></tr>
+<tr><td>MAVLink USB</td><td>Bidirectional MAVLink over USB CDC (ESP32-S3/C6)</td></tr>
+<tr><td>Startup delay</td><td>Configurable up to 30 000 ms</td></tr>
 </table>
 
 <h4>System Architecture</h4>
@@ -680,6 +695,10 @@ GPS TX &rarr; FC RX (unchanged)</pre>
 <tr><td>BLE 5.0 LR</td><td class="n">&#x2717;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
 <tr><td>OTA Updates</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
 <tr><td>USB CDC</td><td class="n">&#x2717;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
+<tr><td>WS2812 LED</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
+<tr><td>GPIO Lighting</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
+<tr><td>DroneCAN</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
+<tr><td>MAVLink USB</td><td class="n">&#x2717;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
 </table>
 <p class="fw-info">Full matrix with all protocols, lock levels, and pin compatibility in <a href="guide.html#guide-variants">Technical Guide &rarr;</a></p>
 </div>

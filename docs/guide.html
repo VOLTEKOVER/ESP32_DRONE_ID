@@ -746,7 +746,7 @@ docker run --rm -v $(pwd):/out -v $(pwd):/project -w /project \
 </ol>
 <p>All settings can be also accessed via the REST API (see section below).</p>
 
-<h4>Parameter Reference (26 Parameters)</h4>
+<h4>Parameter Reference (48 Parameters)</h4>
 <table>
 <tr><th>#</th><th>Parameter</th><th>JSON Key</th><th>Type</th><th>Range</th><th>Default</th><th>Description</th></tr>
 <tr><td>1</td><td>UAS ID</td><td><code>uas_id</code></td><td>string</td><td>1-20 chars</td><td>""</td><td>Serial number or CAA registration. Example: <code>RID-12345678</code></td></tr>
@@ -772,8 +772,31 @@ docker run --rm -v $(pwd):/out -v $(pwd):/project -w /project \
 <tr><td>21</td><td>MAVLink SysID</td><td><code>mavlink_sysid</code></td><td>uint8</td><td>0-254</td><td>0</td><td>MAVLink system ID filter. 0 = auto-detect</td></tr>
 <tr><td>22</td><td>Broadcast without GPS</td><td><code>bcast_powerup</code></td><td>bool</td><td>0/1</td><td>1</td><td>Send ID messages even without GPS fix</td></tr>
 <tr><td>23</td><td>Lock Level</td><td><code>lock_level</code></td><td>int8</td><td>0-2</td><td>0</td><td>0=Normal, 1=Signed cmds, 2=eFuse permanent</td></tr>
-<tr><td>24</td><td>Options</td><td><code>options</code></td><td>bitmask</td><td>0-7</td><td>0</td><td>1=Force ARM, 2=No save BasicID, 4=Print MAVLink RID</td></tr>
-<tr><td>25</td><td>Public Keys</td><td><code>public_key_1-5</code></td><td>string</td><td>0-64 chars</td><td>""</td><td>Up to 5 public keys for command authentication</td></tr>
+<tr><td>24</td><td>Options</td><td><code>options</code></td><td>bitmask</td><td>0-511</td><td>0</td><td>Bit 0=Force ARM, 1=No save BasicID, 2=Print MAVLink RID, 3=Demo mode, 4=Kalman filter, 5=Ed25519 auth, 6=MAVLink arm status, 7=MAVLink op loc loop, 8=Identity ready gate</td></tr>
+<tr><td>25</td><td>Public Keys</td><td><code>public_key_1-5</code></td><td>string</td><td>0-256 chars</td><td>""</td><td>Up to 5 public keys (PEM or base64) for command authentication</td></tr>
+<tr><td>26</td><td>Protocol</td><td><code>protocol</code></td><td>uint8</td><td>0-255</td><td>255</td><td>0=Unknown, 1=MAVLink, 2=MSP, 3=NMEA, 4=None, 255=Auto-detect</td></tr>
+<tr><td>27</td><td>UART Port</td><td><code>uart_port</code></td><td>uint8</td><td>0-2</td><td>1</td><td>UART peripheral number (0=UART0, 1=UART1, 2=UART2)</td></tr>
+<tr><td>28</td><td>UART TX Pin</td><td><code>tx_pin</code></td><td>int8</td><td>-1 / GPIO</td><td>17</td><td>UART TX GPIO pin</td></tr>
+<tr><td>29</td><td>UART RX Pin</td><td><code>rx_pin</code></td><td>int8</td><td>-1 / GPIO</td><td>18</td><td>UART RX GPIO pin for GPS/FC data</td></tr>
+<tr><td>30</td><td>Operator Latitude</td><td><code>operator_lat</code></td><td>double</td><td>-90-90</td><td>0.0</td><td>Operator position latitude (fallback)</td></tr>
+<tr><td>31</td><td>Operator Longitude</td><td><code>operator_lon</code></td><td>double</td><td>-180-180</td><td>0.0</td><td>Operator position longitude (fallback)</td></tr>
+<tr><td>32</td><td>Operator Altitude</td><td><code>operator_alt</code></td><td>float</td><td>any</td><td>0.0</td><td>Operator position altitude in meters (fallback)</td></tr>
+<tr><td>33</td><td>Self-ID Text</td><td><code>self_id_text</code></td><td>string</td><td>0-20 chars</td><td>""</td><td>Self-ID message text description</td></tr>
+<tr><td>34</td><td>LED Red GPIO</td><td><code>led_r_gpio</code></td><td>int8</td><td>-1 / GPIO</td><td>-1</td><td>RGB LED red channel GPIO (-1 = disabled)</td></tr>
+<tr><td>35</td><td>LED Green GPIO</td><td><code>led_g_gpio</code></td><td>int8</td><td>-1 / GPIO</td><td>-1</td><td>RGB LED green channel GPIO (-1 = disabled)</td></tr>
+<tr><td>36</td><td>LED Blue GPIO</td><td><code>led_b_gpio</code></td><td>int8</td><td>-1 / GPIO</td><td>-1</td><td>RGB LED blue channel GPIO (-1 = disabled)</td></tr>
+<tr><td>37</td><td>WS2812 GPIO</td><td><code>ws2812_gpio</code></td><td>int8</td><td>-1 / GPIO</td><td>-1</td><td>WS2812 addressable RGB LED GPIO (-1 = disabled)</td></tr>
+<tr><td>38</td><td>WS2812 Brightness</td><td><code>ws2812_brightness</code></td><td>uint8</td><td>0-100</td><td>16</td><td>WS2812 brightness percentage</td></tr>
+<tr><td>39</td><td>Lighting Pin 1-5</td><td><code>lighting_pin_1-5</code></td><td>int8</td><td>-1 / GPIO</td><td>-1</td><td>GPIO for external lighting output channel (-1 = disabled)</td></tr>
+<tr><td>40</td><td>Lighting Pattern 1-5</td><td><code>lighting_pattern_1-5</code></td><td>uint8</td><td>0-5</td><td>0</td><td>0=OFF, 1=SOLID, 2=BLINK_SLOW, 3=BLINK_FAST, 4=ARMED, 5=GPS_FLASH</td></tr>
+<tr><td>41</td><td>Lighting Phase 1-5</td><td><code>lighting_phase_1-5</code></td><td>int16</td><td>any</td><td>0</td><td>Per-channel phase offset in milliseconds</td></tr>
+<tr><td>42</td><td>DroneCAN RX GPIO</td><td><code>dronecan_rx_gpio</code></td><td>int8</td><td>-1 / GPIO</td><td>-1</td><td>DroneCAN CAN bus RX GPIO (-1 = disabled)</td></tr>
+<tr><td>43</td><td>DroneCAN TX GPIO</td><td><code>dronecan_tx_gpio</code></td><td>int8</td><td>-1 / GPIO</td><td>-1</td><td>DroneCAN CAN bus TX GPIO (-1 = disabled)</td></tr>
+<tr><td>44</td><td>DroneCAN Bitrate</td><td><code>dronecan_bitrate</code></td><td>uint32</td><td>any</td><td>1000000</td><td>DroneCAN CAN bus bitrate in bps</td></tr>
+<tr><td>45</td><td>MAVLink USB</td><td><code>mavlink_usb_enable</code></td><td>bool</td><td>0/1</td><td>0</td><td>Enable MAVLink over USB CDC serial (S3/C6 only)</td></tr>
+<tr><td>46</td><td>OTA Trigger GPIO</td><td><code>ota_trigger_gpio</code></td><td>int8</td><td>-1 / GPIO</td><td>-1</td><td>Boot-time GPIO to enter OTA update mode (-1 = disabled)</td></tr>
+<tr><td>47</td><td>Auth Private Key</td><td><code>auth_private_key</code></td><td>string</td><td>0-512 chars</td><td>""</td><td>Ed25519 private key in PEM format for signing auth pages</td></tr>
+<tr><td>48</td><td>Startup Delay</td><td><code>start_delay_ms</code></td><td>uint32</td><td>0-30000 ms</td><td>10000</td><td>Delay before transmission starts after boot</td></tr>
 </table>
 
 <h4>REST API</h4>
@@ -859,11 +882,11 @@ idf.py -p COM3 monitor</pre>
 &#x251c;&#x2500;&#x2500; main/                          # Application entry point
 &#x2502;   &#x2514;&#x2500;&#x2500; main.c                     # Init, demo mode, splash
 &#x251c;&#x2500;&#x2500; components/esp_remote_id/      # Core component
-&#x2502;   &#x251c;&#x2500;&#x2500; include/                   # 20 header files
+&#x2502;   &#x251c;&#x2500;&#x2500; include/                   # 24 header files
 &#x2502;   &#x2502;   &#x2514;&#x2500;&#x2500; esp_remote_id.h        # Public API + structs
-&#x2502;   &#x251c;&#x2500;&#x2500; src/                        # 25 source files
+&#x2502;   &#x251c;&#x2500;&#x2500; src/                        # 28 source files
 &#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; esp_remote_id.c       # Orchestrator (rate limiting, task loop)
-&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; nvs_storage.c         # Config persistence (17 keys, 26 params)
+&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; nvs_storage.c         # Config persistence (17 keys, 48 params)
 &#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; web_config.c          # HTTP server + REST API + OTA + eFuse lock
 &#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; protocol_detect.c     # Auto-detect: MAVLink/MSP/NMEA + cache
 &#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; mavlink_parser.c      # MAVLink + MESSAGE_PACK + ODID messages
@@ -985,12 +1008,29 @@ idf.py -p COM3 monitor</pre>
 </ul>
 
 <h5>System</h5>
-<p>Security settings and advanced options.</p>
+<p>Security settings, authentication, and advanced options.</p>
 <ul>
 <li><b>Lock Level:</b> 0 = normal operation. 1 = signed commands only. 2 = permanent eFuse (irreversible!).</li>
-<li><b>Public Keys:</b> Up to 5 public keys (base64-encoded) for authenticating signed configuration commands.</li>
-<li><b>Options:</b> Force ARM status, disable NVS saving of BasicID, enable MAVLink RID message printing.</li>
+<li><b>Public Keys:</b> Up to 5 public keys (PEM or base64) for authenticating signed configuration commands.</li>
+<li><b>Auth Private Key:</b> Ed25519 private key for authentication page signing (ASTM F3411-22a).</li>
+<li><b>Options:</b> Force ARM status, disable NVS saving of BasicID, enable MAVLink RID printing, demo mode, Kalman filter, Ed25519 auth, MAVLink arm status, MAVLink operator location loopback, identity ready gate.</li>
 </ul>
+
+<h5>Hardware</h5>
+<p>GPIO pin assignments and peripheral configuration.</p>
+<ul>
+<li><b>Status LED (R/G/B):</b> Three independent GPIO pins for RGB status LED. 7 states via PWM: BOOT, NO_GPS, GPS_OK, DEMO, LOCKED, OTA, ERROR.</li>
+<li><b>WS2812 LED:</b> Addressable RGB LED driven via RMT. Configurable GPIO and brightness (0-100%).</li>
+<li><b>GPIO Lighting:</b> 5 independent lighting outputs. Each channel configurable with GPIO pin, pattern (OFF/SOLID/BLINK_SLOW/BLINK_FAST/ARMED/GPS_FLASH), and phase offset in milliseconds.</li>
+<li><b>DroneCAN:</b> CAN bus receiver. Configurable RX/TX GPIO pins and bitrate (default 1 Mbps). Decodes <code>uavcan.equipment.gnss.Fix2</code>.</li>
+<li><b>UART Pins:</b> Select UART peripheral port (UART0/1/2) and assign any GPIO for TX and RX.</li>
+<li><b>MAVLink USB:</b> Enable MAVLink over USB CDC serial transport (ESP32-S3/C6 only).</li>
+<li><b>OTA Trigger GPIO:</b> GPIO that triggers OTA update mode at boot (firmware upload on next restart).</li>
+<li><b>Startup Delay:</b> Delay in milliseconds before transmission begins after boot (default 10 000 ms).</li>
+</ul>
+
+<h5>Operator Position</h5>
+<p>Fallback operator latitude, longitude, and altitude used when GPS data is unavailable or broadcast is enabled without GPS fix.</p>
 
 <h5>Status</h5>
 <p>Real-time telemetry dashboard showing:</p>
@@ -1361,6 +1401,12 @@ sudo ip link set wlan0 up</pre>
 <tr><td>Lock Level 1 (Signed)</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
 <tr><td>Lock Level 2 (eFuse)</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
 <tr><td>Status LED (GPIO)</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
+<tr><td>WS2812 Addressable LED</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
+<tr><td>GPIO Lighting (5-ch)</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
+<tr><td>DroneCAN (CAN Bus)</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
+<tr><td>MAVLink USB Transport</td><td class="n">&#x2717;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
+<tr><td>Kalman Position Filter</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
+<tr><td>Ed25519 Auth Pages</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
 <tr><td>Analyzer Support</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
 </table>
 <p><span class="tag tag-green">&#x2713; Supported</span> <span class="tag tag-red">&#x2717; Not supported</span> <span class="tag" style="background:#fff8e1;color:#e65100">Partial — limited or experimental</span></p>
@@ -1402,9 +1448,13 @@ sudo ip link set wlan0 up</pre>
 <tr><td>UART RX (default)</td><td>GPIO16</td><td>GPIO18</td><td>GPIO7</td></tr>
 <tr><td>Alt UART RX</td><td>4,26</td><td>4,5</td><td>0,1</td></tr>
 <tr><td>RGB LED R/G/B</td><td colspan="3">Configurable via web UI (any GPIO, default -1)</td></tr>
+<tr><td>WS2812 LED</td><td colspan="3">Configurable via web UI (any GPIO, default -1)</td></tr>
+<tr><td>Lighting 1-5</td><td colspan="3">5 independent outputs, any GPIO, 6 patterns, configurable phase</td></tr>
+<tr><td>DroneCAN RX/TX</td><td colspan="3">Configurable via web UI (any GPIO, default -1)</td></tr>
+<tr><td>OTA Trigger</td><td colspan="3">Configurable via web UI (any GPIO, default -1)</td></tr>
 <tr><td>Boot button</td><td>GPIO0</td><td>GPIO0</td><td>GPIO9</td></tr>
 </table>
-<p>UART pins are configured in <code>main.c</code> via <code>uart_param_t</code>. RGB LED pins are set via the web UI at <code>192.168.4.1</code>.</p>
+<p>UART pins, RGB LED, WS2812, GPIO lighting, DroneCAN, and OTA trigger pins are all configurable via the web UI at <code>192.168.4.1</code>.</p>
 </div>
 </div>
 
@@ -1510,61 +1560,104 @@ sudo ip link set wlan0 up</pre>
 <tr><td><code>wifi_pwr</code></td><td>float</td><td>WiFi TX power (dBm)</td></tr>
 <tr><td><code>rates</code></td><td>struct</td><td>Four rate values (wifi_bcn, wifi_nan, ble4, ble5) + two power values (ble4, ble5)</td></tr>
 <tr><td><code>wifi_ap</code></td><td>struct</td><td>SSID + password</td></tr>
-<tr><td><code>serial</code></td><td>struct</td><td>Baud rate + MAVLink sysid + bcast_powerup + webserver_en</td></tr>
-<tr><td><code>system</code></td><td>struct</td><td>Lock level + options</td></tr>
+<tr><td><code>serial</code></td><td>struct</td><td>Baud rate + MAVLink sysid + bcast_powerup + webserver_en + UART port + TX/RX pins</td></tr>
+<tr><td><code>operator</code></td><td>struct</td><td>Operator lat/lon/alt + self_id_text</td></tr>
+<tr><td><code>leds</code></td><td>struct</td><td>RGB LED R/G/B GPIOs + WS2812 GPIO + WS2812 brightness</td></tr>
+<tr><td><code>lighting</code></td><td>struct</td><td>5 lighting pins + 5 patterns + 5 phase offsets</td></tr>
+<tr><td><code>dronecan</code></td><td>struct</td><td>DroneCAN RX/TX GPIOs + bitrate</td></tr>
+<tr><td><code>system</code></td><td>struct</td><td>Lock level + options + protocol + MAVLink USB + OTA trigger GPIO + startup delay</td></tr>
 <tr><td><code>key_1</code>...<code>key_5</code></td><td>string</td><td>Public keys</td></tr>
+<tr><td><code>auth_key</code></td><td>string</td><td>Ed25519 private key (PEM)</td></tr>
 </table>
 
 <h4>Status JSON Schema</h4>
 <pre>{
-  "protocol":     int,    // 0=Unknown, 1=MAVLink, 2=MSP, 3=NMEA, 4=None
-  "gps_valid":    bool,   // true if GPS has valid fix
-  "lat":          float,  // decimal degrees
-  "lon":          float,  // decimal degrees
-  "alt":          float,  // meters MSL
-  "speed":        float,  // m/s
-  "heading":      int,    // degrees (0-360)
-  "satellites":   int,    // number of satellites
-  "fix_type":     int,    // 0=None, 2=2D, 3=3D
-  "tx_total":     int,    // total transmissions since boot
-  "tx_wifi_bcn":  int,    // WiFi beacon packets sent
-  "tx_wifi_nan":  int,    // WiFi NAN packets sent
-  "tx_ble4":      int,    // BLE 4.0 packets sent
-  "tx_ble5":      int,    // BLE 5.0 packets sent
-  "uptime_ms":    int     // milliseconds since boot
+  "protocol":       int,    // 0=Unknown, 1=MAVLink, 2=MSP, 3=NMEA, 4=None
+  "gps_valid":      bool,   // true if GPS has valid fix
+  "lat":            float,  // decimal degrees
+  "lon":            float,  // decimal degrees
+  "alt":            float,  // meters MSL
+  "speed":          float,  // m/s
+  "heading":        int,    // degrees (0-360)
+  "satellites":     int,    // number of satellites
+  "fix_type":       int,    // 0=None, 2=2D, 3=3D
+  "tx_total":       int,    // total transmissions since boot
+  "tx_wifi_bcn":    int,    // WiFi beacon packets sent
+  "tx_wifi_nan":    int,    // WiFi NAN packets sent
+  "tx_ble4":        int,    // BLE 4.0 packets sent
+  "tx_ble5":        int,    // BLE 5.0 packets sent
+  "armed":          bool,   // MAVLink arm status
+  "kalman_active":  bool,   // Kalman filter active
+  "identity_ready": bool,   // Identity fully configured
+  "uptime_ms":      int     // milliseconds since boot
 }</pre>
 
 <h4>Config JSON Schema</h4>
 <pre>{
-  "uas_id":           string,
-  "id_type":          int,     // 1-4
-  "ua_type":          int,     // 0-15
-  "operator_id":      string,
-  "uas_id_2":         string,
-  "id_type_2":        int,     // 0-4
-  "ua_type_2":        int,     // 0-15
-  "tx_modes":         int,     // bitmask
-  "wifi_channel":     int,     // 1-13
-  "wifi_power_dbm":   float,   // 2-20
-  "wifi_bcn_rate_hz": float,   // 0-5
-  "wifi_nan_rate_hz": float,   // 0-5
-  "ble4_rate_hz":     float,   // 0-5
-  "ble4_power_dbm":   float,   // -27-18
-  "ble5_rate_hz":     float,   // 0-5
-  "ble5_power_dbm":   float,   // -27-18
-  "wifi_ssid":        string,
-  "wifi_password":    string,
-  "webserver_en":     int,     // 0/1
-  "baud_rate":        int,     // 9600-921600
-  "mavlink_sysid":    int,     // 0-254
-  "bcast_powerup":    int,     // 0/1
-  "lock_level":       int,     // 0-2
-  "options":          int,     // bitmask
-  "public_key_1":     string,
-  "public_key_2":     string,
-  "public_key_3":     string,
-  "public_key_4":     string,
-  "public_key_5":     string
+  "uas_id":              string,
+  "id_type":             int,     // 1-4
+  "ua_type":             int,     // 0-15
+  "operator_id":         string,
+  "uas_id_2":            string,
+  "id_type_2":           int,     // 0-4
+  "ua_type_2":           int,     // 0-15
+  "tx_modes":            int,     // bitmask
+  "wifi_channel":        int,     // 1-13
+  "wifi_power_dbm":      float,   // 2-20
+  "wifi_bcn_rate_hz":    float,   // 0-5
+  "wifi_nan_rate_hz":    float,   // 0-5
+  "ble4_rate_hz":        float,   // 0-5
+  "ble4_power_dbm":      float,   // -27-18
+  "ble5_rate_hz":        float,   // 0-5
+  "ble5_power_dbm":      float,   // -27-18
+  "wifi_ssid":           string,
+  "wifi_password":       string,
+  "webserver_en":        int,     // 0/1
+  "baud_rate":           int,     // 9600-921600
+  "mavlink_sysid":       int,     // 0-254
+  "bcast_powerup":       int,     // 0/1
+  "lock_level":          int,     // 0-2
+  "options":             int,     // bitmask
+  "public_key_1":        string,
+  "public_key_2":        string,
+  "public_key_3":        string,
+  "public_key_4":        string,
+  "public_key_5":        string,
+  "protocol":            int,     // 255=auto
+  "uart_port":           int,     // 0-2
+  "tx_pin":              int,     // GPIO
+  "rx_pin":              int,     // GPIO
+  "operator_lat":        float,   // -90-90
+  "operator_lon":        float,   // -180-180
+  "operator_alt":        float,   // meters
+  "self_id_text":        string,
+  "led_r_gpio":          int,     // -1=disabled
+  "led_g_gpio":          int,     // -1=disabled
+  "led_b_gpio":          int,     // -1=disabled
+  "ws2812_gpio":         int,     // -1=disabled
+  "ws2812_brightness":   int,     // 0-100
+  "lighting_pin_1":      int,     // -1=disabled
+  "lighting_pin_2":      int,     // -1=disabled
+  "lighting_pin_3":      int,     // -1=disabled
+  "lighting_pin_4":      int,     // -1=disabled
+  "lighting_pin_5":      int,     // -1=disabled
+  "lighting_pattern_1":  int,     // 0-5
+  "lighting_pattern_2":  int,     // 0-5
+  "lighting_pattern_3":  int,     // 0-5
+  "lighting_pattern_4":  int,     // 0-5
+  "lighting_pattern_5":  int,     // 0-5
+  "lighting_phase_1":    int,     // ms
+  "lighting_phase_2":    int,     // ms
+  "lighting_phase_3":    int,     // ms
+  "lighting_phase_4":    int,     // ms
+  "lighting_phase_5":    int,     // ms
+  "dronecan_rx_gpio":    int,     // -1=disabled
+  "dronecan_tx_gpio":    int,     // -1=disabled
+  "dronecan_bitrate":    int,     // bps
+  "mavlink_usb_enable":  int,     // 0/1
+  "ota_trigger_gpio":    int,     // -1=disabled
+  "auth_private_key":    string,
+  "start_delay_ms":      int      // 0-30000
 }</pre>
 
 <h4>ODID Message Structure</h4>
