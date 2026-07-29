@@ -49,15 +49,16 @@ docs/                            # GitHub Pages documentation
 1. Fork the repository
 2. Create a feature branch: `git checkout -b feature/my-change`
 3. Make your changes
-4. Build for all3 targets to verify no regressions:
+4. Build for all 3 targets to verify no regressions:
    ```bash
    idf.py set-target esp32 && idf.py build
    idf.py set-target esp32s3 && idf.py build
    idf.py set-target esp32c6 && idf.py build
    ```
 5. Test on real hardware if possible
-6. Commit with a clear message (see below)
-7. Push and open a Pull Request
+6. Update [`todolist/softwarestatus.md`](todolist/softwarestatus.md) for file-level changes
+7. Commit with a clear message (see below)
+8. Push and open a Pull Request
 
 ## Commit Messages
 
@@ -79,9 +80,10 @@ Examples:
 ## Code Style
 
 - C: follow ESP-IDF coding standards
-- No Kconfig configurations — all settings via web interface
-- JavaScript: keep web UI lightweight (embedded in flash, ~16KB budget)
+- Keep Kconfig changes minimal — prefer web-configurable settings
+- JavaScript: keep web UI lightweight (embedded in flash)
 - Add `Wno-error` flags only when necessary (document why)
+- Update [`todolist/softwarestatus.md`](todolist/softwarestatus.md) with any new/changed source files
 
 ## Reporting Bugs
 

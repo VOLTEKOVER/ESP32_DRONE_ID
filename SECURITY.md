@@ -30,21 +30,34 @@ Instead, please email the maintainers or use
 
 ## Security Considerations
 
-This project implements a **broadcast-only** Remote ID transmitter:
+This project implements a **WiFi AP + REST API** Remote ID transmitter:
 
-- **No inbound connections** — the device only broadcasts WiFi BLE/NaN frames
-- **No authentication bypass** — web config requires physical network access (AP mode)
-- **OTA updates** — firmware updates are delivered over HTTPS from GitHub Releases
-- **Key management** — Ed25519 auth keys are stored in NVS (not flash filesystem)
+- **Web config server** runs on `192.168.4.1` (AP network) — no inbound internet exposure
+- **Authentication pages** available via Ed25519 signing (ASTM F3411-22a compliant)
+- **3-tier lock system**: Level 0 (open), Level 1 (Ed25519 signed commands), Level 2 (eFuse permanent)
+- **OTA updates** with SHA-256 integrity + optional Ed25519 signature verification
+- **Key management** — Ed25519 keys stored in NVS (encrypted at rest if flash encryption enabled)
 
 ### Web Configuration
 
-The web configuration interface is served on the AP network (192.168.4.1). It is
-intended for local configuration only. There is no authentication on the web
-interface — anyone connected to the AP can modify settings.
+The web configuration interface is served on the AP network (192.168.4.1) with
+optional WPA2-PSK password protection. At lock level 0, no authentication is
+required for config changes. At level ≥ 1, all POST requests to `/api/config`
+and `/ota` require an `X-Signature` header (Ed25519 signature over the SHA-256
+hash of the body).
 
 ### Firmware Updates
 
-OTA updates fetch `manifest.json` from GitHub Releases over HTTPS. The firmware
-binaries are not signed by this project (ESP-IDF Secure Boot is not enabled by
-default). Users should verify firmware integrity when possible.
+OTA updates are uploaded via the web UI as HTTP POST to `/ota`. The browser
+computes a SHA-256 hash (Web Crypto API) sent as `X-Expected-SHA256` header.
+The server independently verifies the hash. At lock level ≥ 1, an Ed25519
+signature (`X-Signature` header) is also required. A dual-OTA partition scheme
+ensures automatic rollback on failure.
+
+### Security Hardening
+
+- **cJSON parser** — all JSON inputs parsed with cJSON instead of naive `strstr()`
+- **Rate limiting** — 10 failed signature attempts per 60s sliding window, then lockout
+- **strncpy null-termination** — all string fields explicitly null-terminated
+- **psa_crypto_init()** — PSA Crypto API initialized at boot for ESP-IDF v5+
+- **Shared verification module** — `rid_security.c/h` used by both web config and OTA

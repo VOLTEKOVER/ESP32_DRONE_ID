@@ -232,7 +232,7 @@ ESP_DRONE_REMOTEID/
 ├── ESP32_DRONE_REMOTE_ID_Firmware/     # ESP-IDF firmware (C, 94% of repo)
 │   ├── main/app_main.c                 # Entry point
 │   └── components/esp_remote_id/
-│       ├── src/                        # 23 source files
+│       ├── src/                        # 28 source files
 │       │   ├── esp_remote_id.c         # Main orchestrator (543 L)
 │       │   ├── mavlink_parser.c        # Protocol detection + parsing (276 L)
 │       │   ├── web_config.c            # HTTP server + REST API (735 L)
@@ -245,9 +245,12 @@ ESP_DRONE_REMOTEID/
 │       │   ├── rid_dronecan.c          # DroneCAN CAN bus (142 L)
 │       │   ├── led_ws2812.c            # WS2812 addressable RGB (110 L)
 │       │   ├── rid_lighting.c          # GPIO lighting (101 L)
+│       │   ├── rid_mavlink_usb.c       # MAVLink USB CDC transport (42 L)
+│       │   ├── rid_mavlink_tx.c        # MAVLink telemetry TX (59 L)
+│       │   ├── rid_patrol.c            # Demo GPS patrol (31 L)
 │       │   ├── cli.c                   # UART CLI REPL (317 L)
-│       │   └── ...                     # 13 more parsers/utilities
-│       ├── include/                    # 20 public headers
+│       │   └── ...                     # 12 more parsers/utilities
+│       ├── include/                    # 24 public headers
 │       ├── webui/config.html           # Embedded web UI (~1520 L inline)
 │       └── mavlink/                    # MAVLink v2 dialect headers
 │   ├── partitions.csv                  # OTA partition layout (4 MB)
@@ -273,8 +276,8 @@ ESP_DRONE_REMOTEID/
 │   └── vite.config.ts
 │
 ├── docs/                                # GitHub Pages
-│   ├── index.html                       # Landing + WebSerial installer (~901 L)
-│   ├── guide.html                        # Technical wiki (sections 3–16, ~1864 L)
+│   ├── index.html                       # Landing + WebSerial installer (~969 L)
+│   ├── guide.html                        # Technical wiki (sections 3–16, ~2066 L)
 │   ├── config(demo).html                 # Offline config UI demo (~2546 L)
 │   ├── manifest.json                     # ESP Web Tools firmware manifest
 │   ├── prototype_bom.md                  # Hardware BOM + wiring
@@ -284,6 +287,9 @@ ESP_DRONE_REMOTEID/
 ├── .github/workflows/
 │   ├── build.yml                       # CI: 3-target matrix + Pages deploy
 │   ├── release.yml                     # GitHub Release + auto-changelog
+│   ├── codeql.yml                      # CodeQL security analysis
+│   ├── deploy-pages.yml                # Manual Pages deployment
+│   ├── rid-hub-ci.yml                 # RID Hub build + test
 │   └── dependabot.yml
 ├── LICENSE                             # Apache 2.0
 └── README.md                           # This file
