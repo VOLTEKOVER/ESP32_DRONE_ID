@@ -12,7 +12,7 @@ Scope: all 80+ source files (excluding build artifacts)
 - [x] **Message Pack submessage decode** (`mavlink_parser.c:235-247`) — switch on submsg[0] is empty
 - [x] **Task watchdog** (`esp_remote_id.c:627`) — no recovery if rid_task hangs
 - [x] **Rate limiting on signature** (`web_config.c:306-375`) — brute-force on eFuse sigs
-- [ ] **Base64 strict padding** (`web_config.c:275-304`) — accepts malformed base64
+- [x] **Base64 strict padding** (`rid_security.c:12-41`) — accepts malformed base64
 - [ ] **OTA timeout** (`rid_ota.c:129-157`) — infinite loop if upload stalled
 
 ### 🟡 HIGH — Quality & Robustness
@@ -43,6 +43,7 @@ Scope: all 80+ source files (excluding build artifacts)
 - README, CONTRIBUTING, SECURITY synced with current project state
 - CI fix — rid-hub-ci.yml setup-node@v7 → v4
 - Issue/PR template overhaul — bug_report.yml, PULL_REQUEST_TEMPLATE.md
+- Base64 strict padding — `b64_decode()` now validates padding and rejects invalid chars
 
 ---
 
@@ -66,7 +67,7 @@ Scope: all 80+ source files (excluding build artifacts)
 | `opendroneid.h` | 762 | ✅ OK | Upstream Intel ODID lib |
 | `odid_wifi.h` | 106 | ✅ OK | 802.11 packed structs |
 | `esp_remote_id.c` | 543 | 🟡 ABSOLUTE GPS | Needs absolute GPS timeout |
-| `web_config.c` | 735 | 🟡 SECURITY | Base64 strict padding |
+| `web_config.c` | 735 | ✅ OK | cJSON, rate limiting, signature verify |
 | `cli.c` | 317 | 🟡 NEEDS | Missing `config set` command |
 | `wifi_tx.c` | 204 | 🟡 DEDUP | Dedup populate_uas_data with common lib |
 | `wifi.c` | 614 | ✅ OK | Intel ODID frame builder |
@@ -84,7 +85,7 @@ Scope: all 80+ source files (excluding build artifacts)
 | `rid_auth.c` | 107 | ✅ OK | Ed25519 via mbedTLS|
 | `rid_ota.c` | 329 | 🟡 TIMEOUT | Add OTA upload timeout|
 | `rid_patrol.c` | 31 | ✅ OK | Demo GPS patrol|
-| `rid_security.c` | 158 | ✅ OK | SHA-256, Ed25519, base64, hex|
+| `rid_security.c` | 158 | ✅ OK | SHA-256, Ed25519, base64 strict, hex|
 | `rid_mavlink_tx.c` | 59 | ✅ OK | HEARTBEAT out|
 | `rid_lighting.c` | 101 | ✅ OK | 5-ch GPIO lighting|
 | `rid_dronecan.c` | 142 | ✅ OK | TWAI Fix2 decode|
@@ -140,7 +141,7 @@ Scope: all 80+ source files (excluding build artifacts)
 
 | Prio | Feature | Effort | Status |
 |------|---------|--------|--------|
-| P0 | Security fixes (base64 strict padding, OTA timeout) | ~1d | 🔜 Next |
+| P0 | OTA upload timeout | ~0.5d | 🔜 Next |
 | P1 | ESP-NOW mesh relay | ~4d | 🔜 Next |
 | P1 | CLI config set + history | ~2d | Future |
 | P1 | LoRa SX1262 backup | ~6d | Future |

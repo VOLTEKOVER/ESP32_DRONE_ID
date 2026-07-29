@@ -11,13 +11,19 @@ static const char b64_tab[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvw
 
 static int b64_decode(const char *in, size_t in_len, uint8_t *out, size_t out_size)
 {
+    if (in_len == 0 || in_len % 4 != 0) return -1;
+    size_t pad = 0;
+    while (pad < in_len && in[in_len - 1 - pad] == '=') pad++;
+    if (pad > 2) return -1;
+    size_t valid_len = in_len - pad;
+    if (pad > 0 && valid_len % 4 == 0) return -1;
     int len = 0;
     uint8_t buf[4];
     int buf_i = 0;
-    for (size_t i = 0; i < in_len && in[i] != '='; i++) {
+    for (size_t i = 0; i < valid_len; i++) {
         char c = in[i];
         const char *p = strchr(b64_tab, c);
-        if (!p) continue;
+        if (!p) return -1;
         buf[buf_i++] = (uint8_t)(p - b64_tab);
         if (buf_i == 4) {
             if (len >= (int)out_size) return -1;
