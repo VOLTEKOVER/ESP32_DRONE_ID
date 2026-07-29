@@ -13,8 +13,7 @@
 :root{--bg:#121212;--card-bg:#1e1e1e;--card-border:#333;--txt:#e0e0e0;--txt-sec:#aaa;--txt-muted:#777;--line:#333;--hover:#2a2a2a;--input-bg:#2a2a2a;--input-border:#444;--shadow:rgba(0,0,0,.2);--accent:#fff}
 }
 [data-theme="dark"]{--bg:#121212;--card-bg:#1e1e1e;--card-border:#333;--txt:#e0e0e0;--txt-sec:#aaa;--txt-muted:#777;--line:#333;--hover:#2a2a2a;--input-bg:#2a2a2a;--input-border:#444;--shadow:rgba(0,0,0,.2);--accent:#fff}
-*,*::before,*::after{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
-*{margin:0;padding:0;box-sizing:border-box}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 html,body{height:100dvh;overflow:hidden}
 html{background:var(--bg);background-image:radial-gradient(ellipse at 20% 50%,rgba(21,101,192,.04) 0%,transparent 50%),radial-gradient(ellipse at 80% 50%,rgba(46,125,50,.04) 0%,transparent 50%)}
 [data-theme="dark"] html{background-image:radial-gradient(ellipse at 20% 50%,rgba(66,165,245,.05) 0%,transparent 50%),radial-gradient(ellipse at 80% 50%,rgba(102,187,106,.05) 0%,transparent 50%)}
@@ -46,7 +45,7 @@ body{font-family:var(--font);color:var(--txt);padding:8px 16px;display:flex;flex
 .hdr-sensor .sd{width:5px;height:5px;border-radius:50%;background:var(--txt-muted);transition:background .3s;flex-shrink:0}
 .hdr-sensor.on .sd{background:#2e7d32;box-shadow:0 0 4px rgba(46,125,50,.3)}
 .hdr-sensor.on.warn .sd{background:#f57f17}
-.status-bar{display:flex;align-items:center;gap:16px;padding:3px 12px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:8px;font-size:.62em;color:var(--txt-muted);flex-shrink:0;margin-top:4px}
+.status-bar{display:flex;align-items:center;gap:16px;padding:8px 16px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:8px;font-size:.7em;color:var(--txt-muted);flex-shrink:0;margin-top:4px}
 .status-bar span{display:inline-flex;align-items:center;gap:4px}
 .console-off .dash-bottom,.console-off .tab-pane .term-container{display:none}
 #splash{position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg);transition:opacity .5s ease,visibility .5s ease;opacity:1;visibility:visible}
@@ -103,7 +102,7 @@ input:disabled,select:disabled{opacity:.4;cursor:not-allowed}
 .modal-actions .btn-danger{background:#c62828;color:#fff}
 .modal-actions .btn-danger:hover{background:#e53935}
 .modal-actions .btn{background:var(--accent);color:#fff}.modal-actions .btn:hover{opacity:.85}
-[data-theme="dark"] .modal-actions .btn{background:#333}
+[data-theme="dark"] .modal-actions .btn{background:#444;color:#fff}
 .st-icon{display:inline-flex;align-items:center;font-size:.8em;opacity:.5;transition:opacity .2s}
 .st-icon.active{opacity:1}
 .st-icon.armed{color:#2e7d32}
@@ -249,6 +248,27 @@ fieldset.disabled{opacity:.4;pointer-events:none}
 [data-theme="dark"] ::-webkit-scrollbar-thumb{background:#444}
 [data-theme="dark"] ::-webkit-scrollbar-thumb:hover{background:#555}
 [data-theme="dark"] .term-output::-webkit-scrollbar-track{background:#252525}
+[data-theme="dark"] select{background:var(--input-bg);color:var(--txt);border-color:var(--input-border)}
+[data-theme="dark"] input:focus,[data-theme="dark"] select:focus{box-shadow:0 0 0 2px rgba(255,255,255,.08)}
+[data-theme="dark"] .dialog-modal-icon{color:#ef5350}
+[data-theme="dark"] .st-icon.link.active{color:#64b5f6}
+[data-theme="dark"] fieldset.beta{border-color:#665000}
+[data-theme="dark"] fieldset.beta legend{color:#ffd54f}
+[data-theme="dark"] .errmsg{color:#ef5350}
+[data-theme="dark"] .btn-danger{color:#ef5350;border-color:rgba(239,83,80,.3)}
+[data-theme="dark"] .btn-danger:hover{background:rgba(239,83,80,.12)}
+[data-theme="dark"] .tag-warning{background:#2d1515;color:#ef5350;border-color:#c66}
+[data-theme="dark"] .dash-badge.ok{background:#152d15;color:#66bb6a}
+[data-theme="dark"] .dash-badge.warn{background:#2a2000;color:#ffd54f}
+[data-theme="dark"] .dash-badge.err{background:#2d1515;color:#ef5350}
+[data-theme="dark"] .dash-badge.live{background:#0d2137;color:#64b5f6}
+[data-theme="dark"] .dash-btn-config{background:#333;color:#fff}
+[data-theme="dark"] .dash-card.gps-no{border-left-color:#ef5350}
+[data-theme="dark"] .toast.err{border-left-color:#ef5350}
+[data-theme="dark"] .modal-actions .btn-cancel{background:#2a2a2a;color:#aaa;border-color:#3a3a3a}
+[data-theme="dark"] .modal-actions .btn-cancel:hover{background:#333;color:#e0e0e0}
+[data-theme="dark"] img[src*="logo"]{filter:brightness(0) invert(1)}
+[data-theme="dark"] #splash .logo{filter:brightness(0) invert(1) drop-shadow(0 2px 4px rgba(0,0,0,.5))}
 .term-input-row input::placeholder{color:#555}
 
 /* ---------- Tab system ---------- */
@@ -301,8 +321,8 @@ input,select{padding:5px 8px;font-size:.78em}
 .btn-sm{font-size:.68em;padding:3px 8px;min-height:32px}
 .sec-div{font-size:.7em;margin:12px 0 4px}
 .guide{font-size:.68em;padding:6px 8px}
-.sidebar .nav-item{font-size:.68em;padding:4px 6px}
-.status-bar{font-size:.6em;gap:8px;padding:2px 8px}
+.sidebar .nav-item{font-size:.72em;padding:6px 8px;min-height:40px}
+.status-bar{font-size:.65em;gap:8px;padding:6px 10px}
 .status-bar span{gap:2px}
 .dash-grid{grid-template-columns:1fr}
 .dash-bottom{font-size:.9em}
@@ -778,6 +798,53 @@ fieldset{padding:6px 8px}
 </div>
 <div class="hint">Set the GPIO numbers connected to your RGB LED cathode pins. Use -1 for unused channels.</div>
 
+<div class="sec-div">Addressable RGB (WS2812)</div>
+<div class="grid2">
+<div><label>Data Pin</label><input id="ws2812_gpio" type="number" min="-1" max="48" value="-1"><div class="hint">GPIO for WS2812 data line. -1 = disabled.</div></div>
+<div><label>Brightness</label><input id="ws2812_brightness" type="number" min="0" max="255" value="64"><div class="hint">0&ndash;255. Lower = dimmer, saves power.</div></div>
+</div>
+
+<div class="sec-div">UART Configuration</div>
+<div class="grid2">
+<div><label>UART Port</label><select id="uart_port"><option value="0">UART 0</option><option value="1">UART 1</option><option value="2" selected>UART 2</option></select><div class="hint">UART peripheral used for FC serial.</div></div>
+<div></div>
+<div><label>TX Pin</label><input id="tx_pin" type="number" min="-1" max="48" value="17"><div class="hint">UART TX GPIO.</div></div>
+<div><label>RX Pin</label><input id="rx_pin" type="number" min="-1" max="48" value="16"><div class="hint">UART RX GPIO.</div></div>
+</div>
+
+<div class="sec-div">DroneCAN</div>
+<div class="grid2">
+<div><label>RX Pin</label><input id="dronecan_rx_gpio" type="number" min="-1" max="48" value="-1"><div class="hint">DroneCAN RX GPIO. -1 = disabled.</div></div>
+<div><label>TX Pin</label><input id="dronecan_tx_gpio" type="number" min="-1" max="48" value="-1"><div class="hint">DroneCAN TX GPIO.</div></div>
+<div><label>Bitrate</label><select id="dronecan_bitrate"><option value="125000">125 kbps</option><option value="250000">250 kbps</option><option value="500000" selected>500 kbps</option><option value="1000000">1 Mbps</option></select><div class="hint">CAN bus bitrate.</div></div>
+<div></div>
+</div>
+
+<div class="sec-div">External Lighting</div>
+<div class="hint">Configure up to 5 external lighting outputs (LED strips, strobes, etc.).</div>
+<div id="lighting-grid">
+<script>for(var li=0;li<5;li++){document.write('<div class="lgt-row" style="display:flex;gap:8px;align-items:center;margin:6px 0">'+
+'<span style="font-size:.7em;color:var(--txt-muted);width:16px;flex-shrink:0">'+(li+1)+'</span>'+
+'<span style="flex:1"><input id="lighting_pin_'+li+'" type="number" min="-1" max="48" value="-1" placeholder="GPIO" style="width:100%"></span>'+
+'<span style="flex:1"><select id="lighting_pattern_'+li+'" style="width:100%">'+
+'<option value="0">Off</option><option value="1">Solid</option><option value="2">Slow blink</option><option value="3">Fast blink</option><option value="4">Fade in/out</option><option value="5">Strobe</option><option value="6">Police</option><option value="7">Rainbow</option></select></span>'+
+'<span style="flex:1"><input id="lighting_phase_'+li+'" type="number" min="0" max="3600" value="0" placeholder="Phase" style="width:100%"></span>'+
+'</div>')}</script>
+</div>
+<div style="display:flex;gap:16px;font-size:.65em;color:var(--txt-muted);margin:2px 0 6px">
+<span style="flex:1;text-align:center">GPIO</span>
+<span style="flex:1;text-align:center">Pattern</span>
+<span style="flex:1;text-align:center">Phase (&deg;)</span>
+</div>
+
+<div class="sec-div">Advanced</div>
+<div class="grid2">
+<div><label>OTA Trigger GPIO</label><input id="ota_trigger_gpio" type="number" min="-1" max="48" value="-1"><div class="hint">GPIO pulled high at boot to enter OTA mode. -1 = disabled.</div></div>
+<div><label style="display:inline-flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" id="mavlink_usb_enable"> MAVLink over USB</label><div class="hint">Enable MAVLink transport over USB CDC.</div></div>
+<div><label>Startup Delay (ms)</label><input id="start_delay_ms" type="number" min="0" max="30000" value="0"><div class="hint">Delay before transmission starts (0&ndash;30000 ms).</div></div>
+<div></div>
+</div>
+
 <button class="btn" type="submit">Save Hardware</button>
 </form>
 </div>
@@ -807,6 +874,11 @@ fieldset{padding:6px 8px}
 <label><input type="checkbox" id="opt_nosave"> Don't save BasicID to NVS</label>
 <label><input type="checkbox" id="opt_print"> Print MAVLink RID messages</label>
 <label><input type="checkbox" id="opt_demo"> Demo mode (simulated GPS patrol)</label>
+<label><input type="checkbox" id="opt_kalman"> Kalman filter (GPS smoothing)</label>
+<label><input type="checkbox" id="opt_auth"> Ed25519 auth on transmitted IDs</label>
+<label><input type="checkbox" id="opt_mavlink_arm"> MAVLink arm status gate</label>
+<label><input type="checkbox" id="opt_mavlink_op_loc"> MAVLink operator location loop</label>
+<label><input type="checkbox" id="opt_identity_gate"> Identity ready gate</label>
 </div>
 
 <fieldset style="margin-top:16px">
@@ -1208,13 +1280,14 @@ function showMsg(t,e){
   var el=document.createElement('div');
   el.className='toast '+(e?'err':'ok');
   var icon=e?'&#x26a0;':'&#x2705;';
-  el.innerHTML='<span class="toast-icon">'+icon+'</span>'+t.replace(/</g,'&lt;')+'<button class="toast-close" onclick="this.parentElement.remove()">&times;</button>';
+  el.innerHTML='<span class="toast-icon">'+icon+'</span><span class="toast-msg">'+t.replace(/</g,'&lt;')+'</span><button class="toast-close" onclick="this.parentElement.remove()">&times;</button>';
   c.appendChild(el);
+  while(c.children.length>3)c.firstChild.remove();
   var dur=e?5e3:2500;
   requestAnimationFrame(function(){el.classList.add('show')});
   setTimeout(function(){
     el.classList.remove('show');
-    setTimeout(function(){el.remove()},250)
+    setTimeout(function(){el.remove()},300)
   },dur)
 }
 
@@ -1400,7 +1473,7 @@ function validateField(id){
   clearError(el);return true
 }
 function validateForm(formId){
-  var fields={f1:['uas_id','op_id','self_id_text','uas_id2'],f2:['wifi_pwr','wifi_bcn','wifi_nan','bt4_rate','bt4_pwr','bt5_rate','bt5_pwr'],f3:['wifi_ssid','wifi_pass'],f3b:['mav_sysid'],f4:['lock_lvl'],f5:['led_r_gpio','led_g_gpio','led_b_gpio']}
+  var fields={f1:['uas_id','op_id','self_id_text','uas_id2'],f2:['wifi_pwr','wifi_bcn','wifi_nan','bt4_rate','bt4_pwr','bt5_rate','bt5_pwr'],f3:['wifi_ssid','wifi_pass'],f3b:['mav_sysid'],f4:['lock_lvl'],f5:['led_r_gpio','led_g_gpio','led_b_gpio','ws2812_gpio','ws2812_brightness','tx_pin','rx_pin','dronecan_rx_gpio','dronecan_tx_gpio','ota_trigger_gpio','start_delay_ms']}
   var ids=fields[formId]||[],ok=true
   ids.forEach(function(id){if(!validateField(id))ok=false})
   if(formId==='f1'&&parseInt($('ua_type').value)===0){showMsg('UA Type must be set to a valid aircraft type — \"None\" is not accepted by receivers',1);ok=false}
@@ -1431,7 +1504,7 @@ function toggleGuide(el){
 }
 
 function setPlaceholders(){
-  ['uas_id','op_id','self_id_text','uas_id2','wifi_ssid','wifi_pass','wifi_pwr','wifi_bcn','wifi_nan','bt4_rate','bt4_pwr','bt5_rate','bt5_pwr','mav_sysid','led_r_gpio','led_g_gpio','led_b_gpio'].forEach(function(id){
+  ['uas_id','op_id','self_id_text','uas_id2','wifi_ssid','wifi_pass','wifi_pwr','wifi_bcn','wifi_nan','bt4_rate','bt4_pwr','bt5_rate','bt5_pwr','mav_sysid','led_r_gpio','led_g_gpio','led_b_gpio','ws2812_gpio','ws2812_brightness','tx_pin','rx_pin','dronecan_rx_gpio','dronecan_tx_gpio','ota_trigger_gpio','start_delay_ms'].forEach(function(id){
     var el=$(id);if(el&&!el.value)el.style.opacity=''
   })
   $('status').textContent='Loading configuration...'
@@ -1440,45 +1513,67 @@ function getCfg(){
 showLoading('Loading configuration...');
 fetch('/api/config').then(r=>r.json()).then(c=>{
 $('uas_id').value=c.uas_id||''
-$('id_type').value=c.id_type||1
-$('ua_type').value=c.ua_type||1
+$('id_type').value=c.id_type!==undefined?c.id_type:1
+$('ua_type').value=c.ua_type!==undefined?c.ua_type:1
 $('op_id').value=c.operator_id||''
 $('self_id_text').value=c.self_id_text||''
 $('op_lat').value=c.operator_lat||''
 $('op_lon').value=c.operator_lon||''
 $('op_alt').value=c.operator_alt||''
 $('uas_id2').value=c.uas_id_2||''
-$('id_type2').value=c.id_type_2||0
-$('ua_type2').value=c.ua_type_2||0
-$('wifi_ch').value=c.wifi_channel||6
-$('wifi_pwr').value=c.wifi_power_dbm||20
-$('wifi_bcn').value=c.wifi_bcn_rate_hz||1
-$('wifi_nan').value=c.wifi_nan_rate_hz||0
-$('bt4_rate').value=c.ble4_rate_hz||1
-$('bt4_pwr').value=c.ble4_power_dbm||18
-$('bt5_rate').value=c.ble5_rate_hz||1
-$('bt5_pwr').value=c.ble5_power_dbm||18
+$('id_type2').value=c.id_type_2!==undefined?c.id_type_2:0
+$('ua_type2').value=c.ua_type_2!==undefined?c.ua_type_2:0
+$('wifi_ch').value=c.wifi_channel!==undefined?c.wifi_channel:6
+$('wifi_pwr').value=c.wifi_power_dbm!==undefined?c.wifi_power_dbm:20
+$('wifi_bcn').value=c.wifi_bcn_rate_hz!==undefined?c.wifi_bcn_rate_hz:1
+$('wifi_nan').value=c.wifi_nan_rate_hz!==undefined?c.wifi_nan_rate_hz:0
+$('bt4_rate').value=c.ble4_rate_hz!==undefined?c.ble4_rate_hz:1
+$('bt4_pwr').value=c.ble4_power_dbm!==undefined?c.ble4_power_dbm:18
+$('bt5_rate').value=c.ble5_rate_hz!==undefined?c.ble5_rate_hz:1
+$('bt5_pwr').value=c.ble5_power_dbm!==undefined?c.ble5_power_dbm:18
 $('wifi_ssid').value=c.wifi_ssid||'ESP-RID'
 $('wifi_pass').value=c.wifi_password||''
 $('websrv_en').checked=!!c.webserver_en
-$('baud').value=c.baud_rate||57600
+$('baud').value=c.baud_rate!==undefined?c.baud_rate:57600
 $('protocol').value=c.protocol!==undefined?c.protocol:255
-$('mav_sysid').value=c.mavlink_sysid||0
+$('mav_sysid').value=c.mavlink_sysid!==undefined?c.mavlink_sysid:0
 $('bcast_pwr').checked=!!c.bcast_powerup
-$('lock_lvl').value=c.lock_level||0
+$('lock_lvl').value=c.lock_level!==undefined?c.lock_level:0
 $('led_r_gpio').value=c.led_r_gpio!==undefined?c.led_r_gpio:-1
 $('led_g_gpio').value=c.led_g_gpio!==undefined?c.led_g_gpio:-1
 $('led_b_gpio').value=c.led_b_gpio!==undefined?c.led_b_gpio:-1
+$('ws2812_gpio').value=c.ws2812_gpio!==undefined?c.ws2812_gpio:-1
+$('ws2812_brightness').value=c.ws2812_brightness!==undefined?c.ws2812_brightness:64
+$('uart_port').value=c.uart_port!==undefined?c.uart_port:2
+$('tx_pin').value=c.tx_pin!==undefined?c.tx_pin:17
+$('rx_pin').value=c.rx_pin!==undefined?c.rx_pin:16
+$('dronecan_rx_gpio').value=c.dronecan_rx_gpio!==undefined?c.dronecan_rx_gpio:-1
+$('dronecan_tx_gpio').value=c.dronecan_tx_gpio!==undefined?c.dronecan_tx_gpio:-1
+$('dronecan_bitrate').value=c.dronecan_bitrate!==undefined?c.dronecan_bitrate:500000
+$('ota_trigger_gpio').value=c.ota_trigger_gpio!==undefined?c.ota_trigger_gpio:-1
+$('mavlink_usb_enable').checked=!!c.mavlink_usb_enable
+$('start_delay_ms').value=c.start_delay_ms!==undefined?c.start_delay_ms:0
+for(var li=0;li<5;li++){
+  var p=$('lighting_pin_'+li);if(p)p.value=c['lighting_pin_'+li]!==undefined?c['lighting_pin_'+li]:-1
+  var pat=$('lighting_pattern_'+li);if(pat)pat.value=c['lighting_pattern_'+li]!==undefined?c['lighting_pattern_'+li]:0
+  var ph=$('lighting_phase_'+li);if(ph)ph.value=c['lighting_phase_'+li]!==undefined?c['lighting_phase_'+li]:0
+}
 $('opt_arm').checked=!!(c.options&1)
 $('opt_nosave').checked=!!(c.options&2)
 $('opt_print').checked=!!(c.options&4)
 $('opt_demo').checked=!!(c.options&8)
+$('opt_kalman').checked=!!(c.options&16)
+$('opt_auth').checked=!!(c.options&32)
+$('opt_mavlink_arm').checked=!!(c.options&64)
+$('opt_mavlink_op_loc').checked=!!(c.options&128)
+$('opt_identity_gate').checked=!!(c.options&256)
 for(var i=1;i<=5;i++){$('pubkey'+i).value=c['public_key_'+i]||''}
 $('tx_wifi_bcn').checked=!!(c.tx_modes&1)
 $('tx_wifi_nan').checked=!!(c.tx_modes&2)
 $('tx_ble4').checked=!!(c.tx_modes&4)
 $('tx_ble5').checked=!!(c.tx_modes&8)
   document.querySelectorAll('input,select').forEach(function(el){el.style.opacity=''})
+  onTxModeChange();
   applyDeviceConstraints();
   hideLoading();
 }).catch(function(){
@@ -1518,7 +1613,33 @@ lock_level:parseInt($('lock_lvl').value),
 led_r_gpio:parseInt($('led_r_gpio').value),
 led_g_gpio:parseInt($('led_g_gpio').value),
 led_b_gpio:parseInt($('led_b_gpio').value),
-options:($('opt_arm').checked?1:0)|($('opt_nosave').checked?2:0)|($('opt_print').checked?4:0)|($('opt_demo').checked?8:0),
+ws2812_gpio:parseInt($('ws2812_gpio').value),
+ws2812_brightness:parseInt($('ws2812_brightness').value),
+uart_port:parseInt($('uart_port').value),
+tx_pin:parseInt($('tx_pin').value),
+rx_pin:parseInt($('rx_pin').value),
+dronecan_rx_gpio:parseInt($('dronecan_rx_gpio').value),
+dronecan_tx_gpio:parseInt($('dronecan_tx_gpio').value),
+dronecan_bitrate:parseInt($('dronecan_bitrate').value),
+ota_trigger_gpio:parseInt($('ota_trigger_gpio').value),
+mavlink_usb_enable:$('mavlink_usb_enable').checked?1:0,
+start_delay_ms:parseInt($('start_delay_ms').value),
+lighting_pin_0:parseInt(($('lighting_pin_0')||{}).value||-1),
+lighting_pin_1:parseInt(($('lighting_pin_1')||{}).value||-1),
+lighting_pin_2:parseInt(($('lighting_pin_2')||{}).value||-1),
+lighting_pin_3:parseInt(($('lighting_pin_3')||{}).value||-1),
+lighting_pin_4:parseInt(($('lighting_pin_4')||{}).value||-1),
+lighting_pattern_0:parseInt(($('lighting_pattern_0')||{}).value||0),
+lighting_pattern_1:parseInt(($('lighting_pattern_1')||{}).value||0),
+lighting_pattern_2:parseInt(($('lighting_pattern_2')||{}).value||0),
+lighting_pattern_3:parseInt(($('lighting_pattern_3')||{}).value||0),
+lighting_pattern_4:parseInt(($('lighting_pattern_4')||{}).value||0),
+lighting_phase_0:parseInt(($('lighting_phase_0')||{}).value||0),
+lighting_phase_1:parseInt(($('lighting_phase_1')||{}).value||0),
+lighting_phase_2:parseInt(($('lighting_phase_2')||{}).value||0),
+lighting_phase_3:parseInt(($('lighting_phase_3')||{}).value||0),
+lighting_phase_4:parseInt(($('lighting_phase_4')||{}).value||0),
+options:($('opt_arm').checked?1:0)|($('opt_nosave').checked?2:0)|($('opt_print').checked?4:0)|($('opt_demo').checked?8:0)|($('opt_kalman').checked?16:0)|($('opt_auth').checked?32:0)|($('opt_mavlink_arm').checked?64:0)|($('opt_mavlink_op_loc').checked?128:0)|($('opt_identity_gate').checked?256:0),
 public_key_1:$('pubkey1').value,
 public_key_2:$('pubkey2').value,
 public_key_3:$('pubkey3').value,
@@ -2335,10 +2456,10 @@ setTimeout(function(){
   updateCompliance();
 },3000)
 </script>
-<div class="status-bar" style="flex-wrap:wrap;gap:4px 12px;width:100%;padding:6px 16px;margin:4px 0 0">
-<span style="font-weight:600;font-size:.85em;color:var(--txt);white-space:nowrap">ESP DRONE REMOTEID v0.0.1-dev — 15/06/2026, 22:59:30</span>
-<a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID" target="_blank" style="font-size:.85em;color:var(--accent);white-space:nowrap">GitHub</a>
-<a href="#" style="font-size:.85em;color:var(--accent);white-space:nowrap" onclick="setView('help')">Wiki</a>
+<div class="status-bar" style="flex-wrap:wrap;gap:4px 16px;width:100%;padding:10px 20px;margin:6px 0 0;font-size:.75em">
+<span style="font-weight:600;font-size:.95em;color:var(--txt);white-space:nowrap">ESP DRONE REMOTEID v0.0.1-dev — 15/06/2026, 22:59:30</span>
+<a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID" target="_blank" style="font-size:.95em;color:var(--accent);white-space:nowrap">GitHub</a>
+<a href="#" style="font-size:.95em;color:var(--accent);white-space:nowrap" onclick="setView('help')">Wiki</a>
 <span id="st-bar-status" style="margin-left:auto">&#x25cf; <span id="st-bar-proto">Disconnected</span></span>
 <span title="Packets sent">&#x1f4e4; <span id="st-bar-pkts">0</span></span>
 <span title="Packets per second">&#x26a1; <span id="st-bar-rate">0</span>/s</span>

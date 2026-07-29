@@ -8,9 +8,11 @@
 <meta name="description" content="Configuration and management tool for ESP32 Drone Remote ID">
 <title>ESP DRONE REMOTEID — Configuration (DEMO)</title>
 <style>
+:root{--bg:#f2f2f2;--card-bg:#fff;--card-border:#d4d4d4;--txt:#222;--txt-sec:#666;--txt-muted:#999;--line:#ddd;--hover:#f0f0f0;--input-bg:#fff;--input-border:#d0d0d0;--shadow:rgba(0,0,0,.06);--accent:#222}
+@media(prefers-color-scheme:dark){:root{--bg:#121212;--card-bg:#1e1e1e;--card-border:#333;--txt:#e0e0e0;--txt-sec:#aaa;--txt-muted:#777;--line:#333;--hover:#2a2a2a;--input-bg:#2a2a2a;--input-border:#444;--shadow:rgba(0,0,0,.2);--accent:#fff}}
 [data-theme="light"]{--bg:#f2f2f2;--card-bg:#fff;--card-border:#d4d4d4;--txt:#222;--txt-sec:#666;--txt-muted:#999;--line:#ddd;--hover:#f0f0f0;--input-bg:#fff;--input-border:#d0d0d0;--shadow:rgba(0,0,0,.06);--accent:#222}
 [data-theme="dark"]{--bg:#121212;--card-bg:#1e1e1e;--card-border:#333;--txt:#e0e0e0;--txt-sec:#aaa;--txt-muted:#777;--line:#333;--hover:#2a2a2a;--input-bg:#2a2a2a;--input-border:#444;--shadow:rgba(0,0,0,.2);--accent:#fff}
-*{margin:0;padding:0;box-sizing:border-box}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 html,body{height:100dvh;overflow:hidden}
 html{background:var(--bg);background-image:radial-gradient(ellipse at 20% 50%,rgba(21,101,192,.04) 0%,transparent 50%),radial-gradient(ellipse at 80% 50%,rgba(46,125,50,.04) 0%,transparent 50%)}
 body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:99998;border:6px solid var(--accent)}
@@ -509,7 +511,7 @@ fieldset{padding:6px 8px}
 <div class="dc-label">&#x1f4cd; Position</div>
 <div class="dc-val" id="dash-lat">-</div>
 <div class="dc-sub" id="dash-lon">-</div>
-
+<div class="dc-sub" id="dash-map-link" style="display:none;margin-top:2px"><a href="#" target="_blank" id="dash-map-a" style="font-size:.75em;color:var(--accent)">&#x1f5fa; Open in Maps</a></div>
 </div>
 <div class="dash-card" id="dash-move-card">
 <div class="dc-label">&#x1f3c3; Movement</div>
@@ -579,6 +581,7 @@ fieldset{padding:6px 8px}
 <form id="f1">
 <div class="guide" onclick="toggleGuide(this)">
 <b>Basic ID</b> &mdash; The UAS (Unmanned Aircraft System) ID identifies your drone to receivers in the area, as required by FAA/EASA/ENAC Remote ID regulations. Use a serial number following the ANSI/CTA-2063 format (4-char manufacturer code + length digit + serial) or your CAA registration number. Max 20 characters. The UA Type must match your aircraft category — "None" will be ignored by receivers.
+<a href="https://VOLTEKOVER.github.io/ESP_DRONE_REMOTEID/#guide-config" target="_blank">Wiki &rarr;</a>
 </div>
 
 <label>UAS ID</label>
@@ -650,6 +653,7 @@ fieldset{padding:6px 8px}
 <form id="f2">
 <div class="guide" onclick="toggleGuide(this)">
 <b>Tx Modes</b> &mdash; Select which radio technologies to broadcast the Remote ID message on. <b>WiFi Beacon</b> (IEEE 802.11) is the most compatible and recommended. <b>BLE 4.0</b> is widely supported by smartphones. <b>WiFi NAN</b> and <b>BLE 5.0 Coded PHY</b> offer longer range but are experimental. Rates are in Hz (packets per second) — higher rates improve reception but increase airtime usage. Enable at least one mode for the ID to be visible.
+<a href="https://VOLTEKOVER.github.io/ESP_DRONE_REMOTEID/#guide-config" target="_blank">Wiki &rarr;</a>
 </div>
 
 <label>Enabled Channels</label>
@@ -710,6 +714,7 @@ fieldset{padding:6px 8px}
 <form id="f3">
 <div class="guide" onclick="toggleGuide(this)">
 <b>Management Network</b> &mdash; Configure the ESP32's built-in WiFi access point used for configuration. After connecting your phone or laptop to the SSID below, open <code>http://192.168.4.1</code> in your browser. The password protects the config interface — leave empty for an open network. The AP runs on channel 6 by default, separate from the beacon transmission channel.
+<a href="https://VOLTEKOVER.github.io/ESP_DRONE_REMOTEID/#guide-config" target="_blank">Wiki &rarr;</a>
 </div>
 
 <label>WiFi SSID</label>
@@ -738,6 +743,7 @@ fieldset{padding:6px 8px}
 <form id="f3b">
 <div class="guide" onclick="toggleGuide(this)">
 <b>Serial &amp; Protocol</b> &mdash; Configure the UART connection between the ESP32 and your flight controller (Pixhawk, ArduPilot, iNAV, Betaflight, etc.). <b>MAVLink</b> is used by ArduPilot/PX4, <b>MSP</b> by Betaflight/iNAV, <b>NMEA</b> for generic GPS modules. Set the baud rate to match your FC's serial port speed — 57600 or 115200 are common. Select <b>Auto-detect</b> to let the firmware probe all protocols at startup.
+<a href="https://VOLTEKOVER.github.io/ESP_DRONE_REMOTEID/#guide-config" target="_blank">Wiki &rarr;</a>
 </div>
 
 <label>FC Protocol</label>
@@ -788,6 +794,7 @@ fieldset{padding:6px 8px}
 <form id="f5">
 <div class="guide" onclick="toggleGuide(this)">
 <b>Status LED</b> &mdash; Configure GPIO pins for the RGB status LED (common cathode). Wire the red, green, and blue channels to separate GPIO pins through current-limiting resistors (typically 100–220&#x2126;). <b>Red</b> = no GPS fix or error. <b>Green</b> = GPS 3D fix, normal operation. <b>Blue</b> = system booting or BLE active. Set unused channels to <code>-1</code>. Leave all at <code>-1</code> to disable the LED entirely.
+<a href="https://VOLTEKOVER.github.io/ESP_DRONE_REMOTEID/#guide-config" target="_blank">Wiki &rarr;</a>
 </div>
 
 <div class="grid2">
@@ -796,6 +803,53 @@ fieldset{padding:6px 8px}
 <div><label>Blue Pin</label><input id="led_b_gpio" type="number" min="-1" max="48" value="-1"></div>
 </div>
 <div class="hint">Set the GPIO numbers connected to your RGB LED cathode pins. Use -1 for unused channels.</div>
+
+<div class="sec-div">Addressable RGB (WS2812)</div>
+<div class="grid2">
+<div><label>Data Pin</label><input id="ws2812_gpio" type="number" min="-1" max="48" value="-1"><div class="hint">GPIO for WS2812 data line. -1 = disabled.</div></div>
+<div><label>Brightness</label><input id="ws2812_brightness" type="number" min="0" max="255" value="64"><div class="hint">0&ndash;255. Lower = dimmer, saves power.</div></div>
+</div>
+
+<div class="sec-div">UART Configuration</div>
+<div class="grid2">
+<div><label>UART Port</label><select id="uart_port"><option value="0">UART 0</option><option value="1">UART 1</option><option value="2" selected>UART 2</option></select><div class="hint">UART peripheral used for FC serial.</div></div>
+<div></div>
+<div><label>TX Pin</label><input id="tx_pin" type="number" min="-1" max="48" value="17"><div class="hint">UART TX GPIO.</div></div>
+<div><label>RX Pin</label><input id="rx_pin" type="number" min="-1" max="48" value="16"><div class="hint">UART RX GPIO.</div></div>
+</div>
+
+<div class="sec-div">DroneCAN</div>
+<div class="grid2">
+<div><label>RX Pin</label><input id="dronecan_rx_gpio" type="number" min="-1" max="48" value="-1"><div class="hint">DroneCAN RX GPIO. -1 = disabled.</div></div>
+<div><label>TX Pin</label><input id="dronecan_tx_gpio" type="number" min="-1" max="48" value="-1"><div class="hint">DroneCAN TX GPIO.</div></div>
+<div><label>Bitrate</label><select id="dronecan_bitrate"><option value="125000">125 kbps</option><option value="250000">250 kbps</option><option value="500000" selected>500 kbps</option><option value="1000000">1 Mbps</option></select><div class="hint">CAN bus bitrate.</div></div>
+<div></div>
+</div>
+
+<div class="sec-div">External Lighting</div>
+<div class="hint">Configure up to 5 external lighting outputs (LED strips, strobes, etc.).</div>
+<div id="lighting-grid">
+<script>for(var li=0;li<5;li++){document.write('<div class="lgt-row" style="display:flex;gap:8px;align-items:center;margin:6px 0">'+
+'<span style="font-size:.7em;color:var(--txt-muted);width:16px;flex-shrink:0">'+(li+1)+'</span>'+
+'<span style="flex:1"><input id="lighting_pin_'+li+'" type="number" min="-1" max="48" value="-1" placeholder="GPIO" style="width:100%"></span>'+
+'<span style="flex:1"><select id="lighting_pattern_'+li+'" style="width:100%">'+
+'<option value="0">Off</option><option value="1">Solid</option><option value="2">Slow blink</option><option value="3">Fast blink</option><option value="4">Fade in/out</option><option value="5">Strobe</option><option value="6">Police</option><option value="7">Rainbow</option></select></span>'+
+'<span style="flex:1"><input id="lighting_phase_'+li+'" type="number" min="0" max="3600" value="0" placeholder="Phase" style="width:100%"></span>'+
+'</div>')}</script>
+</div>
+<div style="display:flex;gap:16px;font-size:.65em;color:var(--txt-muted);margin:2px 0 6px">
+<span style="flex:1;text-align:center">GPIO</span>
+<span style="flex:1;text-align:center">Pattern</span>
+<span style="flex:1;text-align:center">Phase (&deg;)</span>
+</div>
+
+<div class="sec-div">Advanced</div>
+<div class="grid2">
+<div><label>OTA Trigger GPIO</label><input id="ota_trigger_gpio" type="number" min="-1" max="48" value="-1"><div class="hint">GPIO pulled high at boot to enter OTA mode. -1 = disabled.</div></div>
+<div><label style="display:inline-flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" id="mavlink_usb_enable"> MAVLink over USB</label><div class="hint">Enable MAVLink transport over USB CDC.</div></div>
+<div><label>Startup Delay (ms)</label><input id="start_delay_ms" type="number" min="0" max="30000" value="0"><div class="hint">Delay before transmission starts (0&ndash;30000 ms).</div></div>
+<div></div>
+</div>
 
 <button class="btn" type="submit">Save Hardware</button>
 </form>
@@ -809,6 +863,7 @@ fieldset{padding:6px 8px}
 <form id="f4">
 <div class="guide" onclick="toggleGuide(this)">
 <b>Security &amp; Options</b> &mdash; <b>Lock Level 0</b> (Normal) — no restrictions. <b>Level 1</b> (Locked) — only accepts commands signed with a registered public key; the web UI remains accessible but factory reset via CLI requires authentication. <b>Level 2</b> (eFuse permanent) — burns one-time programmable fuses to enforce lock; <strong style="color:#c62828">this cannot be undone and may brick the device if keys are lost!</strong> Set at least one public key before enabling lock levels 1 or 2.
+<a href="https://VOLTEKOVER.github.io/ESP_DRONE_REMOTEID/#guide-security" target="_blank">Wiki &rarr;</a>
 </div>
 
 <label>Lock Level <span class="tag tag-warning">Dangerous</span></label>
@@ -825,6 +880,11 @@ fieldset{padding:6px 8px}
 <label><input type="checkbox" id="opt_nosave"> Don't save BasicID to NVS</label>
 <label><input type="checkbox" id="opt_print"> Print MAVLink RID messages</label>
 <label><input type="checkbox" id="opt_demo"> Demo mode (simulated GPS patrol)</label>
+<label><input type="checkbox" id="opt_kalman"> Kalman filter (GPS smoothing)</label>
+<label><input type="checkbox" id="opt_auth"> Ed25519 auth on transmitted IDs</label>
+<label><input type="checkbox" id="opt_mavlink_arm"> MAVLink arm status gate</label>
+<label><input type="checkbox" id="opt_mavlink_op_loc"> MAVLink operator location loop</label>
+<label><input type="checkbox" id="opt_identity_gate"> Identity ready gate</label>
 </div>
 
 <fieldset style="margin-top:16px">
@@ -868,6 +928,7 @@ fieldset{padding:6px 8px}
 <h2><span class="ico">&#x1f4bb;</span> Console &amp; Telemetry</h2>
 <div class="guide" onclick="toggleGuide(this)">
 Live telemetry and serial console from the ESP32 Remote ID transmitter. The console captures real-time log output from the device firmware — including GPS status, transmission events, and protocol detection. Use the input at the bottom to send CLI commands (<code>restart</code>, <code>status</code>, <code>reset</code>). Telemetry data below shows the latest readings from the flight controller.
+<a href="https://VOLTEKOVER.github.io/ESP_DRONE_REMOTEID/#guide-webui" target="_blank">Wiki &rarr;</a>
 </div>
 
 <div class="term-container">
@@ -1148,6 +1209,13 @@ var mockConfig = {
   protocol:1,baud_rate:57600,mavlink_sysid:1,
   lock_level:0,bcast_powerup:0,webserver_en:1,
   led_r_gpio:13,led_g_gpio:12,led_b_gpio:14,
+  ws2812_gpio:-1,ws2812_brightness:64,
+  uart_port:2,tx_pin:17,rx_pin:16,
+  dronecan_rx_gpio:-1,dronecan_tx_gpio:-1,dronecan_bitrate:500000,
+  ota_trigger_gpio:-1,mavlink_usb_enable:0,start_delay_ms:0,
+  lighting_pin_0:-1,lighting_pin_1:-1,lighting_pin_2:-1,lighting_pin_3:-1,lighting_pin_4:-1,
+  lighting_pattern_0:0,lighting_pattern_1:0,lighting_pattern_2:0,lighting_pattern_3:0,lighting_pattern_4:0,
+  lighting_phase_0:0,lighting_phase_1:0,lighting_phase_2:0,lighting_phase_3:0,lighting_phase_4:0,
   options:8,tx_modes:13,
   public_key_1:'',public_key_2:'',public_key_3:'',public_key_4:'',public_key_5:''
 };
@@ -1356,6 +1424,10 @@ window.fetch = function(url, opts){
 
 function $(id){return document.getElementById(id)}
 
+/* Haptic feedback for touch */
+function haptic(){if(navigator.vibrate)navigator.vibrate(10)}
+document.addEventListener('click',function(e){if(e.target.closest('button,.btn,.btn-sm,.btn-danger,.btn-save-all,.hdr-btn,.nav-item,.ota-zone,.chk label'))haptic()},true)
+
 /* ---------- View modes ---------- */
 function setView(v){
   currentView = v;
@@ -1531,7 +1603,7 @@ if(!hasKey){showMsg('Warning: Lock Level '+lockVal+' without any public key will
 }
 }
 
-$('fwfile').onchange=function(){var f=this.files[0];$('fw_name').textContent=f?f.name+' ('+(f.size/1024).toFixed(0)+' KB)':'No file selected'}
+$('fwfile').onchange=function(){var f=this.files[0];$('fw_name').textContent=f?f.name+' ('+(f.size/1024).toFixed(0)+' KB)':'No file selected';$('fw_name').style.color=f?'#222':'#999'}
 
 var otaZone=$('ota-zone');
 otaZone.ondragover=function(e){e.preventDefault();this.classList.add('dragover')}
@@ -1621,14 +1693,14 @@ function validateField(id){
   clearError(el);return true
 }
 function validateForm(formId){
-  var fields={f1:['uas_id','op_id','self_id_text','uas_id2'],f2:['wifi_pwr','wifi_bcn','wifi_nan','bt4_rate','bt4_pwr','bt5_rate','bt5_pwr'],f3:['wifi_ssid','wifi_pass'],f3b:['mav_sysid'],f4:['lock_lvl'],f5:['led_r_gpio','led_g_gpio','led_b_gpio']}
+  var fields={f1:['uas_id','op_id','self_id_text','uas_id2'],f2:['wifi_pwr','wifi_bcn','wifi_nan','bt4_rate','bt4_pwr','bt5_rate','bt5_pwr'],f3:['wifi_ssid','wifi_pass'],f3b:['mav_sysid'],f4:['lock_lvl'],f5:['led_r_gpio','led_g_gpio','led_b_gpio','ws2812_gpio','ws2812_brightness','tx_pin','rx_pin','dronecan_rx_gpio','dronecan_tx_gpio','ota_trigger_gpio','start_delay_ms']}
   var ids=fields[formId]||[],ok=true
   ids.forEach(function(id){if(!validateField(id))ok=false})
   if(formId==='f1'&&parseInt($('ua_type').value)===0){showMsg('UA Type must be set to a valid aircraft type — \"None\" is not accepted by receivers',1);ok=false}
   if(formId==='f2'&&!$('tx_wifi_bcn').checked&&!$('tx_wifi_nan').checked&&!$('tx_ble4').checked&&!$('tx_ble5').checked){showMsg('At least one transmission mode must be enabled',1);ok=false}
   if(formId==='f1'&&parseInt($('id_type2').value)!==0&&!$('uas_id2').value.trim()){setError($('uas_id2'),'Required when ID Type 2 is set');ok=false}
   if(formId==='f4'){
-    for(var i=1;i<=5;i++){var pk=$('pubkey'+i);if(pk.value.trim()&&!/^PUBLIC_KEYV1:/i.test(pk.value.trim())){setError(pk,'Must start with PUBLIC_KEYV1:');ok=false}}
+    for(var i=1;i<=5;i++){var pk=$('pubkey'+i);if(pk.value.trim()&&!/^(-----BEGIN|PUBLIC_KEYV1:)/i.test(pk.value.trim())){setError(pk,'Must start with PUBLIC_KEYV1: or -----BEGIN');ok=false}}
     var lockVal=parseInt($('lock_lvl').value);
     if(lockVal>=1){
       var hasKey=false;
@@ -1652,7 +1724,7 @@ function toggleGuide(el){
 }
 
 function setPlaceholders(){
-  ['uas_id','op_id','self_id_text','uas_id2','wifi_ssid','wifi_pass','wifi_pwr','wifi_bcn','wifi_nan','bt4_rate','bt4_pwr','bt5_rate','bt5_pwr','mav_sysid','led_r_gpio','led_g_gpio','led_b_gpio'].forEach(function(id){
+  ['uas_id','op_id','self_id_text','uas_id2','wifi_ssid','wifi_pass','wifi_pwr','wifi_bcn','wifi_nan','bt4_rate','bt4_pwr','bt5_rate','bt5_pwr','mav_sysid','led_r_gpio','led_g_gpio','led_b_gpio','ws2812_gpio','ws2812_brightness','tx_pin','rx_pin','dronecan_rx_gpio','dronecan_tx_gpio','ota_trigger_gpio','start_delay_ms'].forEach(function(id){
     var el=$(id);if(el&&!el.value)el.style.opacity=''
   })
   $('status').textContent='Loading configuration...'
@@ -1661,7 +1733,7 @@ function getCfg(){
 showLoading('Loading configuration...');
 fetch('/api/config').then(r=>r.json()).then(c=>{
 $('uas_id').value=c.uas_id||''
-$('id_type').value=c.id_type||1
+$('id_type').value=c.id_type!==undefined?c.id_type:1
 $('ua_type').value=c.ua_type!==undefined?c.ua_type:1
 $('op_id').value=c.operator_id||''
 $('self_id_text').value=c.self_id_text||''
@@ -1671,7 +1743,7 @@ $('op_alt').value=c.operator_alt||''
 $('uas_id2').value=c.uas_id_2||''
 $('id_type2').value=c.id_type_2!==undefined?c.id_type_2:0
 $('ua_type2').value=c.ua_type_2!==undefined?c.ua_type_2:0
-$('wifi_ch').value=c.wifi_channel||6
+$('wifi_ch').value=c.wifi_channel!==undefined?c.wifi_channel:6
 $('wifi_pwr').value=c.wifi_power_dbm!==undefined?c.wifi_power_dbm:20
 $('wifi_bcn').value=c.wifi_bcn_rate_hz!==undefined?c.wifi_bcn_rate_hz:1
 $('wifi_nan').value=c.wifi_nan_rate_hz!==undefined?c.wifi_nan_rate_hz:0
@@ -1684,16 +1756,37 @@ $('wifi_pass').value=c.wifi_password||''
 $('websrv_en').checked=!!c.webserver_en
 $('baud').value=c.baud_rate!==undefined?c.baud_rate:57600
 $('protocol').value=c.protocol!==undefined?c.protocol:255
-$('mav_sysid').value=c.mavlink_sysid||0
+$('mav_sysid').value=c.mavlink_sysid!==undefined?c.mavlink_sysid:0
 $('bcast_pwr').checked=!!c.bcast_powerup
-$('lock_lvl').value=c.lock_level||0
+$('lock_lvl').value=c.lock_level!==undefined?c.lock_level:0
 $('led_r_gpio').value=c.led_r_gpio!==undefined?c.led_r_gpio:-1
 $('led_g_gpio').value=c.led_g_gpio!==undefined?c.led_g_gpio:-1
 $('led_b_gpio').value=c.led_b_gpio!==undefined?c.led_b_gpio:-1
+$('ws2812_gpio').value=c.ws2812_gpio!==undefined?c.ws2812_gpio:-1
+$('ws2812_brightness').value=c.ws2812_brightness!==undefined?c.ws2812_brightness:64
+$('uart_port').value=c.uart_port!==undefined?c.uart_port:2
+$('tx_pin').value=c.tx_pin!==undefined?c.tx_pin:17
+$('rx_pin').value=c.rx_pin!==undefined?c.rx_pin:16
+$('dronecan_rx_gpio').value=c.dronecan_rx_gpio!==undefined?c.dronecan_rx_gpio:-1
+$('dronecan_tx_gpio').value=c.dronecan_tx_gpio!==undefined?c.dronecan_tx_gpio:-1
+$('dronecan_bitrate').value=c.dronecan_bitrate!==undefined?c.dronecan_bitrate:500000
+$('ota_trigger_gpio').value=c.ota_trigger_gpio!==undefined?c.ota_trigger_gpio:-1
+$('mavlink_usb_enable').checked=!!c.mavlink_usb_enable
+$('start_delay_ms').value=c.start_delay_ms!==undefined?c.start_delay_ms:0
+for(var li=0;li<5;li++){
+  var p=$('lighting_pin_'+li);if(p)p.value=c['lighting_pin_'+li]!==undefined?c['lighting_pin_'+li]:-1
+  var pat=$('lighting_pattern_'+li);if(pat)pat.value=c['lighting_pattern_'+li]!==undefined?c['lighting_pattern_'+li]:0
+  var ph=$('lighting_phase_'+li);if(ph)ph.value=c['lighting_phase_'+li]!==undefined?c['lighting_phase_'+li]:0
+}
 $('opt_arm').checked=!!(c.options&1)
 $('opt_nosave').checked=!!(c.options&2)
 $('opt_print').checked=!!(c.options&4)
 $('opt_demo').checked=!!(c.options&8)
+$('opt_kalman').checked=!!(c.options&16)
+$('opt_auth').checked=!!(c.options&32)
+$('opt_mavlink_arm').checked=!!(c.options&64)
+$('opt_mavlink_op_loc').checked=!!(c.options&128)
+$('opt_identity_gate').checked=!!(c.options&256)
 for(var i=1;i<=5;i++){$('pubkey'+i).value=c['public_key_'+i]||''}
 $('tx_wifi_bcn').checked=!!(c.tx_modes&1)
 $('tx_wifi_nan').checked=!!(c.tx_modes&2)
@@ -1740,7 +1833,33 @@ lock_level:parseInt($('lock_lvl').value),
 led_r_gpio:parseInt($('led_r_gpio').value),
 led_g_gpio:parseInt($('led_g_gpio').value),
 led_b_gpio:parseInt($('led_b_gpio').value),
-options:($('opt_arm').checked?1:0)|($('opt_nosave').checked?2:0)|($('opt_print').checked?4:0)|($('opt_demo').checked?8:0),
+ws2812_gpio:parseInt($('ws2812_gpio').value),
+ws2812_brightness:parseInt($('ws2812_brightness').value),
+uart_port:parseInt($('uart_port').value),
+tx_pin:parseInt($('tx_pin').value),
+rx_pin:parseInt($('rx_pin').value),
+dronecan_rx_gpio:parseInt($('dronecan_rx_gpio').value),
+dronecan_tx_gpio:parseInt($('dronecan_tx_gpio').value),
+dronecan_bitrate:parseInt($('dronecan_bitrate').value),
+ota_trigger_gpio:parseInt($('ota_trigger_gpio').value),
+mavlink_usb_enable:$('mavlink_usb_enable').checked?1:0,
+start_delay_ms:parseInt($('start_delay_ms').value),
+lighting_pin_0:parseInt(($('lighting_pin_0')||{}).value||-1),
+lighting_pin_1:parseInt(($('lighting_pin_1')||{}).value||-1),
+lighting_pin_2:parseInt(($('lighting_pin_2')||{}).value||-1),
+lighting_pin_3:parseInt(($('lighting_pin_3')||{}).value||-1),
+lighting_pin_4:parseInt(($('lighting_pin_4')||{}).value||-1),
+lighting_pattern_0:parseInt(($('lighting_pattern_0')||{}).value||0),
+lighting_pattern_1:parseInt(($('lighting_pattern_1')||{}).value||0),
+lighting_pattern_2:parseInt(($('lighting_pattern_2')||{}).value||0),
+lighting_pattern_3:parseInt(($('lighting_pattern_3')||{}).value||0),
+lighting_pattern_4:parseInt(($('lighting_pattern_4')||{}).value||0),
+lighting_phase_0:parseInt(($('lighting_phase_0')||{}).value||0),
+lighting_phase_1:parseInt(($('lighting_phase_1')||{}).value||0),
+lighting_phase_2:parseInt(($('lighting_phase_2')||{}).value||0),
+lighting_phase_3:parseInt(($('lighting_phase_3')||{}).value||0),
+lighting_phase_4:parseInt(($('lighting_phase_4')||{}).value||0),
+options:($('opt_arm').checked?1:0)|($('opt_nosave').checked?2:0)|($('opt_print').checked?4:0)|($('opt_demo').checked?8:0)|($('opt_kalman').checked?16:0)|($('opt_auth').checked?32:0)|($('opt_mavlink_arm').checked?64:0)|($('opt_mavlink_op_loc').checked?128:0)|($('opt_identity_gate').checked?256:0),
 public_key_1:$('pubkey1').value,
 public_key_2:$('pubkey2').value,
 public_key_3:$('pubkey3').value,
@@ -2019,6 +2138,11 @@ function updateDashboard(s){
   $('dash-proto-sub').textContent=s.protocol===0?'No data received':'Flight controller connected';
   $('dash-lat').textContent=s.lat?s.lat.toFixed(6):'---';
   $('dash-lon').textContent=s.lon?s.lon.toFixed(6):'---';
+  var mapLink=$('dash-map-link'),mapA=$('dash-map-a');
+  if(mapLink&&mapA){
+    if(s.lat&&s.lon){mapLink.style.display='block';mapA.href='https://www.openstreetmap.org/?mlat='+s.lat+'&mlon='+s.lon+'#map=15/'+s.lat+'/'+s.lon}
+    else{mapLink.style.display='none'}
+  }
   $('dash-alt').textContent=s.alt?s.alt.toFixed(1)+' m':'---';
   $('dash-speed').textContent=s.speed!==undefined?s.speed.toFixed(1)+' m/s ('+(s.heading!==undefined?s.heading+'\u00b0':'---')+')':'---';
   $('dash-tx-total').textContent='Total: '+(s.tx_total||0).toLocaleString();
