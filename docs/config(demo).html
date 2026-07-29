@@ -1129,7 +1129,7 @@ Live telemetry and serial console from the ESP32 Remote ID transmitter. The cons
 <div style="display:flex;flex-direction:column;gap:8px;max-width:360px">
 <label>Access Password</label>
 <div style="display:flex;gap:6px">
-<input type="password" id="sec-password" maxlength="32" placeholder="Leave empty to disable" style="flex:1">
+<input type="password" id="sec-password" maxlength="32" placeholder="Leave empty to disable" value="fake" style="flex:1">
 <button type="button" class="btn-sm" onclick="toggleSecPwd()" style="padding:3px 10px" id="sec-pwd-toggle">&#x1f441;</button>
 </div>
 <div class="hint">Min 4 chars. If set, login is required to access any page.</div>
@@ -2419,17 +2419,14 @@ function saveSecurity(e){
   showMsg('Security settings saved',0);
 }
 function requireLogin(){
-  var pwd=localStorage.getItem('rid_sec_pwd');
-  if(!pwd){return true}
-  var entered=prompt('Enter access password:');
-  if(atob(pwd)===entered){
+  var entered=prompt('Enter access password (demo accepts any):');
+  if(entered!==null){
     var t=parseInt(localStorage.getItem('rid_sec_timeout')||'15');
     if(t>0){secTimer=setTimeout(function(){localStorage.removeItem('rid_sec_logged');requireLogin()},t*60000)}
     localStorage.setItem('rid_sec_logged','1');
     return true
   }
-  if(entered!==null){showMsg('Incorrect password',1)}else{return true}
-  return false
+  return true
 }
 /* ---------- Data Logging (Betaflight-style) ---------- */
 var logData=[],logging=false,logStart=0;
