@@ -7,6 +7,8 @@
 <meta name="theme-color" content="#121212">
 <meta name="description" content="Configuration and management tool for ESP32 Drone Remote ID">
 <title>ESP DRONE REMOTEID — Configuration (DEMO)</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.3/css/bulma.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
 <style>
 :root{--bg:#f2f2f2;--card-bg:#fff;--card-border:#d4d4d4;--txt:#222;--txt-sec:#666;--txt-muted:#999;--line:#ddd;--hover:#f0f0f0;--input-bg:#fff;--input-border:#d0d0d0;--shadow:rgba(0,0,0,.06);--accent:#222}
 @media(prefers-color-scheme:dark){:root{--bg:#121212;--card-bg:#1e1e1e;--card-border:#333;--txt:#e0e0e0;--txt-sec:#aaa;--txt-muted:#777;--line:#333;--hover:#2a2a2a;--input-bg:#2a2a2a;--input-border:#444;--shadow:rgba(0,0,0,.2);--accent:#fff}}
@@ -27,9 +29,9 @@ body{font-family:var(--font);color:var(--txt);padding:8px 16px;display:flex;flex
 [data-theme="dark"] img[src*="logo"]{filter:brightness(0) invert(1)}
 [data-theme="dark"] #splash .logo{filter:brightness(0) invert(1) drop-shadow(0 2px 4px rgba(0,0,0,.5))}
 .logo-txt .sub{font-weight:400;font-size:.5em;display:block;letter-spacing:1px;color:var(--txt-muted);-webkit-text-fill-color:var(--txt-muted)}
-[data-theme="light"] .tag-stable{background:#e8f5e9;color:#2e7d32;border-color:#a5d6a7}[data-theme="dark"] .tag-stable{background:#152d15;color:#5a9e5a;border-color:#2e5a2e}
-[data-theme="light"] .tag-beta{background:#fff8e1;color:#f57f17;border-color:#ffe082}[data-theme="dark"] .tag-beta{background:#2a2000;color:#e0b000;border-color:#665000}
-[data-theme="light"] .tag-na{background:#f5f5f5;color:#999;border-color:#ddd}[data-theme="dark"] .tag-na{background:#1e1e1e;color:#666;border-color:#333}
+[data-theme="light"] [data-theme="dark"] 
+[data-theme="light"] [data-theme="dark"] 
+[data-theme="light"] [data-theme="dark"] 
 .hdr{background:var(--card-bg);border-radius:10px;margin:0 0 6px;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;border:1px solid var(--card-border);box-shadow:0 1px 3px var(--shadow);flex-shrink:0;font-size:1.05em}
 .hdr .brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--txt)}
 .hdr .brand h1{font-size:1.15em;font-weight:600;letter-spacing:-.3px}
@@ -73,8 +75,8 @@ input.error,select.error{border-color:#c62828!important;border-width:2px!importa
 input.ok,select.ok{border-color:#2e7d32!important}
 input.warn,select.warn{border-color:#f57f17!important}
 .field-wrap{display:flex;align-items:center;gap:4px}
-.field-wrap label{flex-shrink:0}
-.field-wrap input,.field-wrap select{flex:1}
+.field-wrap 
+.field-wrap input,.field-wrap 
 input:disabled,select:disabled{opacity:.4;cursor:not-allowed}
 .hdr-menu-btn{display:none;background:none;border:none;color:var(--txt);font-size:1.2em;cursor:pointer;padding:2px 6px;border-radius:4px}
 .hdr-menu-btn:hover{background:var(--hover)}
@@ -102,16 +104,16 @@ input:disabled,select:disabled{opacity:.4;cursor:not-allowed}
 .dialog-wait-box h3{font-size:1em;text-align:center}
 .dialog-wait-content{font-size:.85em;color:var(--txt-sec);text-align:center}
 .modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
-.modal-actions button{padding:10px 24px;border-radius:8px;border:none;font-size:.85em;cursor:pointer;font-weight:600;transition:all .15s;width:auto;margin:0}
-.modal-actions .btn-cancel{background:var(--hover);color:var(--txt);border:1px solid var(--line)}
-.modal-actions .btn-cancel:hover{background:var(--card-border);color:var(--txt)}
-.modal-actions .btn-danger{background:#c62828;color:#fff}
-.modal-actions .btn-danger:hover{background:#e53935}
-.modal-actions .btn{background:var(--accent);color:#fff}
-.modal-actions .btn:hover{opacity:.85}
-[data-theme="dark"] .modal-actions .btn-cancel{background:#2a2a2a;color:#aaa;border-color:#3a3a3a}
-[data-theme="dark"] .modal-actions .btn-cancel:hover{background:#333;color:#e0e0e0}
-[data-theme="dark"] .modal-actions .btn{background:#444;color:#fff}
+.modal-actions .button{margin:0}
+
+
+
+
+
+.modal-actions 
+
+
+
 .st-icon{display:inline-flex;align-items:center;font-size:.8em;opacity:.5;transition:opacity .2s}
 .st-icon.active{opacity:1}
 .st-icon.armed{color:#2e7d32}
@@ -124,7 +126,7 @@ input:disabled,select:disabled{opacity:.4;cursor:not-allowed}
 .st-flash-progress{display:inline-block;width:30px;height:6px;background:var(--hover);border-radius:3px;overflow:hidden;vertical-align:middle}
 .st-flash-fill{display:block;height:100%;background:var(--accent);border-radius:3px;transition:width .5s ease;opacity:.6}
 .sensor-grid .sg-item{display:flex;justify-content:space-between;align-items:center;padding:4px 8px;background:var(--hover);border-radius:4px}
-.sensor-grid .sg-label{color:var(--txt-muted);font-size:.85em}
+.sensor-grid .sg-
 .sensor-grid .sg-value{font-weight:600;font-family:monospace;font-size:.95em}
 #preset-list .preset-item{display:flex;align-items:center;justify-content:space-between;padding:6px 10px;margin:3px 0;background:var(--hover);border-radius:6px;gap:6px}
 #preset-list .preset-item .preset-name{flex:1;font-weight:500;font-size:.9em}
@@ -138,32 +140,29 @@ input:disabled,select:disabled{opacity:.4;cursor:not-allowed}
 }
 @keyframes pulse{0%{opacity:1}50%{opacity:.4}100%{opacity:1}}
 .hdr-actions{display:flex;align-items:center;gap:6px}
-[data-theme="light"] .btn-save-all{background:var(--accent);color:#fff;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:.76em;font-weight:500;letter-spacing:.3px;transition:background .2s;white-space:nowrap}
-[data-theme="dark"] .btn-save-all{background:#333;color:#fff}
-.btn-save-all:hover{opacity:.8}
-.btn-save-all.loading{opacity:.6;pointer-events:none}
-@media(max-width:600px){.hdr{padding:6px 8px;font-size:.85em}.hdr-actions .btn-save-all{font-size:.65em;padding:4px 8px}.hdr-btn{font-size:.65em;padding:3px 6px}}
+
+@media(max-width:600px){.hdr{padding:6px 8px;font-size:.85em}}
 .card{background:var(--card-bg);border-radius:12px;padding:24px;border:1px solid var(--card-border);box-shadow:0 1px 3px var(--shadow)}
 .card h2{font-size:.85em;color:var(--txt);margin:0 0 8px;padding-bottom:6px;border-bottom:2px solid var(--accent);display:flex;align-items:center;gap:8px;font-weight:600;letter-spacing:.3px;flex-shrink:0}
 .card h2 .ico{width:24px;height:24px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;background:var(--hover);color:var(--txt);flex-shrink:0}
-label{display:block;font-size:.68em;color:var(--txt-sec);margin:8px 0 2px;letter-spacing:.3px;text-transform:uppercase;font-weight:500}
-input,select{width:100%;padding:6px 10px;border:1px solid var(--input-border);border-radius:5px;background:var(--input-bg);color:var(--txt);font-size:.8em;outline:0;transition:border .2s,box-shadow .2s;appearance:none;-webkit-appearance:none}
-select{padding-right:26px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23999'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;background-size:10px 6px;cursor:pointer}
-input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(0,0,0,.08)}
+
+
+
+
 .hint{font-size:.66em;color:var(--txt-muted);margin:2px 0 0}
 .errmsg{font-size:.66em;color:#c62828;margin:1px 0 0;display:none}
 input.error+.errmsg,select.error+.errmsg{display:block}
-[data-theme="light"] .btn{background:var(--accent);color:#fff;border:none;padding:7px 14px;border-radius:5px;cursor:pointer;width:100%;font-size:.78em;font-weight:500;margin-top:10px;transition:background .2s;letter-spacing:.3px;flex-shrink:0}
-[data-theme="dark"] .btn{background:#333;color:#fff}
-.btn:hover{opacity:.85}
-.btn:active{transform:scale(.98)}
-.btn.loading{opacity:.7;pointer-events:none}
-.btn-sm{background:var(--hover);color:var(--txt);border:1px solid var(--line);padding:4px 10px;border-radius:4px;cursor:pointer;font-size:.7em;margin-top:6px;width:auto;transition:background .2s;flex-shrink:0}
-.btn-sm:hover{background:var(--card-border)}
-.btn-danger{background:transparent;color:#c00;border:1px solid rgba(198,40,40,.2);padding:5px 12px;border-radius:5px;cursor:pointer;font-size:.72em;margin-top:6px;width:100%;transition:background .2s;text-align:center;flex-shrink:0}
-.btn-danger:hover{background:rgba(198,40,40,.08)}
+
+
+
+
+
+
+
+
+
 .chk{display:flex;gap:4px;flex-wrap:wrap;margin:4px 0}
-.chk label{display:inline-flex;align-items:center;gap:4px;font-size:.73em;width:auto;margin:0;cursor:pointer;background:var(--hover);padding:4px 10px;border-radius:4px;border:1px solid var(--line);text-transform:none;color:var(--txt-sec);transition:background .2s}
+.chk 
 .chk label:hover{background:var(--card-border)}
 .chk input[type=checkbox]{width:auto;appearance:auto;-webkit-appearance:auto}
 input[type=checkbox]{width:auto;appearance:auto;-webkit-appearance:auto}
@@ -171,7 +170,7 @@ pre{background:var(--hover);padding:16px;border-radius:6px;font-size:.78em;overf
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 @media(max-width:750px){.grid2{grid-template-columns:1fr}}
 .status-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:.82em}
-.status-grid .sg-label{color:var(--txt-muted);padding:4px 0}
+.status-grid .sg-
 .status-grid .sg-val{color:var(--txt);text-align:right;font-weight:500;padding:4px 0}
 .status-grid .sg-full{grid-column:1/-1;border-top:1px solid var(--line);margin-top:4px;padding-top:8px;font-size:.85em}
 .guide{font-size:.7em;color:var(--txt-sec);line-height:1.4;margin:6px 0;padding:8px 10px;background:var(--hover);border-radius:5px;border-left:3px solid var(--accent);cursor:pointer;user-select:none;position:relative;transition:max-height .3s ease;flex-shrink:0}
@@ -190,24 +189,24 @@ hr{border:none;border-top:1px solid var(--line);margin:8px 0;flex-shrink:0}
 .footer{text-align:center;margin-top:4px;font-size:.65em;color:var(--txt-muted);flex-shrink:0}
 .footer a{color:var(--txt-muted);text-decoration:none}
 .footer a:hover{color:var(--txt);text-decoration:underline}
-.hdr-btn{background:var(--hover);color:var(--txt);border:1px solid var(--line);padding:5px 12px;border-radius:6px;cursor:pointer;font-size:.76em;font-weight:500;transition:all .2s;white-space:nowrap;display:inline-flex;align-items:center;gap:4px;text-decoration:none;font-family:inherit}
-.hdr-btn:hover{background:var(--card-border);color:var(--txt)}
-.hdr-btn.github{background:transparent;color:var(--txt-muted);border:none;padding:5px 8px;font-size:.72em}
-.hdr-btn.github:hover{color:var(--txt);background:transparent}
-.hdr-btn.danger{color:#c62828}
-[data-theme="light"] .hdr-btn.danger:hover{background:#fbe9e7;border-color:#ef9a9a}
-[data-theme="dark"] .hdr-btn.danger:hover{background:#2d1515;border-color:#c66}
+
+
+
+
+
+
+
 code{background:var(--hover);padding:2px 6px;border-radius:3px;font-size:.9em;color:var(--txt)}
-.tag{display:inline-block;padding:1px 7px;border-radius:3px;font-size:.65em;font-weight:600;letter-spacing:.3px;text-transform:uppercase;vertical-align:middle;margin-left:4px}
-.tag-stable{background:#e8f5e9;color:#2e7d32;border:1px solid #a5d6a7}
-.tag-beta{background:#fff8e1;color:#f57f17;border:1px solid #ffe082}
-.tag-na{background:#f5f5f5;color:#999;border:1px solid #ddd}
-.tag-warning{background:#fbe9e7;color:#c62828;border:1px solid #ef9a9a}
+
+
+
+
+
 fieldset{border:1px solid var(--line);border-radius:5px;padding:10px 12px;margin:8px 0;position:relative}
 fieldset legend{font-size:.66em;color:var(--txt-sec);padding:0 6px;font-weight:600;letter-spacing:.3px;text-transform:uppercase}
 fieldset.beta legend{color:#f57f17}
 fieldset.beta{opacity:.6;border-color:#ffe082}
-fieldset.beta input,fieldset.beta select{pointer-events:auto}
+fieldset.beta input,fieldset.beta 
 fieldset.disabled{opacity:.4;pointer-events:none}
 
 [data-theme="light"] .disclaimer{text-align:center;margin:0 0 6px;padding:8px 14px;background:#fff3e0;border:1px solid #e65100;border-radius:8px;font-size:.64em;color:#bf360c;line-height:1.5;flex-shrink:0;border-left:4px solid #e65100}
@@ -236,8 +235,8 @@ fieldset.disabled{opacity:.4;pointer-events:none}
 .term-header{display:flex;align-items:center;justify-content:space-between;padding:5px 10px;background:var(--hover);color:var(--txt-sec);font-size:.7em;flex-shrink:0}
 .term-title{font-weight:500;color:var(--txt)}
 .term-toolbar{display:flex;gap:4px}
-.term-toolbar .btn-sm{background:none;border:1px solid var(--line);color:var(--txt-muted);padding:2px 10px;font-size:.75em;margin:0}
-.term-toolbar .btn-sm:hover{background:var(--hover);color:var(--txt)}
+
+
 .term-output{overflow-y:auto;padding:4px 10px;font-family:'Cascadia Code','Fira Code','Consolas',monospace;font-size:.68em;line-height:1.4;background:#1e1e1e;color:#ccc;flex:1;min-height:30px}
 .term-output .line{padding:1px 0;white-space:pre-wrap;word-break:break-all}
 .term-output .line.lv-I{color:#8bc34a}
@@ -272,8 +271,8 @@ fieldset.disabled{opacity:.4;pointer-events:none}
 .sidebar .nav-item:hover{background:var(--hover);color:var(--txt)}
 .sidebar .nav-item.active{background:var(--hover);color:var(--txt);font-weight:600;box-shadow:inset 2px 0 0 var(--accent)}
 .sidebar .nav-icon{font-size:1em;width:20px;text-align:center;flex-shrink:0}
-.sidebar .nav-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.sidebar .nav-group-label{padding:8px 12px 2px;font-size:.62em;font-weight:600;color:var(--txt-muted);text-transform:uppercase;letter-spacing:.5px;flex-shrink:0}
+.sidebar .nav-
+.sidebar .nav-group-
 .main-content{flex:1;min-width:0;background:var(--card-bg);border:1px solid var(--card-border);border-left:none;border-radius:0 10px 10px 0;padding:12px 16px;box-shadow:0 1px 3px var(--shadow);display:flex;flex-direction:column;overflow:hidden}
 .main-content .tab-pane>.card{border:none;box-shadow:none;padding:0;margin:0;background:transparent}
 .main-content .card h2{margin-top:0}
@@ -288,7 +287,7 @@ body{padding:4px 8px}
 .sidebar.open{left:0}
 .sidebar .nav-item{padding:10px 12px;min-height:44px;font-size:.88em;gap:10px}
 .sidebar .nav-item.active{box-shadow:none;border-left:3px solid var(--accent);border-radius:4px}
-.sidebar .nav-group-label{padding:10px 12px 4px;font-size:.7em}
+.sidebar .nav-group-
 .main-content{border-left:1px solid var(--card-border);border-top:none;border-radius:10px;margin-top:0;padding:8px 10px}
 .disclaimer{font-size:.55em;padding:4px 8px}
 }
@@ -306,9 +305,9 @@ body{padding:2px 4px}
 .main-content{padding:6px 8px;border-radius:8px}
 .card{padding:12px;border-radius:8px}
 .card h2{font-size:.82em}
-input,select{padding:5px 8px;font-size:.78em}
+
 .btn{padding:8px 14px;font-size:.82em;min-height:40px}
-.btn-sm{font-size:.68em;padding:3px 8px;min-height:32px}
+
 .sec-div{font-size:.7em;margin:12px 0 4px}
 .guide{font-size:.68em;padding:6px 8px}
 .sidebar .nav-item{font-size:.72em;padding:6px 8px;min-height:40px}
@@ -317,24 +316,24 @@ input,select{padding:5px 8px;font-size:.78em}
 .dash-grid{grid-template-columns:1fr}
 .dash-bottom{font-size:.9em}
 .sensor-grid{grid-template-columns:1fr!important}
-.sidebar .nav-group-label{font-size:.65em;padding:4px 6px 1px}
+.sidebar .nav-group-
 #log-pane-grid{grid-template-columns:1fr 1fr!important}
 }
 @media(max-width:400px){
 .hdr .brand h1{font-size:.88em}
 .hdr-chip{font-size:.58em;padding:1px 4px}
-.hdr-actions .btn-save-all{font-size:.6em;padding:3px 6px}
-.hdr-btn{font-size:.6em;padding:2px 5px}
+
+
 .main-content{padding:4px 6px}
 .card{padding:8px 6px}
-input,select{font-size:.7em;padding:4px 6px}
-label{font-size:.65em}
+
+
 .hint{font-size:.65em}
 .grid2{gap:4px}
 fieldset{padding:6px 8px}
 .dash-card{padding:6px 10px;min-height:40px}
 .dash-card .dc-val{font-size:.88em}
-.dash-card .dc-label{font-size:.55em}
+.dash-card .dc-
 }
 
 /* ---------- Dashboard ---------- */
@@ -343,7 +342,7 @@ fieldset{padding:6px 8px}
 .dash-hdr h2{font-size:.9em;color:var(--txt);margin:0}
 .dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;flex-shrink:0}
 .dash-card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:10px;padding:10px 14px;min-height:60px;position:relative}
-.dash-card .dc-label{font-size:.6em;color:var(--txt-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px}
+.dash-card .dc-
 .dash-card .dc-val{font-size:1em;font-weight:600;color:var(--txt)}
 .dash-card .dc-val.dc-large{font-size:1.3em}
 .dash-card .dc-sub{font-size:.68em;color:var(--txt-muted);margin-top:1px}
@@ -367,7 +366,7 @@ fieldset{padding:6px 8px}
 .bar-fill.ble5{background:linear-gradient(180deg,#e65100,#fb8c00)}
 .bar-fill.nan{background:linear-gradient(180deg,#6a1b9a,#ab47bc)}
 .bar-value{font-size:.95em;font-weight:700;color:var(--txt)}
-.bar-label{font-size:.62em;color:var(--txt-muted);text-transform:uppercase;letter-spacing:.3px}
+.bar-
 
 .signal-gauge{display:flex;gap:3px;align-items:center;margin-top:2px}
 .signal-gauge .sg-bar{width:4px;border-radius:2px;background:var(--hover);transition:all .4s ease;height:12px}
@@ -393,12 +392,12 @@ fieldset{padding:6px 8px}
 
 @keyframes floatUp{0%{opacity:0;transform:translateY(4px)}100%{opacity:1;transform:translateY(0)}}
 .bar-group .bar-value{animation:floatUp .4s ease}
-[data-theme="dark"] select{background:var(--input-bg);color:var(--txt);border-color:var(--input-border)}
-[data-theme="dark"] input:focus,[data-theme="dark"] select:focus{box-shadow:0 0 0 2px rgba(255,255,255,.08)}
+
+
 [data-theme="dark"] .errmsg{color:#ef5350}
-[data-theme="dark"] .btn-danger{color:#ef5350;border-color:rgba(239,83,80,.3)}
-[data-theme="dark"] .btn-danger:hover{background:rgba(239,83,80,.12)}
-[data-theme="dark"] .tag-warning{background:#2d1515;color:#ef5350;border-color:#c66}
+
+
+[data-theme="dark"] 
 [data-theme="dark"] .dash-badge.ok{background:#152d15;color:#66bb6a}
 [data-theme="dark"] .dash-badge.warn{background:#2a2000;color:#ffd54f}
 [data-theme="dark"] .dash-badge.err{background:#2d1515;color:#ef5350}
@@ -410,10 +409,13 @@ fieldset{padding:6px 8px}
 [data-theme="dark"] .st-icon.link.active{color:#64b5f6}
 [data-theme="dark"] fieldset.beta{border-color:#665000}
 [data-theme="dark"] fieldset.beta legend{color:#ffd54f}
+[data-theme="dark"]{--bulma-body-bg:var(--bg);--bulma-scheme-main:var(--card-bg);--bulma-scheme-main-bis:var(--hover);--bulma-text:var(--txt);--bulma-text-strong:var(--txt);--bulma-text-light:var(--txt-sec);--bulma-border:var(--line);--bulma-link:#7a9fdb;--bulma-link-hover:#aac3ef;--bulma-input-bg:var(--input-bg);--bulma-input-border-color:var(--input-border);--bulma-box-bg:var(--card-bg);--bulma-navbar-bg:var(--card-bg)}
+[x-cloak]{display:none!important}
 </style>
-<link rel="stylesheet" href="shared.css"></head>
-<body>
-<div id="splash">
+<link rel="stylesheet" href="shared.css">
+</head>
+<body x-data="app()">
+<div id="splash" x-show="splashVisible" x-transition.opacity.duration.500ms x-cloak>
 <img class="logo" src="images/logo con scritta.svg" alt="ESP DRONE REMOTEID">
 <div class="sub">Open DroneID Transmitter</div>
 <div class="spinner"></div>
@@ -446,14 +448,14 @@ fieldset{padding:6px 8px}
 <span class="hdr-sensor" id="hdr-sns-ble5"><span class="sd"></span>BLE5</span>
 </div>
 <div class="hdr-actions">
-<button class="btn-save-all" id="btn-save-all" onclick="saveAll()">&#x1f4be; Save All</button>
-<button class="hdr-btn" onclick="exportCfg()">&#x1f4e5; Export</button>
-<button class="hdr-btn" onclick="document.getElementById('import-file').click()">&#x1f4e4; Import</button>
+<button class="btn-save-all button is-small is-dark" id="btn-save-all" onclick="saveAll()">&#x1f4be; Save All</button>
+<button class="hdr-btn button is-small is-light" onclick="exportCfg()">&#x1f4e5; Export</button>
+<button class="hdr-btn button is-small is-light" onclick="document.getElementById('import-file').click()">&#x1f4e4; Import</button>
 <input type="file" id="import-file" accept=".json" style="display:none" onchange="importCfg(this)">
-<a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID" target="_blank" class="hdr-btn github">GitHub</a>
-<button class="hdr-btn" id="btn-reconnect" onclick="getCfg()" title="Reconnect / Refresh">&#x1f504;</button>
-<button class="hdr-btn" onclick="showIssues()" title="Check for problems" style="font-size:.9em">&#x1f6a8;</button>
-<button id="dark-toggle" onclick="toggleDark()" class="hdr-btn" style="font-size:.9em;padding:4px 8px" title="Toggle dark mode">&#x263e;</button>
+<a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID" target="_blank" class="hdr-btn github button is-small is-ghost">GitHub</a>
+<button class="hdr-btn button is-small is-light" id="btn-reconnect" onclick="getCfg()" title="Reconnect / Refresh">&#x1f504;</button>
+<button class="hdr-btn button is-small is-light" onclick="showIssues()" title="Check for problems" style="font-size:.9em">&#x1f6a8;</button>
+<button id="dark-toggle" @click="toggleDark()" class="hdr-btn button is-small is-light" style="font-size:.9em;padding:4px 8px" title="Toggle dark mode">&#x263e;</button>
 </div>
 </div>
 
@@ -462,27 +464,27 @@ fieldset{padding:6px 8px}
 </div>
 
 <div class="layout">
-<nav class="sidebar" id="sidebar">
-    <div class="nav-group-label">Monitor</div>
-<button class="nav-item active" data-tab="dashboard" onclick="setView('dashboard')"><span class="nav-icon">&#x1f4ca;</span><span class="nav-label">Dashboard</span></button>
-<div class="nav-group-label">Configuration</div>
-<button class="nav-item" data-tab="identity" onclick="setView('identity')"><span class="nav-icon">&#x1f9d1;</span><span class="nav-label">Identity</span></button>
-<button class="nav-item" data-tab="transmission" onclick="setView('transmission')"><span class="nav-icon">&#x1f4e1;</span><span class="nav-label">Transmission</span></button>
-<button class="nav-item" data-tab="ap" onclick="setView('ap')"><span class="nav-icon">&#x1f4f6;</span><span class="nav-label">Access Point</span></button>
-<button class="nav-item" data-tab="fc" onclick="setView('fc')" data-fc-needed="true"><span class="nav-icon">&#x1f6f0;</span><span class="nav-label">Flight Controller</span></button>
-<div class="nav-group-label">Hardware</div>
-<button class="nav-item" data-tab="hardware" onclick="setView('hardware')"><span class="nav-icon">&#x1f527;</span><span class="nav-label">Hardware</span></button>
-<div class="nav-group-label">Advanced</div>
-<button class="nav-item" data-tab="system" onclick="setView('system')"><span class="nav-icon">&#x2699;</span><span class="nav-label">System</span></button>
-<button class="nav-item" data-tab="firmware" onclick="setView('firmware')"><span class="nav-icon">&#x1f4e4;</span><span class="nav-label">Firmware</span></button>
-<div class="nav-group-label">Tools</div>
-<button class="nav-item" data-tab="console" onclick="setView('console')"><span class="nav-icon">&#x1f4bb;</span><span class="nav-label">Console</span></button>
-<button class="nav-item" data-tab="presets" onclick="setView('presets')"><span class="nav-icon">&#x1f4cb;</span><span class="nav-label">Presets</span></button>
-<button class="nav-item" data-tab="logging" onclick="setView('logging')"><span class="nav-icon">&#x1f4dd;</span><span class="nav-label">Logging</span></button>
-<button class="nav-item" data-tab="sensors" onclick="setView('sensors')"><span class="nav-icon">&#x1f50d;</span><span class="nav-label">Sensors</span></button>
-<button class="nav-item" data-tab="compliance" onclick="setView('compliance')"><span class="nav-icon">&#x2696;</span><span class="nav-label">Compliance</span></button>
-<button class="nav-item" data-tab="security" onclick="setView('security')"><span class="nav-icon">&#x1f510;</span><span class="nav-label">Security</span></button>
-<button class="nav-item" data-tab="help" onclick="setView('help')"><span class="nav-icon">&#x2753;</span><span class="nav-label">Help</span></button>
+<nav class="sidebar menu" id="sidebar">
+    <p class="menu-label nav-group-label">Monitor</p>
+<ul class="menu-list"><li><button class="nav-item is-active" data-tab="dashboard" onclick="setView('dashboard')"><span class="nav-icon">&#x1f4ca;</span><span class="nav-label">Dashboard</span></button></li></ul>
+<p class="menu-label nav-group-label">Configuration</p>
+<ul class="menu-list"><li><button class="nav-item" data-tab="identity" onclick="setView('identity')"><span class="nav-icon">&#x1f9d1;</span><span class="nav-label">Identity</span></button></li>
+<li><button class="nav-item" data-tab="transmission" onclick="setView('transmission')"><span class="nav-icon">&#x1f4e1;</span><span class="nav-label">Transmission</span></button></li>
+<li><button class="nav-item" data-tab="ap" onclick="setView('ap')"><span class="nav-icon">&#x1f4f6;</span><span class="nav-label">Access Point</span></button></li>
+<li><button class="nav-item" data-tab="fc" onclick="setView('fc')" data-fc-needed="true"><span class="nav-icon">&#x1f6f0;</span><span class="nav-label">Flight Controller</span></button></li></ul>
+<p class="menu-label nav-group-label">Hardware</p>
+<ul class="menu-list"><li><button class="nav-item" data-tab="hardware" onclick="setView('hardware')"><span class="nav-icon">&#x1f527;</span><span class="nav-label">Hardware</span></button></li></ul>
+<p class="menu-label nav-group-label">Advanced</p>
+<ul class="menu-list"><li><button class="nav-item" data-tab="system" onclick="setView('system')"><span class="nav-icon">&#x2699;</span><span class="nav-label">System</span></button></li>
+<li><button class="nav-item" data-tab="firmware" onclick="setView('firmware')"><span class="nav-icon">&#x1f4e4;</span><span class="nav-label">Firmware</span></button></li></ul>
+<p class="menu-label nav-group-label">Tools</p>
+<ul class="menu-list"><li><button class="nav-item" data-tab="console" onclick="setView('console')"><span class="nav-icon">&#x1f4bb;</span><span class="nav-label">Console</span></button></li>
+<li><button class="nav-item" data-tab="presets" onclick="setView('presets')"><span class="nav-icon">&#x1f4cb;</span><span class="nav-label">Presets</span></button></li>
+<li><button class="nav-item" data-tab="logging" onclick="setView('logging')"><span class="nav-icon">&#x1f4dd;</span><span class="nav-label">Logging</span></button></li>
+<li><button class="nav-item" data-tab="sensors" onclick="setView('sensors')"><span class="nav-icon">&#x1f50d;</span><span class="nav-label">Sensors</span></button></li>
+<li><button class="nav-item" data-tab="compliance" onclick="setView('compliance')"><span class="nav-icon">&#x2696;</span><span class="nav-label">Compliance</span></button></li>
+<li><button class="nav-item" data-tab="security" onclick="setView('security')"><span class="nav-icon">&#x1f510;</span><span class="nav-label">Security</span></button></li>
+<li><button class="nav-item" data-tab="help" onclick="setView('help')"><span class="nav-icon">&#x2753;</span><span class="nav-label">Help</span></button></li></ul>
 </nav>
 <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="toggleMobileMenu()"></div>
 
@@ -546,20 +548,20 @@ fieldset{padding:6px 8px}
 </div>
 
 <div class="dash-bottom">
-<div class="card">
+<div class="card box">
 <h2><span class="ico">&#x1f4ca;</span> Live Telemetry</h2>
 <div id="status" style="min-height:60px">Loading...</div>
 </div>
-<div class="card">
+<div class="card box">
 <h2><span class="ico">&#x1f4bb;</span> Console</h2>
 <div class="term-container">
 <div class="term-header">
 <span class="term-title">&#x1f4bb; Console Output</span>
 <div class="term-toolbar">
-<button class="btn-sm" onclick="copyTerm('term-output2')" title="Copy console">&#x1f4cb; Copy</button>
-<button class="btn-sm" onclick="copyAllLogs()" title="Copy all logs from device">&#x1f4cb; All</button>
-<button class="btn-sm" onclick="clearTerm2()" title="Clear console">&#x1f5d1; Clear</button>
-<button class="btn-sm" id="term-scroll-btn2" onclick="toggleTermScroll2()" title="Toggle auto-scroll">&#x1f53d; Auto</button>
+<button class="btn-sm button is-small is-light" onclick="copyTerm('term-output2')" title="Copy console">&#x1f4cb; Copy</button>
+<button class="btn-sm button is-small is-light" onclick="copyAllLogs()" title="Copy all logs from device">&#x1f4cb; All</button>
+<button class="btn-sm button is-small is-light" onclick="clearTerm2()" title="Clear console">&#x1f5d1; Clear</button>
+<button class="btn-sm button is-small is-light" id="term-scroll-btn2" onclick="toggleTermScroll2()" title="Toggle auto-scroll">&#x1f53d; Auto</button>
 </div>
 </div>
 <div class="term-output" id="term-output2">
@@ -567,7 +569,7 @@ fieldset{padding:6px 8px}
 </div>
 <div class="term-input-row">
 <input type="text" id="term-input2" placeholder="Type command (restart, status, reset)..." onkeydown="if(event.key==='Enter')sendCmd2()">
-<button class="btn-sm" onclick="sendCmd2()" style="margin:0;flex-shrink:0">Send</button>
+<button class="btn-sm button is-small is-light" onclick="sendCmd2()" style="margin:0;flex-shrink:0">Send</button>
 </div>
 </div>
 </div>
@@ -577,7 +579,7 @@ fieldset{padding:6px 8px}
 
 <!-- IDENTITY -->
 <div id="tab-identity" class="tab-pane">
-<div class="card">
+<div class="card box">
 <h2><span class="ico">&#x1f464;</span> Identity <span class="tag tag-stable">Stable</span></h2>
 <form id="f1">
 <div class="guide" onclick="toggleGuide(this)">
@@ -585,14 +587,14 @@ fieldset{padding:6px 8px}
 <a href="https://VOLTEKOVER.github.io/ESP_DRONE_REMOTEID/#guide-config" target="_blank">Wiki &rarr;</a>
 </div>
 
-<label>UAS ID</label>
-<input id="uas_id" maxlength="20" placeholder="e.g. RID-12345678 or serial number">
+<label class="label">UAS ID</label>
+<input class="input" id="uas_id" maxlength="20" placeholder="e.g. RID-12345678 or serial number">
 <div class="hint">Max 20 chars. Serial number (recommended) or CAA registration.</div>
 
 <div class="grid2">
 <div>
-<label>ID Type</label>
-<select id="id_type">
+<label class="label">ID Type</label>
+<select class="select" id="id_type">
 <option value="1">Serial Number (ANSI/CTA-2063)</option>
 <option value="2">CAA Registration</option>
 <option value="3">UTM UUID</option>
@@ -600,8 +602,8 @@ fieldset{padding:6px 8px}
 </select>
 </div>
 <div>
-<label>UA Type</label>
-<select id="ua_type">
+<label class="label">UA Type</label>
+<select class="select" id="ua_type">
 <option value="0">None</option><option value="1">Aeroplane</option><option value="2" selected>Helicopter / Multirotor</option>
 <option value="3">Gyroplane</option><option value="4">Hybrid Lift</option><option value="5">Ornithopter</option>
 <option value="6">Glider</option><option value="7">Kite</option><option value="8">Free Balloon</option>
@@ -613,60 +615,60 @@ fieldset{padding:6px 8px}
 </div>
 </div>
 
-<label>Operator ID</label>
+<label class="label">Operator ID</label>
 <input id="op_id" maxlength="20" placeholder="e.g. OP-MARIO-12345">
 
-<label>Self-ID Description</label>
+<label class="label">Self-ID Description</label>
 <input id="self_id_text" maxlength="23" placeholder="e.g. Camera drone, DOY1234">
 <div class="hint">Free-form text (max 23 chars). Broadcast to receivers with Self-ID message.</div>
 
 <div class="sec-div">Operator Position (separate from drone)</div>
 <div class="grid2">
-<div><label>Operator Latitude</label><input id="op_lat" type="number" step="any" placeholder="e.g. 41.9028"><div class="hint">Leave 0 to use drone position</div></div>
-<div><label>Operator Longitude</label><input id="op_lon" type="number" step="any" placeholder="e.g. 12.4964"><div class="hint">Leave 0 to use drone position</div></div>
+<div><label class="label">Operator Latitude</label><input id="op_lat" type="number" step="any" placeholder="e.g. 41.9028"><div class="hint">Leave 0 to use drone position</div></div>
+<div><label class="label">Operator Longitude</label><input id="op_lon" type="number" step="any" placeholder="e.g. 12.4964"><div class="hint">Leave 0 to use drone position</div></div>
 </div>
 <div class="grid2">
-<div><label>Operator Altitude (m)</label><input id="op_alt" type="number" step="0.1" placeholder="e.g. 50"><div class="hint">Operator altitude in meters</div></div>
+<div><label class="label">Operator Altitude (m)</label><input id="op_alt" type="number" step="0.1" placeholder="e.g. 50"><div class="hint">Operator altitude in meters</div></div>
 </div>
 
 <fieldset style="margin-top:16px">
 <legend>Second Basic ID &#x1f4cb; <span style="font-weight:400;color:var(--txt-muted)">optional</span></legend>
 <div class="grid2">
-<div><label>UAS ID 2</label><input id="uas_id2" maxlength="20" placeholder="Secondary ID"><div id="id2-hint" class="hint" style="color:#c62828;display:none;margin-top:2px"></div></div>
-<div><label>ID Type 2</label><select id="id_type2"><option value="0">None</option><option value="1">Serial</option><option value="2">CAA</option><option value="3">UTM</option><option value="4">Session</option></select></div>
+<div><label class="label">UAS ID 2</label><input id="uas_id2" maxlength="20" placeholder="Secondary ID"><div id="id2-hint" class="hint" style="color:#c62828;display:none;margin-top:2px"></div></div>
+<div><label class="label">ID Type 2</label><select class="select" id="id_type2"><option value="0">None</option><option value="1">Serial</option><option value="2">CAA</option><option value="3">UTM</option><option value="4">Session</option></select></div>
 </div>
-<label>UA Type 2</label>
-<select id="ua_type2">
+<label class="label">UA Type 2</label>
+<select class="select" id="ua_type2">
 <option value="0">None</option><option value="1">Aeroplane</option><option value="2">Multirotor</option><option value="3">Gyroplane</option>
 <option value="4">Hybrid</option><option value="5">Ornithopter</option><option value="6">Glider</option><option value="15">Other</option>
 </select>
 </fieldset>
 
-<button class="btn" type="submit">Save Identity</button>
+<button class="btn button is-dark is-fullwidth" type="submit">Save Identity</button>
 </form>
 </div>
 </div>
 
 <!-- TRANSMISSION -->
 <div id="tab-transmission" class="tab-pane">
-<div class="card">
-<h2><span class="ico">&#x1f4e1;</span> Transmission <span class="tag tag-stable">Stable</span> <button class="btn-sm" type="button" onclick="document.getElementById('f2').querySelector('.btn').click()" style="margin:0 0 0 auto;padding:3px 10px;font-size:.75em" title="Save without scrolling">&#x1f4be; Quick Save</button></h2>
+<div class="card box">
+<h2><span class="ico">&#x1f4e1;</span> Transmission <span class="tag tag-stable">Stable</span> <button class="btn-sm button is-small is-light" type="button" onclick="document.getElementById('f2').querySelector('.btn').click()" style="margin:0 0 0 auto;padding:3px 10px;font-size:.75em" title="Save without scrolling">&#x1f4be; Quick Save</button></h2>
 <form id="f2">
 <div class="guide" onclick="toggleGuide(this)">
 <b>Tx Modes</b> &mdash; Select which radio technologies to broadcast the Remote ID message on. <b>WiFi Beacon</b> (IEEE 802.11) is the most compatible and recommended. <b>BLE 4.0</b> is widely supported by smartphones. <b>WiFi NAN</b> and <b>BLE 5.0 Coded PHY</b> offer longer range but are experimental. Rates are in Hz (packets per second) — higher rates improve reception but increase airtime usage. Enable at least one mode for the ID to be visible.
 <a href="https://VOLTEKOVER.github.io/ESP_DRONE_REMOTEID/#guide-config" target="_blank">Wiki &rarr;</a>
 </div>
 
-<label>Enabled Channels</label>
+<label class="label">Enabled Channels</label>
 <div class="chk">
-<label><input type="checkbox" id="tx_wifi_bcn" checked> WiFi Beacon <span class="tag tag-stable">Stable</span></label>
-<label><input type="checkbox" id="tx_wifi_nan"> WiFi NAN <span class="tag tag-beta">Beta</span></label>
-<label><input type="checkbox" id="tx_ble4" checked> BLE 4.0 <span class="tag tag-stable">Stable</span></label>
+<label class="label"><input type="checkbox" id="tx_wifi_bcn" checked> WiFi Beacon <span class="tag tag-stable">Stable</span></label>
+<label class="label"><input type="checkbox" id="tx_wifi_nan"> WiFi NAN <span class="tag tag-beta">Beta</span></label>
+<label class="label"><input type="checkbox" id="tx_ble4" checked> BLE 4.0 <span class="tag tag-stable">Stable</span></label>
 <label style="opacity:.6"><input type="checkbox" id="tx_ble5"> BLE 5.0 LR <span class="tag tag-beta">Beta</span></label>
 </div>
 <div style="display:flex;gap:6px;margin-top:4px">
-<button class="btn-sm" type="button" onclick="setAllTx(true)">&#x2713; Enable All</button>
-<button class="btn-sm" type="button" onclick="setAllTx(false)">&#x2717; Disable All</button>
+<button class="btn-sm button is-small is-light" type="button" onclick="setAllTx(true)">&#x2713; Enable All</button>
+<button class="btn-sm button is-small is-light" type="button" onclick="setAllTx(false)">&#x2717; Disable All</button>
 </div>
 <div class="hint">BLE 5.0 LR is experimental (ESP32-S3/C6). WiFi NAN experimental.</div>
 <div id="tx-mode-hint" class="hint" style="color:#2e7d32;margin-top:4px"></div>
@@ -675,8 +677,8 @@ fieldset{padding:6px 8px}
 
 <div class="grid2">
 <div>
-<label>WiFi Channel</label>
-<select id="wifi_ch">
+<label class="label">WiFi Channel</label>
+<select class="select" id="wifi_ch">
 <option value="1">1 &mdash; 2412 MHz</option><option value="2">2 &mdash; 2417 MHz</option><option value="3">3 &mdash; 2422 MHz</option>
 <option value="4">4 &mdash; 2427 MHz</option><option value="5">5 &mdash; 2432 MHz</option><option value="6" selected>6 &mdash; 2437 MHz</option>
 <option value="7">7 &mdash; 2442 MHz</option><option value="8">8 &mdash; 2447 MHz</option><option value="9">9 &mdash; 2452 MHz</option>
@@ -685,32 +687,32 @@ fieldset{padding:6px 8px}
 </select>
 </div>
 <div>
-<label>WiFi Power (dBm)</label>
-<input id="wifi_pwr" type="number" min="2" max="20" step=".5" value="20">
+<label class="label">WiFi Power (dBm)</label>
+<input class="input" id="wifi_pwr" type="number" min="2" max="20" step=".5" value="20">
 </div>
 </div>
 
 <div class="sec-div">Rates &amp; Power</div>
 <div class="grid2">
-<div><label>WiFi Beacon Rate (Hz)</label><input id="wifi_bcn" type="number" min="0" max="5" step=".1" value="1"></div>
-<div><label>WiFi NAN Rate (Hz)</label><input id="wifi_nan" type="number" min="0" max="5" step=".1" value="0"></div>
+<div><label class="label">WiFi Beacon Rate (Hz)</label><input class="input" id="wifi_bcn" type="number" min="0" max="5" step=".1" value="1"></div>
+<div><label class="label">WiFi NAN Rate (Hz)</label><input class="input" id="wifi_nan" type="number" min="0" max="5" step=".1" value="0"></div>
 </div>
 <div class="grid2">
-<div><label>BLE 4.0 Rate (Hz)</label><input id="bt4_rate" type="number" min="0" max="5" step=".1" value="1"></div>
-<div><label>BLE 4.0 Power (dBm)</label><input id="bt4_pwr" type="number" min="-27" max="18" step="1" value="18"></div>
+<div><label class="label">BLE 4.0 Rate (Hz)</label><input class="input" id="bt4_rate" type="number" min="0" max="5" step=".1" value="1"></div>
+<div><label class="label">BLE 4.0 Power (dBm)</label><input class="input" id="bt4_pwr" type="number" min="-27" max="18" step="1" value="18"></div>
 </div>
 <div class="grid2">
-<div><label>BLE 5.0 Rate (Hz)</label><input id="bt5_rate" type="number" min="0" max="5" step=".1" value="1"></div>
-<div><label>BLE 5.0 Power (dBm)</label><input id="bt5_pwr" type="number" min="-27" max="18" step="1" value="18"></div>
+<div><label class="label">BLE 5.0 Rate (Hz)</label><input class="input" id="bt5_rate" type="number" min="0" max="5" step=".1" value="1"></div>
+<div><label class="label">BLE 5.0 Power (dBm)</label><input class="input" id="bt5_pwr" type="number" min="-27" max="18" step="1" value="18"></div>
 </div>
-<button class="btn" type="submit">Save Transmission</button>
+<button class="btn button is-dark is-fullwidth" type="submit">Save Transmission</button>
 </form>
 </div>
 </div>
 
 <!-- ACCESS POINT -->
 <div id="tab-ap" class="tab-pane">
-<div class="card">
+<div class="card box">
 <h2><span class="ico">&#x1f4f6;</span> Access Point <span class="tag tag-stable">Stable</span></h2>
 <form id="f3">
 <div class="guide" onclick="toggleGuide(this)">
@@ -718,13 +720,13 @@ fieldset{padding:6px 8px}
 <a href="https://VOLTEKOVER.github.io/ESP_DRONE_REMOTEID/#guide-config" target="_blank">Wiki &rarr;</a>
 </div>
 
-<label>WiFi SSID</label>
-<input id="wifi_ssid" maxlength="20" value="ESP-RID">
+<label class="label">WiFi SSID</label>
+<input class="input" id="wifi_ssid" maxlength="20" value="ESP-RID">
 <div class="hint">Network name for the configuration access point.</div>
 
-<label>WiFi Password</label>
+<label class="label">WiFi Password</label>
 <input id="wifi_pass" type="password" maxlength="20" placeholder="Leave empty for open network">
-<div style="margin:8px 0"><button class="btn-sm" type="button" id="toggle-pass">Show Password</button></div>
+<div style="margin:8px 0"><button class="btn-sm button is-small is-light" type="button" id="toggle-pass">Show Password</button></div>
 
 <div style="margin:10px 0">
 <label style="display:inline-flex;align-items:center;gap:8px;cursor:pointer">
@@ -732,14 +734,14 @@ fieldset{padding:6px 8px}
 </label>
 </div>
 
-<button class="btn" type="submit">Save Access Point</button>
+<button class="btn button is-dark is-fullwidth" type="submit">Save Access Point</button>
 </form>
 </div>
 </div>
 
 <!-- FLIGHT CONTROLLER -->
 <div id="tab-fc" class="tab-pane">
-<div class="card">
+<div class="card box">
 <h2><span class="ico">&#x1f433;</span> Flight Controller <span class="tag tag-stable">Stable</span></h2>
 <form id="f3b">
 <div class="guide" onclick="toggleGuide(this)">
@@ -747,8 +749,8 @@ fieldset{padding:6px 8px}
 <a href="https://VOLTEKOVER.github.io/ESP_DRONE_REMOTEID/#guide-config" target="_blank">Wiki &rarr;</a>
 </div>
 
-<label>FC Protocol</label>
-<select id="protocol">
+<label class="label">FC Protocol</label>
+<select class="select" id="protocol">
 <option value="255">Auto-detect</option>
 <option value="1">MAVLink</option>
 <option value="2">MSP</option>
@@ -757,8 +759,8 @@ fieldset{padding:6px 8px}
 </select>
 <div class="hint">Set to Auto unless detection fails. Manual override forces a specific protocol.</div>
 
-<label>UART Baud Rate</label>
-<select id="baud">
+<label class="label">UART Baud Rate</label>
+<select class="select" id="baud">
 <option value="9600">9600</option><option value="19200">19200</option>
 <option value="38400">38400</option><option value="57600" selected>57600</option>
 <option value="115200">115200</option><option value="230400">230400</option>
@@ -775,7 +777,7 @@ fieldset{padding:6px 8px}
 <div class="sec-div">Advanced</div>
 
 <div class="grid2">
-<div><label>MAVLink SysID</label><input id="mav_sysid" type="number" min="0" max="254" value="0"><div class="hint">0 = auto-detect</div><div id="mav-hint" class="hint" style="color:#f57f17;display:none;margin-top:2px">&#x26a0; Required when Protocol is MAVLink</div></div>
+<div><label class="label">MAVLink SysID</label><input class="input" id="mav_sysid" type="number" min="0" max="254" value="0"><div class="hint">0 = auto-detect</div><div id="mav-hint" class="hint" style="color:#f57f17;display:none;margin-top:2px">&#x26a0; Required when Protocol is MAVLink</div></div>
 <div style="display:flex;align-items:flex-end;padding-bottom:8px">
 <label style="display:inline-flex;align-items:center;gap:8px;cursor:pointer">
 <input type="checkbox" id="bcast_pwr" checked> Broadcast without GPS
@@ -783,14 +785,14 @@ fieldset{padding:6px 8px}
 </div>
 </div>
 
-<button class="btn" type="submit">Save Flight Controller</button>
+<button class="btn button is-dark is-fullwidth" type="submit">Save Flight Controller</button>
 </form>
 </div>
 </div>
 
 <!-- HARDWARE -->
 <div id="tab-hardware" class="tab-pane">
-<div class="card">
+<div class="card box">
 <h2><span class="ico">&#x1f4a1;</span> Hardware <span class="tag tag-stable">Stable</span></h2>
 <form id="f5">
 <div class="guide" onclick="toggleGuide(this)">
@@ -799,31 +801,31 @@ fieldset{padding:6px 8px}
 </div>
 
 <div class="grid2">
-<div><label>Red Pin</label><input id="led_r_gpio" type="number" min="-1" max="48" value="-1"></div>
-<div><label>Green Pin</label><input id="led_g_gpio" type="number" min="-1" max="48" value="-1"></div>
-<div><label>Blue Pin</label><input id="led_b_gpio" type="number" min="-1" max="48" value="-1"></div>
+<div><label class="label">Red Pin</label><input class="input" id="led_r_gpio" type="number" min="-1" max="48" value="-1"></div>
+<div><label class="label">Green Pin</label><input class="input" id="led_g_gpio" type="number" min="-1" max="48" value="-1"></div>
+<div><label class="label">Blue Pin</label><input class="input" id="led_b_gpio" type="number" min="-1" max="48" value="-1"></div>
 </div>
 <div class="hint">Set the GPIO numbers connected to your RGB LED cathode pins. Use -1 for unused channels.</div>
 
 <div class="sec-div">Addressable RGB (WS2812)</div>
 <div class="grid2">
-<div><label>Data Pin</label><input id="ws2812_gpio" type="number" min="-1" max="48" value="-1"><div class="hint">GPIO for WS2812 data line. -1 = disabled.</div></div>
-<div><label>Brightness</label><input id="ws2812_brightness" type="number" min="0" max="255" value="64"><div class="hint">0&ndash;255. Lower = dimmer, saves power.</div></div>
+<div><label class="label">Data Pin</label><input class="input" id="ws2812_gpio" type="number" min="-1" max="48" value="-1"><div class="hint">GPIO for WS2812 data line. -1 = disabled.</div></div>
+<div><label class="label">Brightness</label><input class="input" id="ws2812_brightness" type="number" min="0" max="255" value="64"><div class="hint">0&ndash;255. Lower = dimmer, saves power.</div></div>
 </div>
 
 <div class="sec-div">UART Configuration</div>
 <div class="grid2">
-<div><label>UART Port</label><select id="uart_port"><option value="0">UART 0</option><option value="1">UART 1</option><option value="2" selected>UART 2</option></select><div class="hint">UART peripheral used for FC serial.</div></div>
+<div><label class="label">UART Port</label><select class="select" id="uart_port"><option value="0">UART 0</option><option value="1">UART 1</option><option value="2" selected>UART 2</option></select><div class="hint">UART peripheral used for FC serial.</div></div>
 <div></div>
-<div><label>TX Pin</label><input id="tx_pin" type="number" min="-1" max="48" value="17"><div class="hint">UART TX GPIO.</div></div>
-<div><label>RX Pin</label><input id="rx_pin" type="number" min="-1" max="48" value="16"><div class="hint">UART RX GPIO.</div></div>
+<div><label class="label">TX Pin</label><input class="input" id="tx_pin" type="number" min="-1" max="48" value="17"><div class="hint">UART TX GPIO.</div></div>
+<div><label class="label">RX Pin</label><input class="input" id="rx_pin" type="number" min="-1" max="48" value="16"><div class="hint">UART RX GPIO.</div></div>
 </div>
 
 <div class="sec-div">DroneCAN</div>
 <div class="grid2">
-<div><label>RX Pin</label><input id="dronecan_rx_gpio" type="number" min="-1" max="48" value="-1"><div class="hint">DroneCAN RX GPIO. -1 = disabled.</div></div>
-<div><label>TX Pin</label><input id="dronecan_tx_gpio" type="number" min="-1" max="48" value="-1"><div class="hint">DroneCAN TX GPIO.</div></div>
-<div><label>Bitrate</label><select id="dronecan_bitrate"><option value="125000">125 kbps</option><option value="250000">250 kbps</option><option value="500000" selected>500 kbps</option><option value="1000000">1 Mbps</option></select><div class="hint">CAN bus bitrate.</div></div>
+<div><label class="label">RX Pin</label><input class="input" id="dronecan_rx_gpio" type="number" min="-1" max="48" value="-1"><div class="hint">DroneCAN RX GPIO. -1 = disabled.</div></div>
+<div><label class="label">TX Pin</label><input class="input" id="dronecan_tx_gpio" type="number" min="-1" max="48" value="-1"><div class="hint">DroneCAN TX GPIO.</div></div>
+<div><label class="label">Bitrate</label><select class="select" id="dronecan_bitrate"><option value="125000">125 kbps</option><option value="250000">250 kbps</option><option value="500000" selected>500 kbps</option><option value="1000000">1 Mbps</option></select><div class="hint">CAN bus bitrate.</div></div>
 <div></div>
 </div>
 
@@ -832,10 +834,10 @@ fieldset{padding:6px 8px}
 <div id="lighting-grid">
 <script>for(var li=0;li<5;li++){document.write('<div class="lgt-row" style="display:flex;gap:8px;align-items:center;margin:6px 0">'+
 '<span style="font-size:.7em;color:var(--txt-muted);width:16px;flex-shrink:0">'+(li+1)+'</span>'+
-'<span style="flex:1"><input id="lighting_pin_'+li+'" type="number" min="-1" max="48" value="-1" placeholder="GPIO" style="width:100%"></span>'+
-'<span style="flex:1"><select id="lighting_pattern_'+li+'" style="width:100%">'+
+'<span style="flex:1"><input class="input" id="lighting_pin_'+li+'" type="number" min="-1" max="48" value="-1" placeholder="GPIO" style="width:100%"></span>'+
+'<span style="flex:1"><select class="select" id="lighting_pattern_'+li+'" style="width:100%">'+
 '<option value="0">Off</option><option value="1">Solid</option><option value="2">Slow blink</option><option value="3">Fast blink</option><option value="4">Fade in/out</option><option value="5">Strobe</option><option value="6">Police</option><option value="7">Rainbow</option></select></span>'+
-'<span style="flex:1"><input id="lighting_phase_'+li+'" type="number" min="0" max="3600" value="0" placeholder="Phase" style="width:100%"></span>'+
+'<span style="flex:1"><input class="input" id="lighting_phase_'+li+'" type="number" min="0" max="3600" value="0" placeholder="Phase" style="width:100%"></span>'+
 '</div>')}</script>
 </div>
 <div style="display:flex;gap:16px;font-size:.65em;color:var(--txt-muted);margin:2px 0 6px">
@@ -846,20 +848,20 @@ fieldset{padding:6px 8px}
 
 <div class="sec-div">Advanced</div>
 <div class="grid2">
-<div><label>OTA Trigger GPIO</label><input id="ota_trigger_gpio" type="number" min="-1" max="48" value="-1"><div class="hint">GPIO pulled high at boot to enter OTA mode. -1 = disabled.</div></div>
+<div><label class="label">OTA Trigger GPIO</label><input class="input" id="ota_trigger_gpio" type="number" min="-1" max="48" value="-1"><div class="hint">GPIO pulled high at boot to enter OTA mode. -1 = disabled.</div></div>
 <div><label style="display:inline-flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" id="mavlink_usb_enable"> MAVLink over USB</label><div class="hint">Enable MAVLink transport over USB CDC.</div></div>
-<div><label>Startup Delay (ms)</label><input id="start_delay_ms" type="number" min="0" max="30000" value="0"><div class="hint">Delay before transmission starts (0&ndash;30000 ms).</div></div>
+<div><label class="label">Startup Delay (ms)</label><input class="input" id="start_delay_ms" type="number" min="0" max="30000" value="0"><div class="hint">Delay before transmission starts (0&ndash;30000 ms).</div></div>
 <div></div>
 </div>
 
-<button class="btn" type="submit">Save Hardware</button>
+<button class="btn button is-dark is-fullwidth" type="submit">Save Hardware</button>
 </form>
 </div>
 </div>
 
 <!-- SYSTEM -->
 <div id="tab-system" class="tab-pane">
-<div class="card">
+<div class="card box">
 <h2><span class="ico">&#x1f512;</span> System <span class="tag tag-warning">Warning</span> <span class="tag" style="background:#e65100;color:#fff">Expert</span></h2>
 <form id="f4">
 <div class="guide" onclick="toggleGuide(this)">
@@ -867,46 +869,46 @@ fieldset{padding:6px 8px}
 <a href="https://VOLTEKOVER.github.io/ESP_DRONE_REMOTEID/#guide-security" target="_blank">Wiki &rarr;</a>
 </div>
 
-<label>Lock Level <span class="tag tag-warning">Dangerous</span></label>
-<select id="lock_lvl" onchange="lockLevelWarn(this)">
+<label class="label" Lock Level <span class="tag tag-warning">Dangerous</span></label>
+<select class="select" id="lock_lvl" onchange="lockLevelWarn(this)">
 <option value="0">0 &mdash; Normal</option>
 <option value="1">1 &mdash; Locked (signed commands only)</option>
 <option value="2">2 &mdash; eFuse permanent (IRREVERSIBLE)</option>
 </select>
 <div class="hint" style="color:#c62828">&#x26a0; Level 2 burns eFuses permanently. This cannot be undone!</div>
 
-<label>Options</label>
+<label class="label">Options</label>
 <div class="chk">
-<label><input type="checkbox" id="opt_arm"> Force ARM OK</label>
-<label><input type="checkbox" id="opt_nosave"> Don't save BasicID to NVS</label>
-<label><input type="checkbox" id="opt_print"> Print MAVLink RID messages</label>
-<label><input type="checkbox" id="opt_demo"> Demo mode (simulated GPS patrol)</label>
-<label><input type="checkbox" id="opt_kalman"> Kalman filter (GPS smoothing)</label>
-<label><input type="checkbox" id="opt_auth"> Ed25519 auth on transmitted IDs</label>
-<label><input type="checkbox" id="opt_mavlink_arm"> MAVLink arm status gate</label>
-<label><input type="checkbox" id="opt_mavlink_op_loc"> MAVLink operator location loop</label>
-<label><input type="checkbox" id="opt_identity_gate"> Identity ready gate</label>
+<label class="label"><input type="checkbox" id="opt_arm"> Force ARM OK</label>
+<label class="label"><input type="checkbox" id="opt_nosave"> Don't save BasicID to NVS</label>
+<label class="label"><input type="checkbox" id="opt_print"> Print MAVLink RID messages</label>
+<label class="label"><input type="checkbox" id="opt_demo"> Demo mode (simulated GPS patrol)</label>
+<label class="label"><input type="checkbox" id="opt_kalman"> Kalman filter (GPS smoothing)</label>
+<label class="label"><input type="checkbox" id="opt_auth"> Ed25519 auth on transmitted IDs</label>
+<label class="label"><input type="checkbox" id="opt_mavlink_arm"> MAVLink arm status gate</label>
+<label class="label"><input type="checkbox" id="opt_mavlink_op_loc"> MAVLink operator location loop</label>
+<label class="label"><input type="checkbox" id="opt_identity_gate"> Identity ready gate</label>
 </div>
 
 <fieldset style="margin-top:16px">
 <legend>Public Keys &#x1f511;</legend>
-<label>Key 1</label><input id="pubkey1" maxlength="512" placeholder="PEM public key or raw base64">
-<label>Key 2</label><input id="pubkey2" maxlength="512" placeholder="PEM public key or raw base64">
-<label>Key 3</label><input id="pubkey3" maxlength="512" placeholder="PEM public key or raw base64">
-<label>Key 4</label><input id="pubkey4" maxlength="512" placeholder="PEM public key or raw base64">
-<label>Key 5</label><input id="pubkey5" maxlength="512" placeholder="PEM public key or raw base64">
+<label class="label">Key 1</label><input id="pubkey1" maxlength="512" placeholder="PEM public key or raw base64">
+<label class="label">Key 2</label><input id="pubkey2" maxlength="512" placeholder="PEM public key or raw base64">
+<label class="label">Key 3</label><input id="pubkey3" maxlength="512" placeholder="PEM public key or raw base64">
+<label class="label">Key 4</label><input id="pubkey4" maxlength="512" placeholder="PEM public key or raw base64">
+<label class="label">Key 5</label><input id="pubkey5" maxlength="512" placeholder="PEM public key or raw base64">
 </fieldset>
 
-<button class="btn" type="submit">Save System</button>
+<button class="btn button is-dark is-fullwidth" type="submit">Save System</button>
 </form>
-<button class="btn-danger" onclick="showModal('reset')">&#x21bb; Factory Reset <span class="tag tag-warning">Warning</span></button>
+<button class="btn-danger button is-danger is-light" onclick="showModal('reset')">&#x21bb; Factory Reset <span class="tag tag-warning">Warning</span></button>
 <button class="hdr-btn" onclick="sendSigCmd('restart')" style="margin-top:6px;width:100%;justify-content:center">&#x1f504; Restart Device</button>
 </div>
 </div>
 
 <!-- FIRMWARE -->
 <div id="tab-firmware" class="tab-pane">
-<div class="card">
+<div class="card box">
 <h2><span class="ico">&#x1f4e4;</span> Firmware Update <span class="tag tag-warning">Warning</span> <span class="tag" style="background:#e65100;color:#fff">Expert</span></h2>
 <div class="guide" style="border-left-color:#c62828">
 &#x26a0; Upload a firmware <code>.bin</code> file to update over-the-air. <strong>Do NOT disconnect power during the update.</strong> The device reboots automatically. Use the correct .bin for your ESP32 model.
@@ -915,9 +917,9 @@ fieldset{padding:6px 8px}
 <div class="ota-zone" id="ota-zone">
 <div class="ico-big">&#x1f4c1;</div>
 <input type="file" id="fwfile" accept=".bin" style="display:none">
-<button class="btn-sm" type="button" onclick="document.getElementById('fwfile').click()">Select .bin file</button>
+<button class="btn-sm button is-small is-light" type="button" onclick="document.getElementById('fwfile').click()">Select .bin file</button>
 <span id="fw_name" style="font-size:.8em;color:var(--txt-muted);display:block;margin-top:8px">No file selected</span>
-<button class="btn" type="button" onclick="showModal('ota')" style="margin-top:12px" id="ota-btn">Upload Firmware</button>
+<button class="btn button is-dark is-fullwidth" type="button" onclick="showModal('ota')" style="margin-top:12px" id="ota-btn">Upload Firmware</button>
 <div id="ota_progress" style="margin-top:10px;font-size:.82em;color:var(--txt-muted)"></div>
 </div>
 </div>
@@ -925,7 +927,7 @@ fieldset{padding:6px 8px}
 
 <!-- CONSOLE -->
 <div id="tab-console" class="tab-pane">
-<div class="card">
+<div class="card box">
 <h2><span class="ico">&#x1f4bb;</span> Console &amp; Telemetry</h2>
 <div class="guide" onclick="toggleGuide(this)">
 Live telemetry and serial console from the ESP32 Remote ID transmitter. The console captures real-time log output from the device firmware — including GPS status, transmission events, and protocol detection. Use the input at the bottom to send CLI commands (<code>restart</code>, <code>status</code>, <code>reset</code>). Telemetry data below shows the latest readings from the flight controller.
@@ -936,11 +938,11 @@ Live telemetry and serial console from the ESP32 Remote ID transmitter. The cons
 <div class="term-header">
 <span class="term-title">&#x1f4bb; Console Output</span>
 <div class="term-toolbar">
-<button class="btn-sm" onclick="copyTerm('term-output')" title="Copy console">&#x1f4cb; Copy</button>
-<button class="btn-sm" onclick="copyAllLogs()" title="Copy all logs from device">&#x1f4cb; All</button>
-<button class="btn-sm" onclick="clearTerm()" title="Clear console">&#x1f5d1; Clear</button>
-<button class="btn-sm" onclick="showCliDialog()" title="Open CLI in dialog">&#x26a1; CLI</button>
-<button class="btn-sm" id="term-scroll-btn" onclick="toggleTermScroll()" title="Toggle auto-scroll">&#x1f53d; Auto</button>
+<button class="btn-sm button is-small is-light" onclick="copyTerm('term-output')" title="Copy console">&#x1f4cb; Copy</button>
+<button class="btn-sm button is-small is-light" onclick="copyAllLogs()" title="Copy all logs from device">&#x1f4cb; All</button>
+<button class="btn-sm button is-small is-light" onclick="clearTerm()" title="Clear console">&#x1f5d1; Clear</button>
+<button class="btn-sm button is-small is-light" onclick="showCliDialog()" title="Open CLI in dialog">&#x26a1; CLI</button>
+<button class="btn-sm button is-small is-light" id="term-scroll-btn" onclick="toggleTermScroll()" title="Toggle auto-scroll">&#x1f53d; Auto</button>
 <span class="term-scroll-icon" id="scrollicon" title="Auto-scroll active">&#x2193;</span>
 </div>
 </div>
@@ -950,7 +952,7 @@ Live telemetry and serial console from the ESP32 Remote ID transmitter. The cons
 <div class="term-input-row">
 <input type="text" id="term-input" placeholder="Type command (restart, status, reset)..." onkeydown="if(event.key==='Enter')sendCmd()">
 <input type="text" id="term-sig" placeholder="X-Signature (base64, if locked)" style="width:120px;flex-shrink:0;display:none;font-size:.75em;padding:4px 8px;border:1px solid var(--input-border);border-radius:4px;background:var(--input-bg);color:var(--txt);margin-left:4px" title="Base64-encoded ECDSA P-256 signature for locked commands">
-<button class="btn-sm" onclick="sendCmd()" style="margin:0;flex-shrink:0">Send</button>
+<button class="btn-sm button is-small is-light" onclick="sendCmd()" style="margin:0;flex-shrink:0">Send</button>
 </div>
 </div>
 
@@ -963,14 +965,14 @@ Live telemetry and serial console from the ESP32 Remote ID transmitter. The cons
 
 <!-- PRESETS -->
 <div id="tab-presets" class="tab-pane">
-<div class="card">
+<div class="card box">
 <h2>&#x1f4cb; Presets <span class="tag tag-stable">Stable</span></h2>
 <div class="guide">Save and load named configuration profiles. Profiles are stored in your browser and can be quickly applied. Use Export Config for sharing.</div>
 <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;flex-shrink:0">
 <input id="preset-name" style="flex:1;min-width:120px;font-size:.8em;padding:6px 10px;border-radius:6px;border:1px solid var(--input-border);background:var(--input-bg);color:var(--txt)" placeholder="New preset name...">
-<button class="btn-sm" onclick="savePreset()">&#x1f4be; Save</button>
-<button class="btn-sm" onclick="exportAllPresets()">&#x1f4e5; Export All</button>
-<button class="btn-sm" onclick="document.getElementById('preset-import-file').click()">&#x1f4e4; Import</button>
+<button class="btn-sm button is-small is-light" onclick="savePreset()">&#x1f4be; Save</button>
+<button class="btn-sm button is-small is-light" onclick="exportAllPresets()">&#x1f4e5; Export All</button>
+<button class="btn-sm button is-small is-light" onclick="document.getElementById('preset-import-file').click()">&#x1f4e4; Import</button>
 <input type="file" id="preset-import-file" accept=".json" style="display:none" onchange="importPresets(this)">
 </div>
 <div id="preset-list" style="font-size:.82em">No presets saved yet.</div>
@@ -979,7 +981,7 @@ Live telemetry and serial console from the ESP32 Remote ID transmitter. The cons
 
 <!-- LOGGING -->
 <div id="tab-logging" class="tab-pane">
-<div class="card">
+<div class="card box">
 <h2><span class="ico">&#x1f4dd;</span> Data Logging <span class="tag tag-beta">Beta</span></h2>
 <div class="guide">
 <b>Tethered Logging</b> &mdash; Records live telemetry from the device into browser memory. Data is captured every poll cycle (~2s). Click <b>Start</b> to begin recording, <b>Stop</b> to finish and download a CSV file.
@@ -1011,10 +1013,10 @@ Live telemetry and serial console from the ESP32 Remote ID transmitter. The cons
 </div>
 
 <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:12px 0">
-<button class="btn-sm" id="log-start-btn" onclick="startLogging()">&#x25b6; Start Logging</button>
-<button class="btn-sm" id="log-stop-btn" onclick="stopLogging()" style="display:none">&#x23f9; Stop Logging</button>
-<button class="btn-sm" id="log-dl-btn" onclick="downloadLog()" style="display:none">&#x1f4e5; Download CSV</button>
-<button class="btn-sm" id="log-clr-btn" onclick="clearLog()" style="display:none">&#x1f5d1; Clear</button>
+<button class="btn-sm button is-small is-light" id="log-start-btn" onclick="startLogging()">&#x25b6; Start Logging</button>
+<button class="btn-sm button is-small is-light" id="log-stop-btn" onclick="stopLogging()" style="display:none">&#x23f9; Stop Logging</button>
+<button class="btn-sm button is-small is-light" id="log-dl-btn" onclick="downloadLog()" style="display:none">&#x1f4e5; Download CSV</button>
+<button class="btn-sm button is-small is-light" id="log-clr-btn" onclick="clearLog()" style="display:none">&#x1f5d1; Clear</button>
 <span style="margin-left:auto;font-size:.72em;color:var(--txt-muted)">Entries: <span id="log-count">0</span></span>
 <span style="font-size:.72em;color:var(--txt-muted)">Duration: <span id="log-duration">00:00</span></span>
 </div>
@@ -1025,7 +1027,7 @@ Live telemetry and serial console from the ESP32 Remote ID transmitter. The cons
 
 <!-- SENSORS -->
 <div id="tab-sensors" class="tab-pane">
-<div class="card">
+<div class="card box">
 <h2>&#x1f4ca; Sensor Data <span class="tag tag-stable">Stable</span></h2>
 <div class="guide">Live sensor readings from the device. Refreshes every 2 seconds.</div>
 <div id="sensor-grid" class="sensor-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:.78em">
@@ -1056,7 +1058,7 @@ Live telemetry and serial console from the ESP32 Remote ID transmitter. The cons
 
 <!-- HELP -->
 <div id="tab-help" class="tab-pane">
-<div class="card">
+<div class="card box">
 <h2>&#x2753; Help &amp; References</h2>
 <div class="guide">Quick reference for the ESP32 Drone Remote ID configuration tool.</div>
 <div style="font-size:.82em;line-height:1.8">
@@ -1099,21 +1101,21 @@ Live telemetry and serial console from the ESP32 Remote ID transmitter. The cons
 
 <!-- COMPLIANCE -->
 <div id="tab-compliance" class="tab-pane">
-<div class="card">
+<div class="card box">
 <h2><span class="ico">&#x2696;</span> Compliance Checklist <span class="tag tag-beta">Beta</span></h2>
 <div class="guide" onclick="toggleGuide(this)">
 <b>Regulatory compliance</b> &mdash; Verify your current configuration against the requirements of your region's aviation authority. Select <b>FAA</b> (USA, Part 89), <b>EASA</b> (EU, Delegated Reg. 2019/945), <b>CAA</b> (UK), or <b>ENAC</b> (Italy). The checklist will highlight which mandatory fields are filled, missing, or incorrectly formatted. Use <b>Auto-detect</b> to infer the region from your current settings.
 </div>
 <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
 <label style="font-weight:500">Region:</label>
-<select id="compliance-region" onchange="updateCompliance()" style="width:auto;min-width:120px">
+<select class="select" id="compliance-region" onchange="updateCompliance()" style="width:auto;min-width:120px">
 <option value="auto">Auto-detect</option>
 <option value="FAA">FAA (USA)</option>
 <option value="EASA">EASA (EU)</option>
 <option value="CAA">CAA (UK)</option>
 <option value="ENAC">ENAC (Italy)</option>
 </select>
-<button class="btn-sm" onclick="updateCompliance()" style="padding:3px 12px">&#x1f504; Refresh</button>
+<button class="btn-sm button is-small is-light" onclick="updateCompliance()" style="padding:3px 12px">&#x1f504; Refresh</button>
 </div>
 <div id="compliance-list"></div>
 </div>
@@ -1121,28 +1123,28 @@ Live telemetry and serial console from the ESP32 Remote ID transmitter. The cons
 
 <!-- SECURITY -->
 <div id="tab-security" class="tab-pane">
-<div class="card">
+<div class="card box">
 <h2><span class="ico">&#x1f510;</span> Security <span class="tag tag-beta">Beta</span></h2>
 <div class="guide" onclick="toggleGuide(this)">
 <b>Panel access control</b> &mdash; Optionally protect the web configuration panel with a password. When set, a login screen appears before any settings are shown. The password is stored in the device's NVS (non-volatile storage) and persists across reboots. To disable, clear the field and save. If you forget the password, a hardware reset via the button on the device will clear it. Session timeout controls how long the login lasts before re-authentication is required.
 </div>
 <form id="f-security" onsubmit="saveSecurity(event)">
 <div style="display:flex;flex-direction:column;gap:8px;max-width:360px">
-<label>Access Password</label>
+<label class="label">Access Password</label>
 <div style="display:flex;gap:6px">
 <input type="password" id="sec-password" maxlength="32" placeholder="Leave empty to disable" value="fake" style="flex:1">
-<button type="button" class="btn-sm" onclick="toggleSecPwd()" style="padding:3px 10px" id="sec-pwd-toggle">&#x1f441;</button>
+<button type="button" class="btn-sm button is-small is-light" onclick="toggleSecPwd()" style="padding:3px 10px" id="sec-pwd-toggle">&#x1f441;</button>
 </div>
 <div class="hint">Min 4 chars. If set, login is required to access any page.</div>
-<label>Session Timeout (minutes)</label>
-<select id="sec-timeout" style="width:auto;min-width:100px">
+<label class="label">Session Timeout (minutes)</label>
+<select class="select" id="sec-timeout" style="width:auto;min-width:100px">
 <option value="5">5 min</option>
 <option value="15" selected>15 min</option>
 <option value="30">30 min</option>
 <option value="60">60 min</option>
 <option value="0">Never</option>
 </select>
-<button class="btn" type="submit" style="width:auto;align-self:flex-start">Save Security</button>
+<button class="btn button is-dark is-fullwidth" type="submit" style="width:auto;align-self:flex-start">Save Security</button>
 </div>
 </form>
 </div>
@@ -1174,10 +1176,10 @@ Live telemetry and serial console from the ESP32 Remote ID transmitter. The cons
 <div class="dialog-int-output" id="dialog-int-output" style="flex:1;overflow-y:auto;min-height:200px;max-height:50vh;background:var(--input-bg);border-radius:6px;padding:8px;font-family:monospace;font-size:.78em;white-space:pre-wrap;word-break:break-all"></div>
 <div class="cli-input-row" style="display:flex;gap:6px;margin-top:8px">
 <input type="text" id="dialog-int-input" style="flex:1;font-family:monospace;font-size:.8em" placeholder="Type a command..." onkeydown="if(event.key==='Enter')sendDialogCmd()">
-<button class="btn-sm" onclick="sendDialogCmd()" style="flex-shrink:0">Send</button>
+<button class="btn-sm button is-small is-light" onclick="sendDialogCmd()" style="flex-shrink:0">Send</button>
 </div>
 <div class="modal-actions" style="margin-top:8px">
-<button class="btn-cancel" onclick="closeDialog('dialog-interactive')">Close</button>
+<button class="btn-cancel button is-light" onclick="closeDialog('dialog-interactive')">Close</button>
 </div>
 </div>
 </dialog>
@@ -1190,6 +1192,15 @@ Live telemetry and serial console from the ESP32 Remote ID transmitter. The cons
 </div>
 
 <script>
+function app() {
+return {
+theme: localStorage.getItem('rid_theme')||(window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'),
+sidebarOpen: false,
+splashVisible: true,
+toggleDark(){this.theme=this.theme==='dark'?'light':'dark';setTheme(this.theme)},
+toggleSidebar(){this.sidebarOpen=!this.sidebarOpen;var s=$('sidebar');var b=$('sidebar-backdrop');[s,b].forEach(function(el){if(el)el.classList.toggle('open')})}
+}
+}
 var currentView = 'dashboard';
 
 /* ===================== DEMO SIMULATION ENGINE ===================== */
@@ -1513,7 +1524,7 @@ var a=$('modal-actions');a.textContent='';
 buttons.forEach(function(b){
 var btn=document.createElement('button');
 btn.textContent=b.label;
-btn.className=b.className||'btn-cancel';
+btn.className=b.className||'button is-light';
 btn.onclick=function(){closeDialog('dialog-modal');if(b.action)b.action()};
 a.appendChild(btn)})}
 
@@ -1524,23 +1535,23 @@ var list=$('modal-report-list');list.style.display='none';
 if(type==='reset'){
 icon.textContent='\u26a0';title.textContent='Factory Reset';
 text.textContent='All settings will be erased and return to defaults. The device will reboot immediately. This action cannot be undone.';
-setModalButtons([{label:'Cancel',className:'btn-cancel'},{label:'Reset',className:'btn-danger',action:function(){var hdrs={'Content-Type':'application/json'};var se=document.getElementById('term-sig');if(se&&se.value.trim())hdrs['X-Signature']=se.value.trim();fetch('/api/reset',{method:'POST',headers:hdrs}).then(function(r){showMsg('Factory reset OK, rebooting...')})}}])
+setModalButtons([{label:'Cancel',className:'button is-light'},{label:'Reset',className:'button is-danger',action:function(){var hdrs={'Content-Type':'application/json'};var se=document.getElementById('term-sig');if(se&&se.value.trim())hdrs['X-Signature']=se.value.trim();fetch('/api/reset',{method:'POST',headers:hdrs}).then(function(r){showMsg('Factory reset OK, rebooting...')})}}])
 }else if(type==='ota'){
 icon.textContent='\u26a0';title.textContent='Firmware Update';
 text.textContent='Upload a new firmware binary. The device will reboot after the update. Do NOT disconnect power during the process. Ensure the .bin file is for your ESP32 model.';
-setModalButtons([{label:'Cancel',className:'btn-cancel'},{label:'Upload',className:'btn-danger',action:function(){otaUpdate()}}])
+setModalButtons([{label:'Cancel',className:'button is-light'},{label:'Upload',className:'button is-danger',action:function(){otaUpdate()}}])
 }else if(type==='efuse'){
 icon.textContent='\u26a0\ufe0f';title.textContent='eFuse Permanent Lock';
 text.textContent='Lock level 2 burns eFuses and is IRREVERSIBLE. The device will be permanently locked. This can brick your device if you lose the signing keys. Are you absolutely sure?';
-setModalButtons([{label:'Cancel',className:'btn-cancel'},{label:'I Understand, Lock',className:'btn-danger'}])
+setModalButtons([{label:'Cancel',className:'button is-light'},{label:'I Understand, Lock',className:'button is-danger'}])
 }else if(type==='danger'){
   icon.textContent='\u26a0';title.textContent='Dangerous Setting';
   text.textContent='You are about to apply settings that could cause issues. The creators of this firmware are not responsible for any fines, damage, or accidents. Do you want to proceed?';
-  setModalButtons([{label:'Cancel',className:'btn-cancel'},{label:'Proceed',className:'btn-danger',action:confirmAction||function(){doSave()}}])
+  setModalButtons([{label:'Cancel',className:'button is-light'},{label:'Proceed',className:'button is-danger',action:confirmAction||function(){doSave()}}])
 }else if(type==='lost'){
   icon.textContent='\u26a0';title.textContent='Connection Lost';
   text.innerHTML='The device is not responding. Check that it is powered on and you are connected to its WiFi network.';
-  setModalButtons([{label:'Dismiss',className:'btn-cancel'},{label:'Reconnect',className:'btn',action:confirmAction||function(){getCfg()}}])
+  setModalButtons([{label:'Dismiss',className:'button is-light'},{label:'Reconnect',className:'button is-dark',action:confirmAction||function(){getCfg()}}])
 }
 if(typeof m.showModal==='function')m.showModal()}
 
@@ -1550,7 +1561,7 @@ $('modal-icon').textContent='\u2139\ufe0f';
 $('modal-title').textContent=title||'Information';
 $('modal-text').innerHTML=msg||'';
 $('modal-report-list').style.display='none';
-setModalButtons([{label:'OK',className:'btn-cancel'}]);
+setModalButtons([{label:'OK',className:'button is-light'}]);
 if(typeof $('dialog-modal').showModal==='function')$('dialog-modal').showModal()}
 
 function showError(title,msg){
@@ -1559,7 +1570,7 @@ $('modal-icon').textContent='\u26a0';
 $('modal-title').textContent=title||'Error';
 $('modal-text').innerHTML=msg||'';
 $('modal-report-list').style.display='none';
-setModalButtons([{label:'OK',className:'btn-danger'}]);
+setModalButtons([{label:'OK',className:'button is-danger'}]);
 if(typeof $('dialog-modal').showModal==='function')$('dialog-modal').showModal()}
 
 function showConfirm(title,msg,yesCb,noCb){
@@ -1568,7 +1579,7 @@ $('modal-icon').textContent='\u2753';
 $('modal-title').textContent=title||'Confirm';
 $('modal-text').textContent=msg||'';
 $('modal-report-list').style.display='none';
-setModalButtons([{label:'No',className:'btn-cancel',action:noCb},{label:'Yes',className:'btn-danger',action:yesCb}]);
+setModalButtons([{label:'No',className:'button is-light',action:noCb},{label:'Yes',className:'button is-danger',action:yesCb}]);
 if(typeof $('dialog-modal').showModal==='function')$('dialog-modal').showModal()}
 
 function showReport(issues){
@@ -1580,7 +1591,7 @@ $('modal-title').textContent='Problems Detected';
 $('modal-text').textContent='';
 list.style.display='';list.textContent='';
 issues.forEach(function(i){var li=document.createElement('li');li.textContent=i;list.appendChild(li)});
-setModalButtons([{label:'Close',className:'btn-cancel'}]);
+setModalButtons([{label:'Close',className:'button is-light'}]);
 if(typeof $('dialog-modal').showModal==='function')$('dialog-modal').showModal()}
 
 function showIssues(){
@@ -2389,8 +2400,8 @@ function updateCompliance(){
     {id:'lock',label:'Lock Level configured securely',check:function(){return parseInt($('lock_lvl').value)>=1},faa:false,easa:false,caa:false,enac:false},
     {id:'broadcast',label:'Broadcast active (sending packets)',check:function(){return lastTxTotal>0},faa:true,easa:true,caa:true,enac:true}
   ];
-  var html='<table style="width:100%;border-collapse:collapse;font-size:.85em">';
-  html+='<tr style="border-bottom:1px solid var(--line)"><th style="text-align:left;padding:6px 8px">Requirement</th><th style="text-align:center;padding:6px 8px;width:80px">Status</th><th style="text-align:center;padding:6px 8px;width:60px">Required</th></tr>';
+  var html='<table class="table is-fullwidth is-narrow is-hoverable" style="font-size:.85em">';
+  html+='<thead><tr><th>Requirement</th><th class="has-text-centered" style="width:80px">Status</th><th class="has-text-centered" style="width:60px">Required</th></tr></thead><tbody>';
   items.forEach(function(item){
     var req=false;
     if(region==='auto'){req=item.easa}else if(region==='FAA'){req=item.faa}else if(region==='EASA'){req=item.easa}else if(region==='CAA'){req=item.caa}else if(region==='ENAC'){req=item.enac}
@@ -2398,10 +2409,10 @@ function updateCompliance(){
     var icon=ok?'&#x2705;':'&#x274c;';
     var color=ok?'var(--txt)':'#c62828';
     var reqIcon=req?'&#x1f6a9;':'';
-    html+='<tr style="border-bottom:1px solid var(--line)"><td style="padding:6px 8px;color:'+color+'">'+item.label+'</td><td style="text-align:center;padding:6px 8px">'+icon+'</td><td style="text-align:center;padding:6px 8px">'+reqIcon+'</td></tr>';
+    html+='<tr><td style="color:'+color+'">'+item.label+'</td><td class="has-text-centered">'+icon+'</td><td class="has-text-centered">'+reqIcon+'</td></tr>';
   });
-  html+='</table>';
-  html+='<div style="margin-top:12px;padding:8px 12px;border-radius:6px;font-size:.78em;background:var(--hover)">';
+  html+='</tbody></table>';
+  html+='<div class="box" style="padding:8px 12px;font-size:.78em">';
   var allOk=items.every(function(item){return item.check()||!item.easa});
   html+=allOk?'&#x2705; All required checks passed for this region.':'&#x26a0; Some required items are missing. Review the table above.';
   html+='</div>';
@@ -2565,6 +2576,7 @@ function hideWait(){
 }
 setTimeout(function(){
   clearInterval(_splashInt);
+  try{if(window.Alpine)Alpine.$data(document.body).splashVisible=false}catch(e){}
   var s=$('splash');if(s)s.classList.add('hide');_splashDone=true;flushToastQ()
   var pwd=localStorage.getItem('rid_sec_pwd');
   if(pwd&&!localStorage.getItem('rid_sec_logged')){
@@ -2589,8 +2601,8 @@ setTimeout(function(){
 <span class="st-icon failsafe" id="st-icon-failsafe" title="Issues detected" style="display:none">&#x26a0;</span>
 <span class="st-icon link" id="st-icon-link" title="FC connected">&#x1f517;</span>
 <span class="hdr-chip" id="st-bar-warn" style="display:none;padding:1px 6px;font-size:.9em;color:#f57f17;cursor:pointer" onclick="showIssues()" title="Click for details">&#x26a0;</span>
-<button class="btn-sm" onclick="showIssues()" style="margin:0;padding:1px 6px;font-size:.82em" title="Check for problems">&#x1f50d;</button>
-<button class="btn-sm" id="st-bar-console-btn" onclick="toggleConsole()" style="margin:0;padding:1px 6px;font-size:.9em" title="Toggle console">&#x1f4bb;</button>
+<button class="btn-sm button is-small is-light" onclick="showIssues()" style="margin:0;padding:1px 6px;font-size:.82em" title="Check for problems">&#x1f50d;</button>
+<button class="btn-sm button is-small is-light" id="st-bar-console-btn" onclick="toggleConsole()" style="margin:0;padding:1px 6px;font-size:.9em" title="Toggle console">&#x1f4bb;</button>
 </div>
 </body>
 </html>
