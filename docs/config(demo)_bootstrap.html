@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='28' font-size='28'>🛸</text></svg>">
+<meta name="description" content="Configuration tool for ESP32 Drone Remote ID">
+<title>ESP DRONE REMOTEID — Configuration</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
+<style>
+[x-cloak]{display:none!important}
+@keyframes splashBar{0%{width:0%}12%{width:18%}35%{width:18%}45%{width:42%}65%{width:42%}75%{width:70%}85%{width:70%}100%{width:100%}}
+@keyframes pulse{0%{opacity:1}50%{opacity:.4}100%{opacity:1}}
+.live-badge{animation:pulse 2s infinite}
+.sidebar-sticky{position:sticky;top:76px}
+.chart-track{height:90px;background:var(--bs-secondary-bg);border-radius:.375rem;display:flex;align-items:flex-end;overflow:hidden}
+.chart-fill{width:100%;border-radius:.375rem 0 0 0;transition:height .6s ease;min-height:2px}
+</style>
+</head>
+<body x-data="app()" class="d-flex flex-column min-vh-100" data-bs-theme="light">
+<script>
+function app() {
+  return {
+    theme: localStorage.getItem('rid_theme')||(window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'),
+    sidebarOpen: false,
+    currentView: 'dashboard',
+    splashVisible: true,
+    stProto: 'Disconnected',
+    stPkts: 0, stRate: 0, stUptime: '00:00', stConntime: '00:00', stFlash: 0,
+    init(){
+      this.applyTheme();
+      setTimeout(()=>{this.splashVisible=false},3200)
+    },
+    applyTheme(){
+      document.documentElement.setAttribute('data-bs-theme',this.theme);
+      document.body.setAttribute('data-bs-theme',this.theme)
+    },
+    toggleDark(){
+      this.theme=this.theme==='dark'?'light':'dark';
+      this.applyTheme();
+      localStorage.setItem('rid_theme',this.theme)
+    },
+    setView(v){this.currentView=v;this.sidebarOpen=false}
+  }
+}
+</script>
+
+<div class="position-fixed top-0 start-0 w-100 h-100 d-flex flex-column align-items-center justify-content-center" x-show="splashVisible" x-transition.opacity.duration.500ms x-cloak style="z-index:1090;background:var(--bs-body-bg)">
+  <img src="images/logo con scritta.svg" alt="" style="height:72px;width:auto;margin-bottom:6px">
+  <p class="text-body-secondary mb-4" style="font-size:.78em">Open DroneID Transmitter</p>
+  <div class="spinner-border mb-3" style="width:24px;height:24px" role="status"></div>
+  <div class="progress rounded-pill mb-2" style="width:200px;height:3px">
+    <div class="progress-bar" style="width:0%;animation:splashBar 2.8s ease forwards"></div>
+  </div>
+  <p class="text-body-secondary" style="font-size:.7em;min-height:1.3em">Initializing...</p>
+</div>
+
+<nav class="navbar navbar-expand-lg fixed-top shadow-sm bg-body" style="border-bottom:1px solid var(--bs-border-color)">
+  <div class="container-fluid">
+    <a class="navbar-brand d-flex align-items-center gap-2 fw-bold" href="#">
+      <img src="images/logo con scritta.svg" alt="" height="26">
+      <span class="d-none d-sm-inline">ESP DRONE REMOTEID</span>
+    </a>
+    <div class="d-flex align-items-center gap-1">
+      <span class="badge text-bg-success rounded-pill d-none d-md-inline-flex align-items-center gap-1"><span class="bi bi-circle-fill" style="font-size:.4em"></span>Demo</span>
+      <span class="badge text-bg-light border rounded-pill d-none d-md-inline-flex align-items-center gap-1"><span class="bi bi-satellite"></span>GPS --</span>
+      <span class="badge text-bg-light border rounded-pill d-none d-md-inline-flex align-items-center gap-1"><span class="bi bi-battery-half"></span>BAT --</span>
+      <span class="badge text-bg-light border rounded-pill d-none d-md-inline-flex align-items-center gap-1"><span class="bi bi-wifi"></span>RSSI --</span>
+      <span class="badge text-bg-light border rounded-pill d-none d-md-inline-flex align-items-center gap-1"><span class="bi bi-arrow-up-right"></span><span x-text="stPkts">0</span></span>
+      <button class="btn btn-sm btn-outline-secondary d-flex align-items-center" @click="toggleDark()" :title="theme==='dark'?'Switch to light':'Switch to dark'">
+        <i class="bi" :class="theme==='dark'?'bi-sun-fill':'bi-moon-stars-fill'"></i>
+      </button>
+      <button class="btn btn-sm btn-outline-secondary d-lg-none d-flex align-items-center" @click="sidebarOpen=!sidebarOpen" aria-label="Toggle navigation">
+        <i class="bi bi-list fs-5"></i>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<section class="container-fluid flex-grow-1 d-flex flex-column" style="padding-top:70px;min-height:0">
+  <div class="row g-2 flex-grow-1" style="min-height:0">
+
+    <div class="col-lg-2 d-none d-lg-block">
+      <div class="sidebar-sticky">
+        <ul class="nav nav-pills flex-column nav-fill" style="gap:2px">
+          <li class="nav-item"><p class="text-uppercase small fw-semibold text-body-secondary mb-1 mt-2 px-2">Monitor</p></li>
+          <li class="nav-item"><a class="nav-link d-flex align-items-center gap-2" :class="{'active':currentView==='dashboard'}" @click="setView('dashboard')"><i class="bi bi-speedometer2"></i><span>Dashboard</span></a></li>
+          <li class="nav-item"><p class="text-uppercase small fw-semibold text-body-secondary mb-1 mt-2 px-2">Configuration</p></li>
+          <li class="nav-item"><a class="nav-link d-flex align-items-center gap-2" :class="{'active':currentView==='identity'}" @click="setView('identity')"><i class="bi bi-person-badge"></i><span>Identity</span></a></li>
+          <li class="nav-item"><a class="nav-link d-flex align-items-center gap-2" :class="{'active':currentView==='transmission'}" @click="setView('transmission')"><i class="bi bi-radio"></i><span>Transmission</span></a></li>
+          <li class="nav-item"><a class="nav-link d-flex align-items-center gap-2" :class="{'active':currentView==='ap'}" @click="setView('ap')"><i class="bi bi-wifi"></i><span>Access Point</span></a></li>
+          <li class="nav-item"><a class="nav-link d-flex align-items-center gap-2" :class="{'active':currentView==='fc'}" @click="setView('fc')"><i class="bi bi-satellite"></i><span>Flight Controller</span></a></li>
+          <li class="nav-item"><p class="text-uppercase small fw-semibold text-body-secondary mb-1 mt-2 px-2">Hardware</p></li>
+          <li class="nav-item"><a class="nav-link d-flex align-items-center gap-2" :class="{'active':currentView==='hardware'}" @click="setView('hardware')"><i class="bi bi-tools"></i><span>Hardware</span></a></li>
+          <li class="nav-item"><p class="text-uppercase small fw-semibold text-body-secondary mb-1 mt-2 px-2">Advanced</p></li>
+          <li class="nav-item"><a class="nav-link d-flex align-items-center gap-2" :class="{'active':currentView==='system'}" @click="setView('system')"><i class="bi bi-gear"></i><span>System</span></a></li>
+          <li class="nav-item"><a class="nav-link d-flex align-items-center gap-2" :class="{'active':currentView==='firmware'}" @click="setView('firmware')"><i class="bi bi-cloud-arrow-up"></i><span>Firmware</span></a></li>
+          <li class="nav-item"><p class="text-uppercase small fw-semibold text-body-secondary mb-1 mt-2 px-2">Tools</p></li>
+          <li class="nav-item"><a class="nav-link d-flex align-items-center gap-2" :class="{'active':currentView==='console'}" @click="setView('console')"><i class="bi bi-terminal"></i><span>Console</span></a></li>
+          <li class="nav-item"><a class="nav-link d-flex align-items-center gap-2" :class="{'active':currentView==='presets'}" @click="setView('presets')"><i class="bi bi-collection"></i><span>Presets</span></a></li>
+          <li class="nav-item"><a class="nav-link d-flex align-items-center gap-2" :class="{'active':currentView==='logging'}" @click="setView('logging')"><i class="bi bi-journal-text"></i><span>Logging</span></a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="col-12 d-lg-none">
+      <div class="nav nav-pills flex-nowrap overflow-auto gap-1" style="white-space:nowrap">
+        <a class="nav-link" :class="{'active':currentView==='dashboard'}" @click="setView('dashboard')"><i class="bi bi-speedometer2"></i></a>
+        <a class="nav-link" :class="{'active':currentView==='identity'}" @click="setView('identity')"><i class="bi bi-person-badge"></i></a>
+        <a class="nav-link" :class="{'active':currentView==='transmission'}" @click="setView('transmission')"><i class="bi bi-radio"></i></a>
+        <a class="nav-link" :class="{'active':currentView==='ap'}" @click="setView('ap')"><i class="bi bi-wifi"></i></a>
+        <a class="nav-link" :class="{'active':currentView==='fc'}" @click="setView('fc')"><i class="bi bi-satellite"></i></a>
+        <a class="nav-link" :class="{'active':currentView==='hardware'}" @click="setView('hardware')"><i class="bi bi-tools"></i></a>
+        <a class="nav-link" :class="{'active':currentView==='system'}" @click="setView('system')"><i class="bi bi-gear"></i></a>
+        <a class="nav-link" :class="{'active':currentView==='firmware'}" @click="setView('firmware')"><i class="bi bi-cloud-arrow-up"></i></a>
+        <a class="nav-link" :class="{'active':currentView==='console'}" @click="setView('console')"><i class="bi bi-terminal"></i></a>
+        <a class="nav-link" :class="{'active':currentView==='presets'}" @click="setView('presets')"><i class="bi bi-collection"></i></a>
+        <a class="nav-link" :class="{'active':currentView==='logging'}" @click="setView('logging')"><i class="bi bi-journal-text"></i></a>
+      </div>
+    </div>
+
+    <div class="col-lg-10 d-flex flex-column" style="min-height:0">
+      <div x-show="currentView==='dashboard'" x-cloak class="flex-grow-1" style="overflow-y:auto;min-height:0">
+        <div class="d-flex flex-wrap align-items-center justify-content-between mb-2">
+          <h5 class="fw-semibold mb-0"><i class="bi bi-speedometer2 me-2"></i>ESP DRONE REMOTEID Dashboard</h5>
+          <span class="badge text-bg-info rounded-pill live-badge">● LIVE</span>
+        </div>
+        <div class="row g-2 mb-2">
+          <div class="col-sm-6 col-xl-3">
+            <div class="card border-start border-4 border-danger">
+              <div class="card-body py-2">
+                <h6 class="card-subtitle text-body-secondary text-uppercase small mb-1"><i class="bi bi-circle-fill text-danger me-1" style="font-size:.5em"></i>GPS Status</h6>
+                <p class="card-text fs-5 fw-bold mb-1" x-text="'Waiting...'">Waiting...</p>
+                <div class="d-flex align-items-center gap-2"><small class="text-body-secondary">-</small><div class="d-flex gap-1" style="align-items:flex-end"><span style="width:4px;height:8px;border-radius:1px;background:var(--bs-secondary-bg)"></span><span style="width:4px;height:10px;border-radius:1px;background:var(--bs-secondary-bg)"></span><span style="width:4px;height:12px;border-radius:1px;background:var(--bs-secondary-bg)"></span><span style="width:4px;height:10px;border-radius:1px;background:var(--bs-secondary-bg)"></span><span style="width:4px;height:8px;border-radius:1px;background:var(--bs-secondary-bg)"></span></div></div>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-6 col-xl-3">
+            <div class="card">
+              <div class="card-body py-2">
+                <h6 class="card-subtitle text-body-secondary text-uppercase small mb-1"><i class="bi bi-radio me-1"></i>Protocol</h6>
+                <p class="card-text fs-5 fw-bold mb-0" x-text="'--'">--</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-6 col-xl-3">
+            <div class="card">
+              <div class="card-body py-2">
+                <h6 class="card-subtitle text-body-secondary text-uppercase small mb-1"><i class="bi bi-battery-half me-1"></i>Battery</h6>
+                <p class="card-text fs-5 fw-bold mb-0" x-text="'--'">--</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-6 col-xl-3">
+            <div class="card">
+              <div class="card-body py-2">
+                <h6 class="card-subtitle text-body-secondary text-uppercase small mb-1"><i class="bi bi-wifi me-1"></i>Link</h6>
+                <p class="card-text fs-5 fw-bold mb-0" x-text="'--'">--</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="row g-2 mb-2">
+          <div class="col-lg-8">
+            <div class="card">
+              <div class="card-body py-2">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <h6 class="card-subtitle text-body-secondary text-uppercase small mb-0"><i class="bi bi-bar-chart me-1"></i>Protocol Activity</h6>
+                  <small class="text-body-secondary" x-text="'Total: 0'">Total: 0</small>
+                </div>
+                <div class="row g-2 text-center">
+                  <div class="col"><div class="chart-track"><div class="chart-fill" style="height:0%;background:linear-gradient(180deg,#1565c0,#1976d2)"></div></div><small class="fw-bold">0</small><small class="d-block text-body-secondary">WiFi</small></div>
+                  <div class="col"><div class="chart-track"><div class="chart-fill" style="height:0%;background:linear-gradient(180deg,#2e7d32,#43a047)"></div></div><small class="fw-bold">0</small><small class="d-block text-body-secondary">BLE4</small></div>
+                  <div class="col"><div class="chart-track"><div class="chart-fill" style="height:0%;background:linear-gradient(180deg,#e65100,#fb8c00)"></div></div><small class="fw-bold">0</small><small class="d-block text-body-secondary">BLE5</small></div>
+                  <div class="col"><div class="chart-track"><div class="chart-fill" style="height:0%;background:linear-gradient(180deg,#6a1b9a,#ab47bc)"></div></div><small class="fw-bold">0</small><small class="d-block text-body-secondary">NAN</small></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-4">
+            <div class="card h-100">
+              <div class="card-body py-2">
+                <h6 class="card-subtitle text-body-secondary text-uppercase small mb-2"><i class="bi bi-lightning me-1"></i>Active Protocols</h6>
+                <div class="d-flex justify-content-between small py-1 border-bottom"><span>WiFi Beacon</span><span class="text-body-secondary">—</span></div>
+                <div class="d-flex justify-content-between small py-1 border-bottom"><span>BLE 4.x</span><span class="text-body-secondary">—</span></div>
+                <div class="d-flex justify-content-between small py-1 border-bottom"><span>BLE 5.x</span><span class="text-body-secondary">—</span></div>
+                <div class="d-flex justify-content-between small py-1"><span>NAN</span><span class="text-body-secondary">—</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="row g-2">
+          <div class="col-lg-6">
+            <div class="card">
+              <div class="card-body py-2">
+                <h6 class="card-subtitle text-body-secondary text-uppercase small mb-2"><i class="bi bi-tools me-1"></i>System Status</h6>
+                <div class="d-flex justify-content-between small py-1 border-bottom"><span>Uptime</span><span class="fw-medium" x-text="'00:00'">00:00</span></div>
+                <div class="d-flex justify-content-between small py-1 border-bottom"><span>Packets Sent</span><span class="fw-medium" x-text="'0'">0</span></div>
+                <div class="d-flex justify-content-between small py-1"><span>Rate</span><span class="fw-medium" x-text="'0/s'">0/s</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div x-show="currentView==='identity'" x-cloak class="flex-grow-1" style="overflow-y:auto;min-height:0"><div class="card"><div class="card-body"><h5 class="card-title"><i class="bi bi-person-badge me-2"></i>Identity Configuration</h5></div></div></div>
+      <div x-show="currentView==='transmission'" x-cloak class="flex-grow-1" style="overflow-y:auto;min-height:0"><div class="card"><div class="card-body"><h5 class="card-title"><i class="bi bi-radio me-2"></i>Transmission Configuration</h5></div></div></div>
+      <div x-show="currentView==='ap'" x-cloak class="flex-grow-1" style="overflow-y:auto;min-height:0"><div class="card"><div class="card-body"><h5 class="card-title"><i class="bi bi-wifi me-2"></i>Access Point Configuration</h5></div></div></div>
+      <div x-show="currentView==='fc'" x-cloak class="flex-grow-1" style="overflow-y:auto;min-height:0"><div class="card"><div class="card-body"><h5 class="card-title"><i class="bi bi-satellite me-2"></i>Flight Controller Configuration</h5></div></div></div>
+      <div x-show="currentView==='hardware'" x-cloak class="flex-grow-1" style="overflow-y:auto;min-height:0"><div class="card"><div class="card-body"><h5 class="card-title"><i class="bi bi-tools me-2"></i>Hardware Configuration</h5></div></div></div>
+      <div x-show="currentView==='system'" x-cloak class="flex-grow-1" style="overflow-y:auto;min-height:0"><div class="card"><div class="card-body"><h5 class="card-title"><i class="bi bi-gear me-2"></i>System Configuration</h5></div></div></div>
+      <div x-show="currentView==='firmware'" x-cloak class="flex-grow-1" style="overflow-y:auto;min-height:0"><div class="card"><div class="card-body"><h5 class="card-title"><i class="bi bi-cloud-arrow-up me-2"></i>Firmware Update</h5></div></div></div>
+      <div x-show="currentView==='console'" x-cloak class="flex-grow-1" style="overflow-y:auto;min-height:0"><div class="card"><div class="card-body"><h5 class="card-title"><i class="bi bi-terminal me-2"></i>Console</h5></div></div></div>
+      <div x-show="currentView==='presets'" x-cloak class="flex-grow-1" style="overflow-y:auto;min-height:0"><div class="card"><div class="card-body"><h5 class="card-title"><i class="bi bi-collection me-2"></i>Presets</h5></div></div></div>
+      <div x-show="currentView==='logging'" x-cloak class="flex-grow-1" style="overflow-y:auto;min-height:0"><div class="card"><div class="card-body"><h5 class="card-title"><i class="bi bi-journal-text me-2"></i>Logging</h5></div></div></div>
+    </div>
+  </div>
+</section>
+
+<footer class="border-top bg-body mt-2 py-2" style="border:1px solid var(--bs-border-color)">
+  <div class="container-fluid">
+    <div class="d-flex flex-wrap align-items-center justify-content-between small text-body-secondary" style="gap:4px 16px">
+      <div class="d-flex align-items-center gap-3">
+        <span class="fw-bold text-body">ESP DRONE REMOTEID v0.0.1-dev</span>
+        <a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID" target="_blank" class="text-decoration-none">GitHub</a>
+        <a href="#" class="text-decoration-none" @click="setView('help')">Wiki</a>
+      </div>
+      <div class="d-flex align-items-center gap-3">
+        <span><i class="bi bi-circle-fill me-1" style="font-size:.5em"></i><span x-text="stProto">Disconnected</span></span>
+        <span title="Packets sent"><i class="bi bi-arrow-up-right me-1"></i><span x-text="stPkts">0</span></span>
+        <span title="Packets per second"><i class="bi bi-lightning me-1"></i><span x-text="stRate">0</span>/s</span>
+        <span title="Storage usage"><span class="d-inline-block rounded-pill" style="width:30px;height:6px;background:var(--bs-secondary-bg);overflow:hidden;vertical-align:middle"><span class="d-block h-100 rounded-pill" style="background:var(--bs-body-color)" :style="'width:'+stFlash+'%'"></span></span></span>
+        <span title="Uptime"><i class="bi bi-clock me-1"></i><span x-text="stUptime">00:00</span></span>
+        <span title="Connection time"><i class="bi bi-link-45deg me-1"></i><span x-text="stConntime">00:00</span></span>
+      </div>
+    </div>
+  </div>
+</footer>
+</body>
+</html>
