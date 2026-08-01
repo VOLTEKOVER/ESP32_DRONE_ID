@@ -154,11 +154,18 @@ hr{border:none;border-top:1px solid var(--border);margin:16px 0}
 #preset-list .preset-item{display:flex;align-items:center;justify-content:space-between;padding:6px 10px;margin:3px 0;background:var(--surface-hover);border-radius:6px;gap:6px}
 #preset-list .preset-item .preset-name{flex:1;font-weight:500;font-size:.9em}
 #preset-list .preset-item .preset-ts{font-size:.7em;color:var(--text-muted)}
-.dialog-modal,.dialog-wait{padding:0;margin:0;border:none;border-radius:16px;background:var(--surface);color:var(--text);max-width:420px;width:90%;box-shadow:0 16px 48px rgba(0,0,0,.3);position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(.92);opacity:0;transition:opacity .2s ease,transform .25s cubic-bezier(.4,0,.2,1)}
-.dialog-modal[open],.dialog-wait[open]{opacity:1;transform:translate(-50%,-50%) scale(1)}
-.dialog-modal::backdrop,.dialog-wait::backdrop{background:rgba(0,0,0,.5);backdrop-filter:blur(3px)}
+.dialog-modal,.dialog-wait,.dialog-theme{padding:0;margin:0;border:none;border-radius:16px;background:var(--surface);color:var(--text);max-width:420px;width:90%;box-shadow:0 16px 48px rgba(0,0,0,.3);position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(.92);opacity:0;transition:opacity .2s ease,transform .25s cubic-bezier(.4,0,.2,1)}
+.dialog-modal[open],.dialog-wait[open],.dialog-theme[open]{opacity:1;transform:translate(-50%,-50%) scale(1)}
+.dialog-modal::backdrop,.dialog-wait::backdrop,.dialog-theme::backdrop{background:rgba(0,0,0,.5);backdrop-filter:blur(3px)}
 .dialog-interactive{padding:0;border:none;border-radius:16px;background:var(--surface);color:var(--text);max-width:600px;width:90%;box-shadow:0 16px 48px rgba(0,0,0,.3)}
 .dialog-interactive::backdrop{background:rgba(0,0,0,.5);backdrop-filter:blur(3px)}
+.theme-options{display:flex;gap:12px;justify-content:center;margin:4px 0 18px}
+.theme-opt{flex:1;max-width:150px;display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 12px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface-hover);color:var(--text);cursor:pointer;font-weight:600;font-size:.9em;transition:all .15s}
+.theme-opt:hover{border-color:var(--accent)}
+.theme-opt.selected{border-color:var(--accent);background:var(--surface)}
+.theme-opt .theme-opt-ic{font-size:1.6em;line-height:1}
+.theme-remember{display:flex;align-items:center;justify-content:center;gap:8px;font-size:.78em;color:var(--text-secondary);cursor:pointer;margin-top:2px}
+.theme-remember input{cursor:pointer}
 .dialog-box{padding:28px}
 .dialog-box h3,.dialog-box h3.dialog-modal-title{margin:0 0 8px;font-size:1.05em;font-weight:600}
 .dialog-box h3.dialog-modal-icon{font-size:1.8em;text-align:center;margin-bottom:12px}
@@ -182,7 +189,7 @@ hr{border:none;border-top:1px solid var(--border);margin:16px 0}
 .loading-spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px}
 .loading-overlay p{font-size:.85em;color:var(--text-secondary)}
 [data-theme="dark"] .dialog-modal-icon{color:#ef5350}
-@media(max-width:600px){.hdr-chips{gap:3px}.hdr-chip{font-size:.68em;padding:2px 6px}.status-bar{font-size:.65em;gap:8px;padding:6px 10px;margin:4px 8px 0}.toast-center{top:60px;right:8px;width:calc(100vw - 16px)}.grid2{grid-template-columns:1fr}.sensor-grid{grid-template-columns:1fr!important}}
+@media(max-width:600px){.theme-label{display:none}.hdr-chips{gap:3px}.hdr-chip{font-size:.68em;padding:2px 6px}.status-bar{font-size:.65em;gap:8px;padding:6px 10px;margin:4px 8px 0}.toast-center{top:60px;right:8px;width:calc(100vw - 16px)}.grid2{grid-template-columns:1fr}.sensor-grid{grid-template-columns:1fr!important}}
 .nav-sep{margin:8px 8px 4px;padding-top:8px;border-top:1px solid var(--border)}
 </style>
 <script>
@@ -228,7 +235,7 @@ try{var t=localStorage.getItem('rid_theme');if(t==='dark'){document.documentElem
 <button class="hdr-btn" onclick="document.getElementById('import-file').click()">&#x1f4e4; Import</button>
 <input type="file" id="import-file" accept=".json" style="display:none" onchange="importCfg(this)">
 <button class="hdr-btn" id="btn-reconnect" onclick="getCfg()" title="Reconnect / Refresh">&#x1f504;</button>
-<button id="dark-toggle" onclick="toggleDark()" class="hdr-btn" style="font-size:.9em;padding:4px 8px" title="Toggle dark mode">&#x263e;</button>
+<button id="dark-toggle" onclick="toggleDark()" class="hdr-btn" title="Switch to dark theme"><span id="theme-icon">&#x263e;</span><span class="theme-label">Theme</span></button>
 </div>
 </div>
 
@@ -969,6 +976,19 @@ Live telemetry and serial console from the ESP32 Remote ID transmitter. The cons
 <div class="dialog-wait-box">
 <h3 id="dialog-wait-title">Please wait...</h3>
 <div class="dialog-wait-content" id="dialog-wait-content"></div>
+</div>
+</dialog>
+
+<dialog class="dialog-theme" id="dialog-theme">
+<div class="dialog-box" style="text-align:center">
+<h3 style="font-size:1.8em;text-align:center;margin-bottom:4px">&#x1f319;</h3>
+<h3 class="dialog-modal-title">Choose your theme</h3>
+<div class="dialog-content" style="margin-bottom:14px">Pick a look for the app. You can switch anytime from the <strong>Theme</strong> button in the header.</div>
+<div class="theme-options">
+<button class="theme-opt" type="button" data-theme-opt="light" onclick="pickTheme('light')"><span class="theme-opt-ic">&#x2600;&#xfe0f;</span><span>Light</span></button>
+<button class="theme-opt" type="button" data-theme-opt="dark" onclick="pickTheme('dark')"><span class="theme-opt-ic">&#x1f319;</span><span>Dark</span></button>
+</div>
+<label class="theme-remember"><input type="checkbox" id="theme-remember" checked> Remember my choice</label>
 </div>
 </dialog>
 
@@ -2177,7 +2197,21 @@ getPresetList();
 function setTheme(t){
   document.documentElement.setAttribute('data-theme',t);
   document.documentElement.setAttribute('data-bs-theme',t);
-  localStorage.setItem('rid_theme',t);
+  try{localStorage.setItem('rid_theme',t)}catch(e){}
+  themeBtnSync();
+}
+function themeBtnSync(){
+  var b=$('dark-toggle');if(!b)return;
+  var dark=document.documentElement.getAttribute('data-bs-theme')==='dark';
+  var ic=document.getElementById('theme-icon');
+  if(ic)ic.textContent=dark?'☀️':'☾';
+  b.title=dark?'Switch to light theme':'Switch to dark theme';
+}
+function pickTheme(t){
+  setTheme(t);
+  var cb=$('theme-remember');
+  try{if(cb&&cb.checked)localStorage.setItem('rid_theme_prompt','off')}catch(e){}
+  closeDialog('dialog-theme');
 }
 (function(){
   var t=localStorage.getItem('rid_theme');
@@ -2386,6 +2420,12 @@ setTimeout(function(){
   }
   var to=localStorage.getItem('rid_sec_timeout');if(to&&to!=='0'){$('sec-timeout').value=to}
   updateCompliance();
+  try{
+    if(localStorage.getItem('rid_theme_prompt')!=='off'){
+      var _td=$('dialog-theme');
+      if(_td&&typeof _td.showModal==='function')_td.showModal();
+    }
+  }catch(e){}
 },3000)
 
 /* ---------- Settings search ---------- */
