@@ -47,6 +47,21 @@ body{height:100dvh;overflow:hidden;display:flex;flex-direction:column;position:r
 .status-bar span{display:inline-flex;align-items:center;gap:4px}
 .status-bar a{color:var(--accent);text-decoration:none}
 .status-bar .hdr-chip{font-size:.9em}
+.st-search{position:relative;display:flex;align-items:center;gap:6px}
+.st-search-label{display:inline-flex;align-items:center;gap:4px;padding:5px 9px;font-size:.68em;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:#fff;background:linear-gradient(90deg,var(--accent),#42a5f5);border-radius:6px;white-space:nowrap;box-shadow:0 2px 8px rgba(26,86,219,.4)}
+.st-search-input{width:180px;padding:7px 10px 7px 30px;font-size:.8em;font-weight:500;color:var(--text);background:var(--surface-hover) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231a56db' stroke-width='2.5'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cline x1='21' y1='21' x2='16.5' y2='16.5'/%3E%3C/svg%3E") 8px center/16px no-repeat;border:2px solid var(--accent);border-radius:8px;outline:none;transition:width .2s ease,box-shadow .2s ease,border-color .2s ease;box-shadow:0 0 0 1px var(--accent) inset}
+.st-search-input:hover{box-shadow:0 0 0 1px var(--accent) inset,0 0 12px rgba(26,86,219,.3)}
+.st-search-input:focus{width:260px;background-color:var(--surface);border-color:var(--accent);box-shadow:0 0 0 3px rgba(26,86,219,.25),0 0 16px rgba(26,86,219,.35)}
+.st-search-input::placeholder{color:var(--text-muted)}
+.st-search-results{position:absolute;bottom:calc(100% + 6px);right:0;width:340px;max-height:60vh;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:10px;box-shadow:0 12px 32px rgba(0,0,0,.35);z-index:3000;padding:4px}
+.st-search-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:6px;cursor:pointer;font-size:.8em;color:var(--text)}
+.st-search-item:hover{background:var(--hover)}
+.st-search-tab{font-size:.66em;color:var(--text-muted);border:1px solid var(--border);border-radius:4px;padding:1px 5px;white-space:nowrap;flex-shrink:0;text-transform:uppercase}
+.st-search-empty{padding:10px;font-size:.78em;color:var(--text-muted);text-align:center}
+@keyframes st-flash{0%{box-shadow:0 0 0 3px var(--accent);background:var(--hover)}100%{box-shadow:0 0 0 3px transparent}}
+.st-search-flash{animation:st-flash 1.1s ease-out 3}
+@media(max-width:600px){.st-search-input{width:120px}.st-search-input:focus{width:170px}.st-search-label{font-size:.6em;padding:4px 6px}.st-search-results{width:min(340px,calc(100vw - 20px));right:-60px}}
+
 .hdr{flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;max-height:80px;transition:max-height .3s ease,transform .3s ease}
 .hdr::-webkit-scrollbar{display:none}
 .hdr .hdr-menu-btn,.hdr .brand{flex-shrink:0}
@@ -139,7 +154,7 @@ hr{border:none;border-top:1px solid var(--border);margin:16px 0}
 #preset-list .preset-item{display:flex;align-items:center;justify-content:space-between;padding:6px 10px;margin:3px 0;background:var(--surface-hover);border-radius:6px;gap:6px}
 #preset-list .preset-item .preset-name{flex:1;font-weight:500;font-size:.9em}
 #preset-list .preset-item .preset-ts{font-size:.7em;color:var(--text-muted)}
-.dialog-modal,.dialog-wait{padding:0;border:none;border-radius:16px;background:var(--surface);color:var(--text);max-width:420px;width:90%;box-shadow:0 16px 48px rgba(0,0,0,.3);position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(.92);opacity:0;transition:opacity .2s ease,transform .25s cubic-bezier(.4,0,.2,1)}
+.dialog-modal,.dialog-wait{padding:0;margin:0;border:none;border-radius:16px;background:var(--surface);color:var(--text);max-width:420px;width:90%;box-shadow:0 16px 48px rgba(0,0,0,.3);position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(.92);opacity:0;transition:opacity .2s ease,transform .25s cubic-bezier(.4,0,.2,1)}
 .dialog-modal[open],.dialog-wait[open]{opacity:1;transform:translate(-50%,-50%) scale(1)}
 .dialog-modal::backdrop,.dialog-wait::backdrop{background:rgba(0,0,0,.5);backdrop-filter:blur(3px)}
 .dialog-interactive{padding:0;border:none;border-radius:16px;background:var(--surface);color:var(--text);max-width:600px;width:90%;box-shadow:0 16px 48px rgba(0,0,0,.3)}
@@ -308,10 +323,13 @@ try{var t=localStorage.getItem('rid_theme');if(t==='dark'){document.documentElem
 
 <div class="dash-bottom">
 <div class="card">
+<div class="card-body">
 <h2><span class="ico">&#x1f4ca;</span> Live Telemetry</h2>
 <div id="status" style="min-height:60px">Loading...</div>
 </div>
+</div>
 <div class="card">
+<div class="card-body">
 <h2><span class="ico">&#x1f4bb;</span> Console</h2>
 <div class="term-container">
 <div class="term-header">
@@ -331,7 +349,7 @@ try{var t=localStorage.getItem('rid_theme');if(t==='dark'){document.documentElem
 <button class="btn-sm" onclick="sendCmd2()" style="margin:0;flex-shrink:0">Send</button>
 </div>
 </div>
-</div>
+</div></div>
 </div>
 </div>
 </div>
@@ -412,7 +430,7 @@ try{var t=localStorage.getItem('rid_theme');if(t==='dark'){document.documentElem
 <div id="tab-transmission" class="tab-pane">
 <div class="card">
 <div class="card-body">
-<h2><span class="ico">&#x1f4e1;</span> Transmission <span class="tag tag-stable">Stable</span> <button class="btn-sm" type="button" onclick="document.getElementById('f2').querySelector('.btn').click()" style="margin:0 0 0 auto;padding:3px 10px;font-size:.75em" title="Save without scrolling">&#x1f4be; Quick Save</button></h2>
+<h2><span class="ico">&#x1f4e1;</span> Transmission <span class="tag tag-stable">Stable</span></h2>
 <form id="f2">
 <div class="guide" onclick="toggleGuide(this)">
 <b>Tx Modes</b> &mdash; Select which radio technologies to broadcast the Remote ID message on. <b>WiFi Beacon</b> (IEEE 802.11) is the most compatible and recommended. <b>BLE 4.0</b> is widely supported by smartphones. <b>WiFi NAN</b> and <b>BLE 5.0 Coded PHY</b> offer longer range but are experimental. Rates are in Hz (packets per second) — higher rates improve reception but increase airtime usage. Enable at least one mode for the ID to be visible.
@@ -424,7 +442,7 @@ try{var t=localStorage.getItem('rid_theme');if(t==='dark'){document.documentElem
 <div class="form-check"><input class="form-check-input" type="checkbox" id="tx_wifi_bcn" checked><label class="form-check-label" for="tx_wifi_bcn">WiFi Beacon <span class="tag tag-stable">Stable</span></label></div>
 <div class="form-check"><input class="form-check-input" type="checkbox" id="tx_wifi_nan"><label class="form-check-label" for="tx_wifi_nan">WiFi NAN <span class="tag tag-beta">Beta</span></label></div>
 <div class="form-check"><input class="form-check-input" type="checkbox" id="tx_ble4" checked><label class="form-check-label" for="tx_ble4">BLE 4.0 <span class="tag tag-stable">Stable</span></label></div>
-<div class="form-check" style="opacity:.6"><input class="form-check-input" type="checkbox" id="tx_ble5"><label class="form-check-label" for="tx_ble5">BLE 5.0 LR <span class="tag tag-beta">Beta</span></label></div>
+<div class="form-check"><input class="form-check-input" type="checkbox" id="tx_ble5"><label class="form-check-label" for="tx_ble5">BLE 5.0 LR <span class="tag tag-beta">Beta</span></label></div>
 </div>
 <div class="d-flex gap-2 mb-2">
 <button class="btn-sm" type="button" onclick="setAllTx(true)">&#x2713; Enable All</button>
@@ -990,6 +1008,11 @@ Live telemetry and serial console from the ESP32 Remote ID transmitter. The cons
 <span class="hdr-chip" id="st-bar-warn" style="display:none;padding:1px 6px;font-size:.9em;color:#f57f17;cursor:pointer" onclick="showIssues()" title="Click for details">&#x26a0;</span>
 <button class="btn-sm" onclick="showIssues()" style="margin:0;padding:1px 6px;font-size:.82em" title="Check for problems">&#x1f50d;</button>
 <button class="btn-sm" id="st-bar-console-btn" onclick="toggleConsole()" style="margin:0;padding:1px 6px;font-size:.9em" title="Toggle console">&#x1f4bb;</button>
+<div class="st-search">
+<span class="st-search-label">&#x1f50d; Search</span>
+<input class="st-search-input" id="settings-search" type="search" placeholder="Search settings..." title="Search settings in all tabs (/)">
+<div class="st-search-results" id="settings-search-results" style="display:none"></div>
+</div>
 </div>
 
 <script>
@@ -2082,8 +2105,8 @@ setInterval(function(){
           var stUptime=$('st-bar-uptime');
           if(stUptime){
             var sec=Math.floor((Date.now()-lastStatusTime)/1000);
-            var m=Math.floor(sec/60),s=sec%60;
-            stUptime.textContent=('0'+m).slice(-2)+':'+('0'+s).slice(-2);
+            var m=Math.floor(sec/60),secs=sec%60;
+            stUptime.textContent=('0'+m).slice(-2)+':'+('0'+secs).slice(-2);
           }
           /* Connection time (hours:minutes) */
           var stConn=$('st-bar-conntime');
@@ -2364,6 +2387,90 @@ setTimeout(function(){
   var to=localStorage.getItem('rid_sec_timeout');if(to&&to!=='0'){$('sec-timeout').value=to}
   updateCompliance();
 },3000)
+
+/* ---------- Settings search ---------- */
+var stSearchIndex=[];
+function stSearchTabMap(){
+  var m={};
+  document.querySelectorAll('.nav-item').forEach(function(n){
+    var t=n.getAttribute('data-tab');
+    if(t){var lb=n.querySelector('.nav-label');m[t]=lb?lb.textContent.trim():t}
+  });
+  return m;
+}
+function buildSearchIndex(){
+  stSearchIndex=[];
+  var tabMap=stSearchTabMap();
+  document.querySelectorAll('.tab-pane').forEach(function(tab){
+    var tabId=tab.id.replace('tab-','');
+    var tabName=tabMap[tabId]||tabId;
+    tab.querySelectorAll('input,select,textarea').forEach(function(el){
+      if(!el.id)return;
+      var label='';
+      var l=tab.querySelector('label[for="'+el.id+'"]');
+      if(l)label=l.textContent.trim();
+      if(!label){
+        var fc=el.closest('.form-check');
+        if(fc){var ll=fc.querySelector('.form-check-label');if(ll)label=ll.textContent.trim()}
+      }
+      if(!label)label=el.placeholder||el.title||el.id;
+      if(!label)return;
+      stSearchIndex.push({label:label,tabId:tabId,tabName:tabName,el:el});
+    });
+  });
+}
+function stSearchFilter(){
+  var q=($('settings-search').value||'').toLowerCase().trim();
+  var res=$('settings-search-results');
+  if(!res)return;
+  res.textContent='';
+  if(!q){res.style.display='none';return}
+  var matches=stSearchIndex.filter(function(it){return it.label.toLowerCase().indexOf(q)!==-1||it.tabName.toLowerCase().indexOf(q)!==-1});
+  if(!matches.length){
+    var d=document.createElement('div');d.className='st-search-empty';d.textContent='No settings found for \"'+( $('settings-search').value||'').trim()+'\"';
+    res.appendChild(d);res.style.display='block';return
+  }
+  matches.slice(0,12).forEach(function(it){
+    var d=document.createElement('div');d.className='st-search-item';
+    d.innerHTML='<span class="st-search-tab"></span><span></span>';
+    d.querySelector('.st-search-tab').textContent=it.tabName;
+    d.querySelector('span:last-child').textContent=it.label;
+    d.addEventListener('click',function(){stSearchGo(it)});
+    res.appendChild(d);
+  });
+  res.style.display='block';
+}
+function stSearchGo(it){
+  var res=$('settings-search-results');if(res)res.style.display='none';
+  var inp=$('settings-search');if(inp)inp.value=it.label;
+  if(currentView!==it.tabId)setView(it.tabId);
+  setTimeout(function(){
+    if(it.el&&it.el.scrollIntoView)it.el.scrollIntoView({behavior:'smooth',block:'center'});
+    if(it.el){it.el.classList.add('st-search-flash');setTimeout(function(){it.el.classList.remove('st-search-flash')},4000)}
+    if(it.el&&it.el.focus)it.el.focus({preventScroll:true});
+  },80);
+}
+(function(){
+  var inp=$('settings-search');
+  if(!inp)return;
+  inp.addEventListener('input',function(){stSearchFilter()});
+  inp.addEventListener('focus',function(){stSearchFilter()});
+  inp.addEventListener('keydown',function(e){
+    if(e.key==='Escape'){var r=$('settings-search-results');if(r)r.style.display='none'}
+    if(e.key==='Enter'){var r=$('settings-search-results');if(r){var it=r.querySelector('.st-search-item');if(it)it.click()}}
+  });
+  document.addEventListener('keydown',function(e){
+    if(e.key==='/'&&e.target&&!e.target.closest('input,select,textarea')&&!e.ctrlKey&&!e.metaKey&&!e.altKey){
+      e.preventDefault();var i=$('settings-search');if(i)i.focus()
+    }
+  });
+  document.addEventListener('click',function(e){
+    var wrap=inp.closest('.st-search');
+    if(wrap&&wrap.contains(e.target))return;
+    var r=$('settings-search-results');if(r)r.style.display='none'
+  });
+  buildSearchIndex();
+})();
 </script>
 </body>
 </html>
