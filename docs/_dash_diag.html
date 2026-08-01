@@ -2365,5 +2365,15 @@ setTimeout(function(){
   updateCompliance();
 },3000)
 </script>
-</body>
+<script>
+window.__dashCalls=0;window.__errs=[];window.onerror=function(m){window.__errs.push(String(m))};
+var __od=updateDashboard;
+updateDashboard=function(s){window.__dashCalls++;try{return __od(s)}catch(e){window.__errs.push("updateDashboard threw: "+e.message);throw e}};
+setTimeout(function(){
+  var pre=document.createElement("pre");pre.style.cssText="position:fixed;top:0;left:0;z-index:999999;background:#111;color:#0f0;font-size:12px;max-width:100vw;white-space:pre-wrap";
+  var ls=window.lastStatus?JSON.stringify({gps:window.lastStatus.gps_valid,fix:window.lastStatus.fix_type,sat:window.lastStatus.satellites,proto:window.lastStatus.protocol}):"null";
+  pre.textContent="dashCalls="+window.__dashCalls+"\nerrs="+JSON.stringify(window.__errs)+"\ngps=["+document.getElementById("dash-gps-status").textContent+"]\nsat=["+document.getElementById("dash-sat").textContent+"]\nproto=["+document.getElementById("dash-proto").textContent+"]\ntxTotal=["+document.getElementById("dash-tx-total").textContent+"]\nlastStatus="+ls+"\nstatusDiv=["+document.getElementById("status").textContent+"]";
+  document.body.appendChild(pre);
+},14000);
+</script></body>
 </html>

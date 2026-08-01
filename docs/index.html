@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-theme="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -14,420 +14,70 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link rel="stylesheet" href="bootstrap-theme.css">
+<style>
+/* index-specific overrides (bootstrap-theme.css is shared with guide.html) */
+#guide-intro .gs-header::before{background:linear-gradient(180deg,#1a56db,#5a8fc9)}
+#guide-hardware .gs-header::before{background:linear-gradient(180deg,#1b7a2e,#5a9e5a)}
+[data-theme="dark"] #guide-intro .gs-header::before{background:linear-gradient(180deg,#5a8fc9,#1a56db)}
+[data-theme="dark"] #guide-hardware .gs-header::before{background:linear-gradient(180deg,#5a9e5a,#1b7a2e)}
+
+/* Bootstrap Accordion integration (replaces hand-rolled show/hide) */
+.guide-section .gs-body{display:block}
+.guide-section .accordion-button::after{display:none}
+.guide-section .accordion-button:not(.collapsed){color:inherit;box-shadow:none;background-color:var(--surface-alt)}
+.guide-section .accordion-button:focus{box-shadow:none}
+.guide-section .gs-title{font-size:.88rem;font-weight:600;line-height:1.35;letter-spacing:-.2px}
+</style>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 56 56'><rect width='56' height='56' rx='12' fill='%23222'/><ellipse cx='28' cy='29' rx='2.2' ry='13' fill='%23fff'/></svg>">
 <title>ESP DRONE REMOTEID [BETA] — Open DroneID Transmitter</title>
 <script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
 <script async defer src="https://buttons.github.io/buttons.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>mermaid.initialize({startOnLoad:true,theme:'base',themeVariables:{primaryColor:'#e8f0fe',primaryBorderColor:'#1a56db',lineColor:'#666',secondaryColor:'#e6f7e6',tertiaryColor:'#fef3e2',fontSize:'13px'}})</script>
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-:root{--font:'Inter','Segoe UI',system-ui,-apple-system,sans-serif;--surface:#fff;--surface-alt:#f7f8fa;--surface-hover:#eef0f4;--text:#1a1a2e;--text-secondary:#5a5a7a;--text-muted:#999;--border:#e2e4e9;--border-light:#eef0f4;--shadow-sm:0 1px 3px rgba(0,0,0,.04);--shadow-md:0 4px 16px rgba(0,0,0,.06);--shadow-lg:0 8px 30px rgba(0,0,0,.08);--radius:10px;--radius-sm:6px;--radius-lg:14px;--accent:#1a56db;--accent-green:#1b7a2e;--accent-red:#c62828;--transition:.2s ease}
-@media print{header,.build-col,#btn-top,.copy-btn,.guide-search,.fw-info,.hero .version-bar,.hero .gh-btns{display:none!important}.main-grid{grid-template-columns:1fr!important}.guide-section{border:1px solid #ccc!important;break-inside:avoid}.guide-section .gs-body{display:block!important}.gs-body a{text-decoration:underline!important}.wrap{max-width:100%!important;padding:0!important}body{font-size:11pt;color:#000}footer{position:fixed;bottom:0;width:100%}}
-
-html{scroll-behavior:smooth}
-body{font-family:var(--font);background:var(--surface);color:var(--text);line-height:1.7;font-size:16px;-webkit-font-smoothing:antialiased;transition:background .3s ease,color .3s ease}
-.wrap{max-width:100%;padding:0 32px}
-.logo-img{height:56px;flex-shrink:0}
-header{background:var(--surface-alt);border-bottom:1px solid var(--border);padding:14px 0;position:sticky;top:0;z-index:100;backdrop-filter:blur(12px);box-shadow:0 1px 4px rgba(0,0,0,.04)}
-header .wrap{display:flex;align-items:center;justify-content:space-between}
-header .brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--text)}
-header nav{display:flex;gap:6px;flex-wrap:wrap}
-header nav a{color:var(--text-muted);text-decoration:none;font-size:.82em;padding:6px 14px;border-radius:var(--radius-sm);transition:all var(--transition);display:inline-flex;align-items:center;font-weight:500}
-header nav a:hover{background:var(--surface-hover);color:var(--text)}
-.hero{text-align:center;padding:50px 0 30px}
-.logo-hero{width:72px;height:72px;margin:0 auto 16px}
-.hero h1{font-size:2.4em;font-weight:700;color:var(--text);letter-spacing:-1px;line-height:1.15}
-.hero p{color:var(--text-muted);font-size:1.05em;max-width:640px;margin:10px auto 0}
-.hero .version-bar{font-size:.8em;color:var(--text-secondary);margin-top:14px;background:var(--surface-alt);border:1px solid var(--border);border-radius:var(--radius-sm);padding:6px 16px;display:inline-block}
-.hero .version-bar a{color:var(--text-muted)}
-.hero .gh-btns{margin-top:18px;display:flex;gap:10px;justify-content:center}
-.hero .compat-bar{margin-top:18px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;align-items:center}
-.hero .compat-label{font-size:.72em;color:var(--text-muted);margin-right:4px}
-.compat-item{display:inline-flex;align-items:center;gap:5px;padding:4px 12px 4px 8px;border-radius:20px;font-size:.78em;font-weight:600;text-decoration:none;transition:all .15s;border:1px solid transparent}
-.compat-item.ap{background:#fdecea;color:#c62828;border-color:#f5c6c6}
-.compat-item.bf{background:#e8f5e9;color:#1b7a2e;border-color:#c8e0c9}
-.compat-item.inav{background:#e3f2fd;color:#0d47a1;border-color:#bed9f0}
-.compat-item:hover{opacity:.85;transform:translateY(-1px)}
-.compat-item img{vertical-align:middle}
-[data-theme="dark"] .compat-item.ap{background:#2a1515;border-color:#4a2525}
-[data-theme="dark"] .compat-item.bf{background:#152d15;border-color:#254025}
-[data-theme="dark"] .compat-item.inav{background:#152240;border-color:#253b5a}
-.main-grid{display:grid;grid-template-columns:380px 1fr;gap:40px;padding:10px 0 60px;align-items:start}
-@media(max-width:900px){.main-grid{grid-template-columns:1fr;gap:28px}}
-.build-col{position:sticky;top:90px}
-@media(max-width:900px){.build-col{position:static}}
-
-/* ---------- RESPONSIVE ---------- */
-@media(max-width:600px){
-  .wrap{padding:0 14px}
-  header nav a{padding:5px 8px;font-size:.78em}
-  .hero{padding:30px 0 20px}
-  .logo-hero{width:52px;height:52px;margin-bottom:10px}
-  .hero h1{font-size:1.6em}
-  .hero p{font-size:.92em}
-  .hero .version-bar{font-size:.72em}
-  .hero .gh-btns{flex-direction:column;align-items:center;gap:6px}
-  .build-col h2,.guide-col h2{font-size:1em}
-  .install-box{padding:18px 14px}
-  .install-box h3{font-size:.95em}
-  .guide-section .gs-header{padding:10px 12px}
-  .guide-section .gs-header h3{font-size:.78em}
-  .guide-section .gs-body{padding:0 12px 12px;font-size:.8em}
-  .gs-body table{display:block;overflow-x:auto;width:100%;font-size:.78em}
-  .gs-body th,.gs-body td{padding:5px 6px;white-space:nowrap}
-  .gs-body pre{font-size:.72em;padding:8px 10px}
-  .gs-body ul,.gs-body ol{margin-left:14px}
-  footer{padding:18px 14px;font-size:.7em}
-  footer .fw-links{display:flex;flex-wrap:wrap;justify-content:center;gap:4px}
-  footer .sep{display:none}
-  .guide-diagram{padding:8px}
-  .guide-diagram svg{max-width:100%}
-}
-@media(max-width:480px){
-  .hero h1{font-size:1.3em}
-  .hero p{font-size:.82em}
-  header{padding:10px 0}
-  .logo-hero{width:42px;height:42px}
-}
-
-/* ---------- MOBILE NAV ---------- */
-#hamburger{display:none;background:none;border:none;color:var(--text);font-size:1.3em;cursor:pointer;padding:4px 10px;border-radius:var(--radius-sm);align-items:center;z-index:101;line-height:1}
-#hamburger:hover{background:var(--surface-hover)}
-@media(max-width:768px){
-  #hamburger{display:inline-flex}
-  header nav{display:none}
-  header nav.open{display:flex;flex-direction:column;position:fixed;top:0;left:0;right:0;background:var(--surface);border-bottom:1px solid var(--border);padding:70px 16px 20px;z-index:100;box-shadow:var(--shadow-lg);gap:4px}
-  header nav.open a{padding:12px 14px;font-size:.88em;border-radius:var(--radius-sm);min-height:44px}
-  header #dark-toggle{padding:6px 10px;min-height:40px;font-size:1em}
-  .mobile-nav-backdrop{position:fixed;inset:0;z-index:99;background:rgba(0,0,0,.3);opacity:0;visibility:hidden;transition:opacity .3s ease,visibility .3s ease}
-  .mobile-nav-backdrop.open{opacity:1;visibility:visible}
-}
-@media(min-width:601px) and (max-width:900px){
-  .hero h1{font-size:1.9em}
-  header nav a{font-size:.78em;padding:5px 10px}
-}
-
-.build-col h2{font-size:1.2em;font-weight:700;color:var(--text);margin-bottom:4px;letter-spacing:-.3px}
-.build-col > p{color:var(--text-muted);font-size:.85em;margin-bottom:20px}
-.install-box{background:var(--surface-alt);border:2px solid var(--border);border-radius:var(--radius-lg);padding:28px 24px;text-align:center;box-shadow:var(--shadow-md)}
-.logo-mini{width:40px;height:40px;margin:0 auto}
-.install-box h3{font-size:1.1em;color:var(--text);margin:8px 0 2px}
-.install-box .sub{color:var(--text-muted);font-size:.82em;margin-bottom:16px}
-esp-web-install-button{display:block;margin:0 auto;max-width:340px}
-esp-web-install-button::part(button){background:var(--text);color:var(--surface);border:none;padding:13px 26px;border-radius:var(--radius-sm);font-size:.95em;cursor:pointer;width:100%;font-weight:600;transition:all var(--transition)}
-esp-web-install-button::part(button):hover{background:var(--accent);transform:translateY(-1px)}
-esp-web-install-button::part(unsupported){background:var(--surface-alt);color:var(--text-muted);padding:13px 18px;border-radius:var(--radius-sm);font-size:.82em}
-.steps-box{background:var(--surface-alt);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;margin-top:16px}
-.steps-box h4{font-size:.82em;color:var(--text);margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px}
-.steps-box ol{counter-reset:s;list-style:none;padding:0}
-.steps-box li{counter-increment:s;padding:7px 0 7px 32px;position:relative;font-size:.82em;color:var(--text-secondary);border-bottom:1px solid var(--border-light)}
-.steps-box li:last-child{border-bottom:none}
-.steps-box li::before{content:counter(s);position:absolute;left:0;top:7px;width:22px;height:22px;border-radius:50%;background:var(--text);color:var(--surface);display:flex;align-items:center;justify-content:center;font-size:.7em;font-weight:600}
-.chip-selector{display:flex;gap:4px;margin:0 auto 14px;justify-content:center;max-width:450px;flex-wrap:wrap}
-.chip-option{flex:1}
-.chip-option input{position:absolute;opacity:0;pointer-events:none}
-.chip-option span{display:block;padding:8px 2px;border:2px solid var(--border);border-radius:var(--radius-sm);font-size:.78em;font-weight:600;text-align:center;cursor:pointer;color:var(--text-muted);transition:all var(--transition);background:var(--surface);line-height:1.2}
-.chip-option input:checked+span,.chip-option.active span{border-color:var(--text);color:var(--text);background:var(--surface-alt)}
-.chip-option span:hover{border-color:var(--text-secondary);color:var(--text)}
-[data-theme="dark"] .chip-option span{background:var(--surface);border-color:var(--border);color:var(--text-muted)}
-[data-theme="dark"] .chip-option input:checked+span,[data-theme="dark"] .chip-option.active span{background:var(--surface-alt);border-color:var(--text);color:var(--text)}
-[data-theme="dark"] .chip-option span:hover{border-color:var(--text-secondary);color:var(--text)}
-.fw-info{font-size:.78em;color:var(--text-muted);text-align:center;margin-top:12px}
-.fw-info a{color:var(--text-secondary)}
-/* ------------------ GUIDE (right column) ------------------ */
-.guide-col h2{font-size:1.2em;font-weight:700;color:var(--text);margin-bottom:14px;letter-spacing:-.3px;display:flex;align-items:center;gap:8px}
-.guide-section{border:1px solid var(--border);border-radius:var(--radius);margin-bottom:10px;overflow:hidden;background:var(--surface);box-shadow:var(--shadow-sm);transition:box-shadow var(--transition)}
-.guide-section:hover{box-shadow:var(--shadow-md)}
-.guide-section .gs-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;cursor:pointer;background:var(--surface-alt);transition:background var(--transition);user-select:none;position:relative}
-.guide-section .gs-header:hover{background:var(--surface-hover)}
-.guide-section .gs-header h3{font-size:.88em;font-weight:600;color:var(--text);display:flex;align-items:center;gap:8px;line-height:1.35;letter-spacing:-.2px}
-.guide-section .gs-header .arrow{color:var(--text-muted);font-size:.7em;transition:transform .3s ease;flex-shrink:0}
-.guide-section.open .gs-header .arrow{transform:rotate(180deg)}
-.guide-section .gs-body{padding:0 20px 18px;display:none;color:var(--text-secondary);font-size:.85em;line-height:1.7}
-.guide-section.open .gs-body{display:block}
-.gs-body h4{font-size:1.05em;font-weight:700;color:var(--text);margin:22px 0 8px;letter-spacing:-.3px}
-.gs-body h5{font-size:.95em;font-weight:600;color:var(--text);margin:16px 0 6px}
-.gs-body p{margin:10px 0}
-.gs-body ul,.gs-body ol{margin:8px 0 8px 20px}
-.gs-body li{margin:4px 0}
-.gs-body code{background:var(--surface-alt);padding:2px 7px;border-radius:var(--radius-sm);font-size:.88em;color:var(--text);border:1px solid var(--border-light)}
-.gs-body pre{background:#1a1a2e;color:#e4e4ef;padding:14px 16px;border-radius:var(--radius-sm);font-size:.8em;overflow-x:auto;margin:12px 0;border:none;font-family:'Cascadia Code','JetBrains Mono','Consolas',monospace;line-height:1.65;tab-size:2}
-.gs-body table{width:100%;border-collapse:separate;border-spacing:0;margin:12px 0;font-size:.92em;border-radius:var(--radius-sm);overflow:hidden;border:1px solid var(--border)}
-.gs-body th,.gs-body td{padding:8px 12px;text-align:left;border-bottom:1px solid var(--border)}
-.gs-body th{background:var(--surface-alt);font-weight:600;color:var(--text);font-size:.9em;position:sticky;top:0}
-.gs-body td{color:var(--text-secondary)}
-.gs-body tr:last-child td{border-bottom:none}
-.gs-body tr:hover td{background:var(--surface-alt)}
-.gs-body .callout{background:var(--surface-alt);border-left:3px solid var(--text);padding:12px 16px;border-radius:0 var(--radius-sm) var(--radius-sm) 0;margin:14px 0;font-size:.92em;position:relative}
-.gs-body .callout strong{color:var(--text)}
-.gs-body a{color:var(--accent);text-decoration:none;font-weight:500}
-.gs-body a:hover{color:#0d3b9e;text-decoration:underline}
-.gs-body mark{background:#fcefbd;padding:0 3px;border-radius:2px;color:var(--text)}
-.gs-body hr{border:none;border-top:1px solid var(--border);margin:20px 0}
-.gs-body .tag{display:inline-block;background:var(--surface-hover);color:var(--text-secondary);padding:2px 10px;border-radius:20px;font-size:.75em;font-weight:500;letter-spacing:.2px}
-.gs-body .tag-blue{background:#e8f0fe;color:var(--accent)}
-.gs-body .tag-green{background:#e6f7e6;color:var(--accent-green)}
-.gs-body .tag-red{background:#fde8e8;color:var(--accent-red)}
-footer{text-align:center;padding:28px 24px;border-top:1px solid var(--border);color:var(--text-muted);font-size:.76em}
-footer a{color:var(--text-secondary);text-decoration:none}
-footer a:hover{color:var(--text);text-decoration:underline}
-footer .sep{color:var(--border);margin:0 8px}
-footer .fw-links{margin-bottom:6px}
-footer .fw-copy{font-size:.92em;color:var(--text-muted)}
-#btn-top{position:fixed;bottom:28px;right:28px;width:42px;height:42px;border-radius:50%;background:var(--text);color:var(--surface);border:none;cursor:pointer;font-size:1.1em;opacity:0;pointer-events:none;transition:opacity .3s,transform .2s;z-index:99;box-shadow:var(--shadow-lg)}
-#btn-top.show{opacity:1;pointer-events:auto}
-#btn-top:hover{transform:scale(1.08)}
-#reading-progress{position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,var(--accent),var(--text));z-index:999;width:0%}
-.guide-diagram{max-width:100%;margin:16px 0;background:var(--surface-alt);border:1px solid var(--border);border-radius:var(--radius);padding:16px;display:flex;flex-direction:column;align-items:center;box-shadow:var(--shadow-sm)}
-.guide-diagram pre.mermaid{background:none!important;border:none!important;padding:0!important;margin:0;width:100%;display:flex;justify-content:center}
-.guide-diagram svg{width:100%;height:auto;max-width:620px}
-.guide-diagram .diag-cap{text-align:center;font-size:.74em;color:var(--text-muted);margin-top:8px}
-
-/* ---------- DIAGRAM ANIMATIONS ---------- */
-.guide-diagram{animation:diagramFadeIn .5s ease-out}
-@keyframes diagramFadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-.guide-diagram:hover{border-color:var(--accent);box-shadow:0 4px 20px rgba(26,86,219,.12);transition:border-color .3s ease,box-shadow .3s ease}
-.guide-diagram pre.mermaid svg .edgePath .path{stroke-dasharray:6 4;animation:dashFlow 25s linear infinite}
-@keyframes dashFlow{to{stroke-dashoffset:-200}}
-.guide-diagram:hover pre.mermaid svg .edgePath .path{animation-duration:8s}
-.guide-diagram pre.mermaid svg .node rect,.guide-diagram pre.mermaid svg .node polygon{transition:fill .3s ease,stroke .3s ease}
-.guide-diagram:hover pre.mermaid svg .node rect,.guide-diagram:hover pre.mermaid svg .node polygon{fill-opacity:.85}
-@media(prefers-reduced-motion:reduce){.guide-diagram,.guide-diagram pre.mermaid svg .edgePath .path{animation:none}}
-[data-theme="dark"] .guide-diagram:hover{border-color:var(--text-secondary);box-shadow:0 4px 20px rgba(255,255,255,.06)}
-
-.guide-search{margin-bottom:14px;position:relative}
-.guide-search input{width:100%;padding:10px 14px 10px 36px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:.85em;outline:0;background:var(--surface-alt);transition:border var(--transition),background var(--transition)}
-.guide-search input:focus{border-color:var(--text);background:var(--surface)}
-.guide-search .search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:.85em}
-.guide-section.hidden{display:none}
-.copy-btn{float:right;background:var(--surface-alt);border:1px solid var(--border);border-radius:var(--radius-sm);padding:3px 12px;font-size:.72em;cursor:pointer;color:var(--text-secondary);transition:all var(--transition);font-weight:500}
-.copy-btn:hover{background:var(--surface-hover);color:var(--text)}
-
-/* ---------- DARK MODE ---------- */
-#dark-toggle{background:none;border:none;cursor:pointer;color:var(--text-muted);padding:6px 10px;border-radius:var(--radius-sm);font-size:1.1em;line-height:1;display:inline-flex;align-items:center;transition:background var(--transition),color var(--transition)}
-#dark-toggle:hover{background:var(--surface-hover);color:var(--text)}
-[data-theme="dark"]{--surface:#0d0d0d;--surface-alt:#141414;--surface-hover:#1e1e1e;--text:#e0e0e0;--text-secondary:#a0a0a0;--text-muted:#6a6a6a;--border:#2a2a2a;--border-light:#222;--shadow-sm:0 1px 3px rgba(0,0,0,.2);--shadow-md:0 4px 16px rgba(0,0,0,.35);--shadow-lg:0 8px 30px rgba(0,0,0,.4)}
-[data-theme="dark"] body{background:var(--surface);color:var(--text)}
-[data-theme="dark"] .logo-img,[data-theme="dark"] .logo-hero,[data-theme="dark"] .logo-mini{filter:invert(1)}
-[data-theme="dark"] header{background:var(--surface-alt);border-color:var(--border);backdrop-filter:none}
-[data-theme="dark"] header .brand{color:var(--text)}
-[data-theme="dark"] header nav a{color:var(--text-muted)}
-[data-theme="dark"] header nav a:hover{background:var(--surface-hover);color:var(--text)}
-[data-theme="dark"] #dark-toggle:hover{background:var(--surface-hover);color:var(--text)}
-[data-theme="dark"] .hero h1{color:var(--text)}
-[data-theme="dark"] .hero p{color:var(--text-muted)}
-[data-theme="dark"] .hero .version-bar{background:var(--surface-alt);border-color:var(--border);color:var(--text-secondary)}
-[data-theme="dark"] .compat-label{color:var(--text-muted)}
-[data-theme="dark"] .compat-item img{filter:brightness(.85)}
-[data-theme="dark"] .build-col h2{color:var(--text)}
-[data-theme="dark"] .install-box{background:var(--surface-alt);border-color:var(--border)}
-[data-theme="dark"] .install-box h3{color:var(--text)}
-[data-theme="dark"] .steps-box{background:var(--surface-alt);border-color:var(--border)}
-[data-theme="dark"] .steps-box h4{color:var(--text-secondary)}
-[data-theme="dark"] .steps-box li{color:var(--text-secondary);border-color:var(--border-light)}
-[data-theme="dark"] .steps-box li::before{background:var(--text-muted)}
-[data-theme="dark"] .guide-col h2{color:var(--text)}
-[data-theme="dark"] .guide-section{background:var(--surface);border-color:var(--border);box-shadow:0 1px 3px rgba(0,0,0,.15)}
-[data-theme="dark"] .guide-section .gs-header{background:var(--surface-alt)}
-[data-theme="dark"] .guide-section .gs-header:hover{background:var(--surface-hover)}
-[data-theme="dark"] .guide-section .gs-header h3{color:var(--text)}
-[data-theme="dark"] .guide-section .gs-body{color:var(--text-secondary)}
-[data-theme="dark"] .gs-body h4{color:var(--text)}
-[data-theme="dark"] .gs-body h5{color:var(--text)}
-[data-theme="dark"] .gs-body code{background:var(--surface-hover);color:var(--text);border-color:var(--border)}
-[data-theme="dark"] .gs-body pre{background:#0d0d0d;color:#d0d0d0;border:none}
-[data-theme="dark"] .gs-body th{background:var(--surface-alt);color:var(--text)}
-[data-theme="dark"] .gs-body td{color:var(--text-secondary);border-color:var(--border)}
-[data-theme="dark"] .gs-body tr:hover td{background:var(--surface-alt)}
-[data-theme="dark"] .gs-body .callout{background:var(--surface-alt);border-left-color:var(--text-muted)}
-[data-theme="dark"] .gs-body a{color:#7a9fdb}
-[data-theme="dark"] .gs-body a:hover{color:#aac3ef}
-[data-theme="dark"] .gs-body mark{background:#554400;color:#ffe066}
-[data-theme="dark"] .gs-body hr{border-color:var(--border)}
-[data-theme="dark"] .gs-body .tag{background:var(--surface-hover);color:var(--text-secondary)}
-[data-theme="dark"] .gs-body .tag-blue{background:#152240;color:#6a8fc9}
-[data-theme="dark"] .gs-body .tag-green{background:#152d15;color:#5a9e5a}
-[data-theme="dark"] .gs-body .tag-red{background:#2d1515;color:#c66}
-[data-theme="dark"] .guide-search input{background:var(--surface-alt);border-color:var(--border);color:var(--text)}
-[data-theme="dark"] .guide-search input:focus{border-color:var(--text-muted);background:var(--surface)}
-[data-theme="dark"] .guide-diagram{background:var(--surface-alt);border-color:var(--border)}
-[data-theme="dark"] .guide-diagram svg{filter:brightness(.85) contrast(1.1)}
-[data-theme="dark"] footer{background:var(--surface-alt);border-color:var(--border);color:var(--text-muted)}
-[data-theme="dark"] footer a{color:var(--text-secondary)}
-[data-theme="dark"] footer a:hover{color:var(--text)}
-[data-theme="dark"] #btn-top{background:var(--surface-hover);color:var(--text)}
-[data-theme="dark"] #reading-progress{background:linear-gradient(90deg,#555,#888)}
-[data-theme="dark"] .copy-btn{background:var(--surface-hover);border-color:var(--border);color:var(--text-secondary)}
-[data-theme="dark"] .copy-btn:hover{background:var(--surface-alt)}
-
-/* ---------- RELEASE BAR ---------- */
-.release-bar{padding:0 0 20px}
-.rl-wrap{background:var(--surface-alt);border:1px solid var(--border);border-radius:var(--radius-lg);padding:22px 28px 18px;position:relative}
-[data-theme="dark"] .rl-wrap{background:var(--surface-alt);border-color:var(--border)}
-.rl-timeline{position:relative;height:72px;margin:0 8px}
-.rl-track{position:absolute;top:18px;left:8px;right:8px;height:4px;background:var(--border);border-radius:2px;z-index:0}
-[data-theme="dark"] .rl-track{background:var(--border)}
-.rl-progress{height:100%;background:linear-gradient(90deg,var(--accent),var(--text));border-radius:2px;transition:width .5s ease}
-[data-theme="dark"] .rl-progress{background:linear-gradient(90deg,var(--accent),var(--text))}
-.rl-milestone{position:absolute;top:11px;transform:translateX(-50%);z-index:1;text-align:center}
-.rl-dot{width:14px;height:14px;border-radius:50%;background:var(--border);border:2px solid var(--text-muted);margin:0 auto 4px;position:relative;z-index:2;box-sizing:border-box}
-.rl-milestone.active .rl-dot{background:var(--text);border-color:var(--text);box-shadow:0 0 0 3px rgba(0,0,0,.12)}
-[data-theme="dark"] .rl-milestone.active .rl-dot{background:var(--text);border-color:var(--text);box-shadow:0 0 0 3px rgba(255,255,255,.1)}
-.rl-milestone.future .rl-dot{background:var(--surface);border-color:var(--border);border-style:dashed}
-.rl-ver{font-size:.72em;font-weight:600;color:var(--text);white-space:nowrap}
-.rl-label{font-size:.62em;color:var(--text-muted);margin-top:1px}
-.rl-date{font-size:.55em;color:var(--text-muted);margin-top:1px}
-.rl-milestone.active .rl-ver{color:var(--text)}
-[data-theme="dark"] .rl-ver{color:var(--text)}
-[data-theme="dark"] .rl-milestone.active .rl-ver{color:var(--text)}
-[data-theme="dark"] .rl-date{color:var(--text-muted)}
-.rl-changelog{display:flex;flex-wrap:wrap;gap:4px;margin-top:16px;padding-top:14px;border-top:1px solid var(--border);align-items:center}
-[data-theme="dark"] .rl-changelog{border-color:var(--border)}
-.rl-cl-entry{font-size:.74em;color:var(--text-secondary);display:flex;align-items:center;gap:5px;padding:2px 0;width:100%}
-@media(min-width:700px){.rl-cl-entry{width:48%}}
-.rl-cl-tag{display:inline-block;padding:1px 6px;border-radius:3px;font-size:.68em;font-weight:600;letter-spacing:.3px;text-transform:uppercase;flex-shrink:0}
-.rl-cl-tag.rl-feat{background:#e8f0fe;color:var(--accent)}
-.rl-cl-tag.rl-fix{background:#e6f7e6;color:var(--accent-green)}
-.rl-cl-tag.rl-chore{background:var(--surface-hover);color:var(--text-muted)}
-[data-theme="dark"] .rl-cl-tag.rl-feat{background:#152240;color:#6a8fc9}
-[data-theme="dark"] .rl-cl-tag.rl-fix{background:#152d15;color:#5a9e5a}
-[data-theme="dark"] .rl-cl-tag.rl-chore{background:var(--surface-hover);color:var(--text-muted)}
-[data-theme="dark"] .rl-cl-entry{color:var(--text-secondary)}
-.rl-cl-more{font-size:.72em;padding-top:4px;width:100%}
-.rl-cl-more a{color:var(--text-secondary);text-decoration:none}
-.rl-cl-more a:hover{color:var(--text);text-decoration:underline}
-[data-theme="dark"] .rl-cl-more a{color:var(--text-secondary)}
-[data-theme="dark"] .rl-cl-more a:hover{color:var(--text)}
-@media(max-width:600px){.rl-timeline{height:62px;margin:0 4px}.rl-wrap{padding:16px 14px 14px}.rl-ver{font-size:.64em}.rl-label{font-size:.55em}.rl-date{font-size:.5em}.rl-dot{width:10px;height:10px}.rl-milestone .rl-dot{margin-bottom:2px}}
-
-/* ---------- COLORED SECTION HEADERS ---------- */
-.guide-section .gs-header{position:relative}
-.guide-section .gs-header::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:0 2px 2px 0}
-.guide-section:nth-of-type(1) .gs-header::before{background:linear-gradient(180deg,#1a56db,#5a8fc9)}
-.guide-section:nth-of-type(2) .gs-header::before{background:linear-gradient(180deg,#1b7a2e,#5a9e5a)}
-[data-theme="dark"] .guide-section:nth-of-type(1) .gs-header::before{background:linear-gradient(180deg,#5a8fc9,#1a56db)}
-[data-theme="dark"] .guide-section:nth-of-type(2) .gs-header::before{background:linear-gradient(180deg,#5a9e5a,#1b7a2e)}
-
-/* ---------- WIRING CARDS ---------- */
-.wiring-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0}
-@media(max-width:700px){.wiring-grid{grid-template-columns:1fr}}
-.wiring-card{border-radius:var(--radius);padding:18px 20px;border:1px solid;position:relative;box-shadow:var(--shadow-sm);transition:box-shadow var(--transition),transform var(--transition)}
-.wiring-card:hover{box-shadow:var(--shadow-md);transform:translateY(-1px)}
-.wiring-card h5{margin:0 0 6px;font-size:.92em;font-weight:600}
-.wiring-card p{margin:0;font-size:.82em;line-height:1.5}
-.wiring-card pre{font-size:.72em;padding:8px 10px;margin:8px 0 0;background:rgba(255,255,255,.6);border-radius:var(--radius-sm);overflow-x:auto;border:1px solid rgba(0,0,0,.06)}
-[data-theme="dark"] .wiring-card pre{background:rgba(0,0,0,.3);border-color:rgba(255,255,255,.06)}
-.wiring-card.ap{background:#fdecea;border-color:#e8c9c9;color:#5c1a1a}
-.wiring-card.bf{background:#e8f5e9;border-color:#c8e0c9;color:#1a3d1a}
-.wiring-card.nmea{background:#e3f2fd;border-color:#c0d8e8;color:#0a2a4a}
-.wiring-card.diagram{background:var(--surface-alt);border-color:var(--border);color:var(--text)}
-[data-theme="dark"] .wiring-card.ap{background:#2a1515;border-color:#4a2525;color:#e57373}
-[data-theme="dark"] .wiring-card.bf{background:#152d15;border-color:#254025;color:#66bb6a}
-[data-theme="dark"] .wiring-card.nmea{background:#152240;border-color:#253b5a;color:#64b5f6}
-[data-theme="dark"] .wiring-card.diagram{background:var(--surface-alt);border-color:var(--border);color:var(--text)}
-.wiring-card .wc-icon{font-size:1.5em;margin-bottom:4px}
-.wiring-card .wc-label{position:absolute;top:8px;right:12px;font-size:.65em;text-transform:uppercase;font-weight:600;opacity:.4;letter-spacing:.8px;background:rgba(0,0,0,.04);padding:2px 8px;border-radius:10px}
-[data-theme="dark"] .wiring-card .wc-label{background:rgba(255,255,255,.06)}
-
-/* ---------- SUPPORT TABLE ---------- */
-.support-table{font-size:.82em;width:100%;border-collapse:separate;border-spacing:0;margin:14px 0;border-radius:var(--radius-sm);overflow:hidden;border:1px solid var(--border)}
-.support-table th,.support-table td{padding:7px 10px;text-align:center;border-bottom:1px solid var(--border);border-right:1px solid var(--border)}
-.support-table th:last-child,.support-table td:last-child{border-right:none}
-.support-table th{background:var(--surface-alt);font-weight:600;color:var(--text);font-size:.85em;position:sticky;top:0}
-.support-table td{color:var(--text-secondary)}
-.support-table td:first-child{text-align:left;font-weight:500;white-space:nowrap}
-.support-table tr:last-child td{border-bottom:none}
-.support-table .y{background:#e6f7e6;color:#1a7d2e;font-weight:600}
-.support-table .n{background:#fde8e8;color:#c62828}
-.support-table .p{background:#fff8e1;color:#e65100}
-.support-table .na{color:var(--text-muted);font-size:.8em}
-[data-theme="dark"] .support-table th{background:var(--surface-alt);color:var(--text)}
-[data-theme="dark"] .support-table td{border-color:var(--border);color:var(--text-secondary)}
-[data-theme="dark"] .support-table .y{background:#1a3a1a;color:#66bb6a}
-[data-theme="dark"] .support-table .n{background:#3a1a1a;color:#e57373}
-[data-theme="dark"] .support-table .p{background:#3a3a1a;color:#ffd54f}
-
-/* ---------- ANCHOR LINKS ---------- */
-.gs-body .anchor-link{opacity:0;text-decoration:none;color:var(--text-muted);font-size:.85em;margin-left:4px;transition:opacity .15s}
-.gs-body h4:hover .anchor-link,.gs-body h5:hover .anchor-link{opacity:1}
-.gs-body .anchor-link:hover{color:var(--text-secondary)}
-
-/* ---------- TOC ---------- */
-#btn-toc{position:fixed;right:0;top:50%;transform:translateY(-50%);background:var(--text);color:var(--surface);border:none;border-radius:8px 0 0 8px;padding:10px 8px;cursor:pointer;z-index:98;font-size:.75em;writing-mode:vertical-rl;letter-spacing:1px;transition:opacity var(--transition),background var(--transition);opacity:.5}
-#btn-toc:hover{opacity:1;background:var(--accent)}
-[data-theme="dark"] #btn-toc{background:var(--surface-hover);color:var(--text)}
-[data-theme="dark"] #btn-toc:hover{background:var(--accent);color:var(--surface)}
-#toc-panel{position:fixed;right:0;top:0;bottom:0;width:200px;background:var(--surface);border-left:1px solid var(--border);z-index:97;transform:translateX(100%);transition:transform .25s;overflow-y:auto;padding:20px 14px;box-shadow:-4px 0 20px rgba(0,0,0,.08)}
-#toc-panel.open{transform:translateX(0)}
-[data-theme="dark"] #toc-panel{background:var(--surface);border-color:var(--border)}
-#toc-panel h4{font-size:.78em;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px}
-#toc-panel a{display:block;padding:6px 10px;color:var(--text-secondary);text-decoration:none;font-size:.78em;border-radius:var(--radius-sm);margin:2px 0;transition:all .1s}
-#toc-panel a:hover{background:var(--surface-alt);color:var(--text)}
-#toc-panel a.active{background:var(--surface-hover);color:var(--text);font-weight:600}
-[data-theme="dark"] #toc-panel a{color:var(--text-secondary)}
-[data-theme="dark"] #toc-panel a:hover{background:var(--surface-hover);color:var(--text)}
-[data-theme="dark"] #toc-panel a.active{background:var(--surface-hover);color:var(--text)}
-@media(max-width:900px){#toc-panel{width:180px;font-size:.9em}#btn-toc{padding:8px 6px;font-size:.7em}}
-@media(max-width:600px){#toc-panel{width:160px;right:auto;left:0;transform:translateX(-100%)}#toc-panel.open{transform:translateX(0)}#btn-toc{right:auto;left:0;border-radius:0 8px 8px 0}}
-
-/* ---------- LIGHTBOX ---------- */
-#lb-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:1000;display:none;justify-content:center;align-items:center;cursor:pointer;padding:30px}
-#lb-overlay.open{display:flex}
-#lb-overlay svg{max-width:95vw;max-height:90vh;background:var(--surface);border-radius:var(--radius);padding:24px;box-shadow:0 8px 60px rgba(0,0,0,.5)}
-#lb-overlay .lb-close{position:absolute;top:16px;right:22px;color:#fff;font-size:2em;cursor:pointer;opacity:.7;background:none;border:none;font-family:inherit}
-#lb-overlay .lb-close:hover{opacity:1}
-[data-theme="dark"] #lb-overlay svg{background:var(--surface)}
-
-/* ---------- BREADCRUMBS ---------- */
-.breadcrumbs{font-size:.75em;color:var(--text-muted);margin-bottom:12px;display:flex;align-items:center;gap:4px;flex-wrap:wrap}
-.breadcrumbs a{color:var(--text-secondary);text-decoration:none}
-.breadcrumbs a:hover{color:var(--text);text-decoration:underline}
-.breadcrumbs .cur{color:var(--text)}
-.breadcrumbs .sep{color:var(--text-muted);margin:0 2px}
-[data-theme="dark"] .breadcrumbs{color:var(--text-muted)}
-[data-theme="dark"] .breadcrumbs a{color:var(--text-secondary)}
-[data-theme="dark"] .breadcrumbs a:hover{color:var(--text)}
-[data-theme="dark"] .breadcrumbs .cur{color:var(--text)}</style>
-<link rel="stylesheet" href="shared.css"></head>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+<script>mermaid.initialize({startOnLoad:false,theme:'base',themeVariables:{primaryColor:'#e8f0fe',primaryBorderColor:'#1a56db',lineColor:'#666',secondaryColor:'#e6f7e6',tertiaryColor:'#fef3e2',fontSize:'13px'}})</script>
+</head>
 <body>
 <div id="reading-progress"></div>
 
-<header>
-<div class="wrap">
-<a href="#" class="brand" aria-label="ESP DRONE REMOTEID home">
+<header class="navbar navbar-expand-lg sticky-top bg-body-tertiary">
+<div class="container">
+<a href="#" class="navbar-brand brand p-0 me-3" aria-label="ESP DRONE REMOTEID home">
 <img class="logo-img" src="images/logo%20con%20scritta.svg" alt="ESP DRONE REMOTEID">
 </a>
-<button id="hamburger" onclick="toggleMobileNav()" aria-label="Toggle navigation menu">&#x2630;</button>
-<nav aria-label="Main navigation">
-<a href="#build">Install</a>
-<a href="#guide">Quick Start</a>
-<a href="guide.html">Technical Guide</a>
-<a href="guide.html#guide-analyzer">Analyzer</a>
-<a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID" aria-label="GitHub repository">
+<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<div class="collapse navbar-collapse" id="mainNav">
+<nav class="navbar-nav ms-auto align-items-lg-center" aria-label="Main navigation">
+<a class="nav-link" href="#build">Install</a>
+<a class="nav-link" href="#guide">Quick Start</a>
+<a class="nav-link" href="guide.html">Technical Guide</a>
+<a class="nav-link" href="guide.html#guide-analyzer">Analyzer</a>
+<a class="nav-link" href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID" aria-label="GitHub repository">
 <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8"/></svg>
 </a>
-<a href="config(demo).html">Configurator Live Demo</a>
+<a class="nav-link" href="config(demo).html">Configurator Live Demo</a>
 </nav>
+<div class="ms-lg-3 d-flex align-items-center ps-lg-3 border-lg-start border-secondary-subtle">
 <button id="dark-toggle" onclick="toggleDark()" aria-label="Toggle dark mode">&#x263e;</button>
+</div>
+</div>
 </div>
 </header>
 
-<div class="mobile-nav-backdrop" id="mobile-nav-backdrop" onclick="closeMobileNav()"></div>
-
-<div class="wrap">
+<div class="container">
 <div class="hero">
-<img class="logo-hero" src="images/logo.svg" alt="ESP DRONE REMOTEID">
+<img class="logo-hero mx-auto d-block mb-3" src="images/logo.svg" alt="ESP DRONE REMOTEID">
 <h1>ESP DRONE REMOTEID <span style="font-size:.5em;color:#c62828;font-weight:700">[BETA]</span></h1>
 <p>Universal ASTM F3411-22a Open DroneID transmitter &mdash; WiFi Beacon &middot; BLE 4.0/5.0 &middot; MAVLink &middot; MSP &middot; NMEA &middot; Security hardened</p>
-<div class="version-bar" style="border-color:#f57c00;background:#fff3e0;color:#e65100">&#x26a0; BETA &mdash; v1.0.0-beta &middot; All 21 ESPsquawk fork fixes ported, security hardening complete, FC hardware testing in progress</div>
-<div style="font-size:.72em;color:var(--text-muted);margin-top:8px"><b>Dependencies:</b> <a href="https://github.com/mavlink/c_library_v2" style="color:var(--accent)">MAVLink c_library_v2</a> Jul 2026 &middot; <a href="https://github.com/opendroneid/core-c" style="color:var(--accent)">OpenDroneID core-c</a> Protocol v2 &middot; <a href="https://components.espressif.com/components/espressif/cjson" style="color:var(--accent)">cJSON</a> ^1.7.19 &middot; <a href="https://github.com/espressif/esp-idf" style="color:var(--accent)">ESP-IDF</a> v6.0.1</div>
-<div class="gh-btns">
+<div class="alert alert-warning text-start" role="alert" style="max-width:640px;margin:0 auto 1rem">&#x26a0; BETA &mdash; v1.0.0-beta &middot; All 21 ESPsquawk fork fixes ported, security hardening complete, FC hardware testing in progress</div>
+<div class="small text-secondary mt-2"><b>Dependencies:</b> <a href="https://github.com/mavlink/c_library_v2" class="text-primary fw-medium">MAVLink c_library_v2</a> Jul 2026 &middot; <a href="https://github.com/opendroneid/core-c" class="text-primary fw-medium">OpenDroneID core-c</a> Protocol v2 &middot; <a href="https://components.espressif.com/components/espressif/cjson" class="text-primary fw-medium">cJSON</a> ^1.7.19 &middot; <a href="https://github.com/espressif/esp-idf" class="text-primary fw-medium">ESP-IDF</a> v6.0.1</div>
+<div class="gh-btns d-flex justify-content-center gap-2 mt-3">
   <a class="github-button" href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID" data-show-count="true" data-size="large" aria-label="Star VOLTEKOVER/ESP_DRONE_REMOTEID on GitHub">Star</a>
   <a class="github-button" href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/fork" data-show-count="true" data-size="large" aria-label="Fork VOLTEKOVER/ESP_DRONE_REMOTEID on GitHub">Fork</a>
 </div>
-<div class="compat-bar">
+<div class="d-flex justify-content-center flex-wrap gap-2 align-items-center mt-3">
   <span class="compat-label">Target protocols</span>
   <span class="compat-item ap">
     <img src="images/ardupilot_logo.webp" alt="ArduPilot" height="28">
@@ -447,20 +97,21 @@ footer .fw-copy{font-size:.92em;color:var(--text-muted)}
 <!-- RELEASE BAR -->
 <div class="release-bar">
 <div class="rl-wrap">
-<div style="padding:12px 0;text-align:center">
-  <span style="font-size:.85em;color:#888">&#x1f6a7; Beta release v1.0.0-beta. All 21 ESPsquawk fork fixes ported. Security hardening: cJSON, rate limiting, SHA-256 + Ed25519 OTA verification, rid_security module. 3 ESP32 targets. FC hardware verification in progress. See the <a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/blob/main/todolist/softwarestatus.md">software status</a> for details.</span>
+<div class="text-center py-3">
+  <span class="small text-secondary">&#x1f6a7; Beta release v1.0.0-beta. All 21 ESPsquawk fork fixes ported. Security hardening: cJSON, rate limiting, SHA-256 + Ed25519 OTA verification, rid_security module. 3 ESP32 targets. FC hardware verification in progress. See the <a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/blob/main/todolist/softwarestatus.md">software status</a> for details.</span>
 </div>
 </div>
 </div>
 
-<div class="main-grid">
-<div class="build-col" id="build">
-<h2>&#x1f4e4; Flash Firmware</h2>
-<p>Install via browser &mdash; no tools required.</p>
+<div class="row py-3 pb-5">
+<div class="col-lg-4 mb-4">
+<div class="build-col sticky-lg-top" style="top:88px" id="build">
+<h2 class="fs-5 fw-bold mb-1">&#x1f4e4; Flash Firmware</h2>
+<p class="text-secondary small mb-4">Install via browser &mdash; no tools required.</p>
 <div class="install-box">
 <div class="mini-logo">
-<img class="logo-mini" src="images/logo.svg" alt="ESP DRONE REMOTEID">
-<p class="sub">Select your device &amp; install</p>
+<img class="logo-mini mb-1" src="images/logo.svg" alt="ESP DRONE REMOTEID">
+<p class="sub small text-secondary mb-3">Select your device &amp; install</p>
 <div class="chip-selector" id="chip-selector">
   <label class="chip-option active">
     <input type="radio" name="chip" value="ESP32" checked>
@@ -491,22 +142,27 @@ footer .fw-copy{font-size:.92em;color:var(--text-muted)}
 <div class="fw-info">&#x26a0; Beta build &mdash; core verified in demo mode, FC hardware validation in progress &mdash; <a href="#guide-installation">Manual flashing &rarr;</a></div>
 </div>
 </div>
+</div>
 
+<div class="col-lg-8">
 <div class="guide-col" id="guide">
-<h2>&#x26a1; Quick Start</h2>
+<h2 class="fs-5 fw-bold mb-3 d-flex align-items-center gap-2">&#x26a1; Quick Start</h2>
 <div class="breadcrumbs"><a href="#">Home</a><span class="sep">›</span><span class="cur">Quick Start</span><span class="sep">·</span><a href="guide.html">Technical Guide &rarr;</a></div>
 <div class="guide-search">
 <span class="search-icon">&#x1f50d;</span>
-<input type="text" id="guide-search" placeholder="Search guide sections..." oninput="filterGuide(this.value)" aria-label="Search guide sections">
+<input type="text" id="guide-search" class="form-control" placeholder="Search guide sections..." oninput="filterGuide(this.value)" aria-label="Search guide sections">
 </div>
 
 <!-- 1. INTRODUCTION -->
-<div class="guide-section open" id="guide-intro">
-<div class="gs-header" onclick="this.parentElement.classList.toggle('open')" onkeydown="if(event.key==='Enter'||event.key===' ')this.click()" role="button" tabindex="0" aria-expanded="true">
-<h3>1. Introduction</h3>
+<div class="guide-section accordion-item open" id="guide-intro">
+<h3 class="accordion-header">
+<button class="gs-header accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#guide-intro-body" aria-expanded="true" aria-controls="guide-intro-body">
+<span class="gs-title">1. Introduction</span>
 <span class="arrow">&#x25bc;</span>
-</div>
-<div class="gs-body">
+</button>
+</h3>
+<div class="accordion-collapse collapse show" id="guide-intro-body">
+<div class="accordion-body gs-body">
 <h4>What is ESP DRONE REMOTEID?</h4>
 <p>ESP DRONE REMOTEID is an open-source firmware being developed to transform any ESP32 microcontroller into a universal Remote ID transmitter targeting <b>ASTM F3411-22a</b> (USA) and <b>ASD-STAN prEN 4709-002</b> (EU) standards. It is designed to read GPS position data from a flight controller via UART and broadcast ASTM-standard Open Drone ID messages over WiFi Beacon (802.11) and Bluetooth Low Energy (BLE 4.0 and BLE 5.0 Coded PHY).</p>
 
@@ -551,6 +207,7 @@ footer .fw-copy{font-size:.92em;color:var(--text-muted)}
 <p><b>Note:</b> Compliance with FAA Part 89, EASA 2021/664, or any other regulation has <b>not been certified</b>. Regulatory validation with certified receivers is required before use in actual flight operations.</p>
 
 <h4>Technical Specifications</h4>
+<div class="table-responsive">
 <table>
 <tr><th>Parameter</th><th>Value</th></tr>
 <tr><td>MCU</td><td>ESP32, ESP32-S3, ESP32-C6 (3 targets)</td></tr>
@@ -571,6 +228,7 @@ footer .fw-copy{font-size:.92em;color:var(--text-muted)}
 <tr><td>MAVLink USB</td><td>Bidirectional MAVLink over USB CDC (ESP32-S3/C6)</td></tr>
 <tr><td>Startup delay</td><td>Configurable up to 30 000 ms</td></tr>
 </table>
+</div>
 
 <h4>System Architecture</h4>
 <div class="guide-diagram">
@@ -591,15 +249,20 @@ flowchart LR
 </div>
 </div>
 </div>
+</div>
 
 <!-- 2. HARDWARE -->
-<div class="guide-section" id="guide-hardware">
-<div class="gs-header" onclick="this.parentElement.classList.toggle('open')" onkeydown="if(event.key==='Enter'||event.key===' ')this.click()" role="button" tabindex="0" aria-expanded="false">
-<h3>2. Hardware Setup</h3>
+<div class="guide-section accordion-item" id="guide-hardware">
+<h3 class="accordion-header">
+<button class="gs-header accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#guide-hardware-body" aria-expanded="false" aria-controls="guide-hardware-body">
+<span class="gs-title">2. Hardware Setup</span>
 <span class="arrow">&#x25bc;</span>
-</div>
-<div class="gs-body">
+</button>
+</h3>
+<div class="accordion-collapse collapse" id="guide-hardware-body">
+<div class="accordion-body gs-body">
 <h4>Pinout</h4>
+<div class="table-responsive">
 <table>
 <tr><th>ESP32 Pin</th><th>Function</th><th>Connect To</th><th>Notes</th></tr>
 <tr><td><code>GPIO16</code></td><td>UART2 RX</td><td>FC TX (output)</td><td>Primary data line from flight controller</td></tr>
@@ -609,6 +272,7 @@ flowchart LR
 <tr><td><code>EN</code></td><td>Reset</td><td>Optional button</td><td>Pull-up to 3.3V</td></tr>
 <tr><td><code>GPIO0</code></td><td>Boot mode</td><td>Optional button</td><td>Hold for flash mode</td></tr>
 </table>
+</div>
 
 <h4>Wiring Diagram</h4>
 <div class="guide-diagram">
@@ -688,6 +352,7 @@ GPS TX &rarr; FC RX (unchanged)</pre>
 <p>The ESP32 GPIO pins are <b>5V tolerant</b> but the UART RX pin (GPIO16) uses 3.3V logic levels. Most flight controllers use 3.3V UART (Pixhawk, Matek, Betaflight boards). If your FC uses 5V UART (some older ArduPilot boards), use a <b>level shifter</b> or a voltage divider (1 k&Omega; + 2.2 k&Omega;) on the RX line.</p>
 
 <h4>ESP32 Support Overview</h4>
+<div class="table-responsive">
 <table class="support-table">
 <tr><th>Feature</th><th>ESP32</th><th>S3</th><th>C6</th></tr>
 <tr><td>WiFi Beacon</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
@@ -700,15 +365,14 @@ GPS TX &rarr; FC RX (unchanged)</pre>
 <tr><td>DroneCAN</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
 <tr><td>MAVLink USB</td><td class="n">&#x2717;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
 </table>
+</div>
 <p class="fw-info">Full matrix with all protocols, lock levels, and pin compatibility in <a href="guide.html#guide-variants">Technical Guide &rarr;</a></p>
 </div>
 </div>
+</div>
 
-
-
-
-
-<h4>Recommended Kits</h4>
+<h4 class="mt-4">Recommended Kits</h4>
+<div class="table-responsive">
 <table class="support-table">
 <tr><th>Kit</th><th>Board</th><th>Chip</th><th>WiFi</th><th>BLE</th><th>Price</th><th>Best for</th></tr>
 <tr>
@@ -730,18 +394,20 @@ GPS TX &rarr; FC RX (unchanged)</pre>
   <td>Final product, smallest footprint</td>
 </tr>
 </table>
+</div>
 <p class="fw-info"><b>Recommended:</b> XIAO ESP32-C6 + L76K GNSS — zero soldering, 21×18mm, USB-C, LiPo, U.FL. See <a href="prototype_bom.md">full BOM</a> for details.</p>
 
 <!-- Full technical guide moved to guide.html -->
-<div style="margin:28px 0;text-align:center;background:var(--surface-alt);border:2px solid var(--border);border-radius:var(--radius-lg);padding:24px 28px;box-shadow:var(--shadow-md)">
-  <div style="font-size:2.2em;margin-bottom:6px">&#x1f4d6;</div>
-  <strong style="font-size:1.05em;color:var(--text)">Need detailed protocol, installation, OTA, security, or analyzer info?</strong><br>
-  <span style="color:var(--text-secondary);font-size:.9em">See the full reference with feature matrix, wiring diagrams, and API docs.</span><br>
-  <a href="guide.html" style="display:inline-block;margin-top:12px;background:var(--text);color:var(--surface);padding:10px 24px;border-radius:var(--radius-sm);font-size:.9em;font-weight:600;text-decoration:none;transition:all var(--transition)">Open Technical Guide &rarr;</a>
+<div class="card text-center border-2 rounded-4 p-4 mt-4 mb-2 shadow-sm bg-body-tertiary">
+  <div class="fs-1 mb-2">&#x1f4d6;</div>
+  <div class="h5 mb-1">Need detailed protocol, installation, OTA, security, or analyzer info?</div>
+  <p class="text-secondary small mb-3">See the full reference with feature matrix, wiring diagrams, and API docs.</p>
+  <div><a href="guide.html" class="btn btn-primary px-4 fw-semibold">Open Technical Guide &rarr;</a></div>
 </div>
-</div> <!-- end guide-col -->
-</div> <!-- end main-grid -->
-</div> <!-- end wrap -->
+</div>
+</div>
+</div>
+</div>
 
 <button id="btn-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top" aria-label="Scroll to top">&#x2191;</button>
 
@@ -750,47 +416,68 @@ GPS TX &rarr; FC RX (unchanged)</pre>
 
 <div id="lb-overlay" onclick="if(event.target===this)closeLb()"></div>
 
-<footer>
-<div class="fw-links">
-<a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID">
+<footer class="text-center py-4 border-top small text-muted">
+<div class="fw-links mb-1">
+<a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID" class="text-secondary">
 <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" style="vertical-align:-2px;margin-right:4px"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8"/></svg>
 GitHub
 </a>
-<span class="sep">|</span>
-<a href="guide.html">Technical Guide</a>
-<span class="sep">|</span>
-<a href="guide.html#guide-analyzer">Analyzer</a>
-<span class="sep">|</span>
-<a href="config(demo).html">Configurator Live Demo</a>
-<span class="sep">|</span>
-<a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/releases">Releases</a>
-<span class="sep">|</span>
-<a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/issues">Issues</a>
+<span class="sep text-secondary opacity-50 mx-2">|</span>
+<a href="guide.html" class="text-secondary">Technical Guide</a>
+<span class="sep text-secondary opacity-50 mx-2">|</span>
+<a href="guide.html#guide-analyzer" class="text-secondary">Analyzer</a>
+<span class="sep text-secondary opacity-50 mx-2">|</span>
+<a href="config(demo).html" class="text-secondary">Configurator Live Demo</a>
+<span class="sep text-secondary opacity-50 mx-2">|</span>
+<a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/releases" class="text-secondary">Releases</a>
+<span class="sep text-secondary opacity-50 mx-2">|</span>
+<a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/issues" class="text-secondary">Issues</a>
 </div>
-<div class="fw-copy">ESP DRONE REMOTEID v1.0.0-beta &mdash; ASTM F3411-22a Open DroneID (beta) &mdash; <a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/blob/main/LICENSE">Apache-2.0 License</a></div>
+<div class="fw-copy text-secondary">ESP DRONE REMOTEID v1.0.0-beta &mdash; ASTM F3411-22a Open DroneID (beta) &mdash; <a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/blob/main/LICENSE" class="text-secondary">Apache-2.0 License</a></div>
 </footer>
 
 <script>
-// --- DARK MODE ---
+// --- THEME (mirrors to Bootstrap) ---
 var theme=localStorage.getItem('theme');
-if(theme==='dark'){document.documentElement.setAttribute('data-theme','dark')}
+if(theme==='dark'){document.documentElement.setAttribute('data-theme','dark');document.documentElement.setAttribute('data-bs-theme','dark')}
 function toggleDark(){
   var d=document.documentElement;
-  if(d.getAttribute('data-theme')==='dark'){d.removeAttribute('data-theme');localStorage.setItem('theme','light')}
-  else{d.setAttribute('data-theme','dark');localStorage.setItem('theme','dark')}
+  if(d.getAttribute('data-theme')==='dark'){
+    d.removeAttribute('data-theme');d.setAttribute('data-bs-theme','light');localStorage.setItem('theme','light');
+  }else{
+    d.setAttribute('data-theme','dark');d.setAttribute('data-bs-theme','dark');localStorage.setItem('theme','dark');
+  }
 }
 
-// --- ACCORDION ---
+// --- MERMAID: render diagrams only when their section is visible ---
+function renderMermaid(scope){
+  scope.querySelectorAll('pre.mermaid').forEach(function(p){
+    if(p.getAttribute('data-rendered'))return;
+    p.setAttribute('data-rendered','1');
+    mermaid.run({nodes:[p]});
+  });
+}
+document.querySelectorAll('.guide-section.open').forEach(renderMermaid);
+
+// --- ACCORDION (Bootstrap Collapse) ---
+function sectionBody(s){return s.querySelector('.accordion-collapse')}
+function isOpenSection(s){return s.classList.contains('open')}
+function openSection(s){
+  s.classList.add('open');
+  var b=sectionBody(s);
+  if(b&&!b.classList.contains('show')){bootstrap.Collapse.getOrCreateInstance(b).show()}
+  renderMermaid(s);
+}
+function closeSection(s){
+  s.classList.remove('open');
+  var b=sectionBody(s);
+  if(b&&b.classList.contains('show')){bootstrap.Collapse.getOrCreateInstance(b).hide()}
+}
 document.querySelectorAll('.guide-section').forEach(function(s){
-  var h=s.querySelector('.gs-header');
-  if(h){h.setAttribute('aria-expanded',s.classList.contains('open'))}
-  var orig=s.querySelector('.gs-header').getAttribute('onclick')||'';
-  if(!orig.includes('aria-expanded')){
-    s.querySelector('.gs-header').onclick=function(e){
-      this.parentElement.classList.toggle('open');
-      this.setAttribute('aria-expanded',this.parentElement.classList.contains('open'));
-    }
-  }
+  var b=sectionBody(s);
+  if(!b)return;
+  b.addEventListener('shown.bs.collapse',function(){s.classList.add('open');renderMermaid(s)});
+  b.addEventListener('hidden.bs.collapse',function(){s.classList.remove('open')});
 });
 
 // --- SCROLL: progress bar + back to top + TOC highlight + breadcrumbs ---
@@ -834,8 +521,8 @@ function filterGuide(val){
     var text = s.textContent.toLowerCase();
     var match = q && text.indexOf(q) !== -1;
     s.classList.toggle('hidden', q && !match);
-    if(match && q){s.classList.add('open')}
-    var h3=s.querySelector('.gs-header h3');
+    if(match && q){openSection(s)}
+    var h3=s.querySelector('.gs-header .gs-title');
     if(h3){
       var orig=h3.getAttribute('data-orig');
       if(!orig){orig=h3.textContent;h3.setAttribute('data-orig',orig)}
@@ -858,19 +545,6 @@ function filterGuide(val){
   });
 }
 
-// --- SCROLL TO TOP PER SECTION ---
-document.querySelectorAll('.guide-section').forEach(function(s){
-  if(s.id==='guide-intro')return;
-  var h=s.querySelector('.gs-header');
-  if(!h)return;
-  var a=document.createElement('a');
-  a.href='#btn-top';a.textContent='\u2191';
-  a.title='Back to top';
-  a.style.cssText='color:#bbb;text-decoration:none;font-size:.85em;padding:0 6px 0 8px';
-  a.onclick=function(e){e.stopPropagation();e.preventDefault();window.scrollTo({top:0,behavior:'smooth'})};
-  h.insertBefore(a, h.querySelector('.arrow'));
-});
-
 // --- COPY CODE BLOCKS ---
 document.querySelectorAll('.gs-body pre').forEach(function(pre){
   var btn = document.createElement('button');
@@ -889,7 +563,7 @@ document.querySelectorAll('.gs-body pre').forEach(function(pre){
 var tocPanel = document.getElementById('toc-panel');
 sections.forEach(function(s){
   var id = s.id;
-  var h3 = s.querySelector('.gs-header h3');
+  var h3 = s.querySelector('.gs-header .gs-title');
   if(!id || !h3)return;
   var label = h3.textContent.replace(/^\d+\.\s*/,'');
   var a = document.createElement('a');
@@ -900,18 +574,6 @@ sections.forEach(function(s){
 });
 function toggleToc(){tocPanel.classList.toggle('open')}
 
-// --- MOBILE NAV ---
-function toggleMobileNav(){
-  var nav=document.querySelector('header nav');var back=document.getElementById('mobile-nav-backdrop');
-  var isOpen=nav.classList.toggle('open');back.classList.toggle('open',isOpen);
-  document.getElementById('hamburger').innerHTML=isOpen?'&#x2715;':'&#x2630;';
-}
-function closeMobileNav(){
-  document.querySelector('header nav').classList.remove('open');
-  document.getElementById('mobile-nav-backdrop').classList.remove('open');
-  document.getElementById('hamburger').innerHTML='&#x2630;';
-}
-
 // --- KEYBOARD SHORTCUTS ---
 var searchInput = document.getElementById('guide-search');
 document.addEventListener('keydown',function(e){
@@ -919,8 +581,9 @@ document.addEventListener('keydown',function(e){
     e.preventDefault();searchInput.focus()
   }
   if(e.key==='Escape'){
-    if(document.querySelector('header nav').classList.contains('open')){closeMobileNav()}
-    document.querySelectorAll('.guide-section.open').forEach(function(s){s.classList.remove('open')});
+    var navCollapse = document.getElementById('mainNav');
+    if(navCollapse && navCollapse.classList.contains('show')){bootstrap.Collapse.getOrCreateInstance(navCollapse).hide()}
+    document.querySelectorAll('.guide-section.open').forEach(closeSection);
     if(tocPanel.classList.contains('open')){tocPanel.classList.remove('open')}
     if(searchInput.value){searchInput.value='';filterGuide('')}
     searchInput.blur();
@@ -928,18 +591,18 @@ document.addEventListener('keydown',function(e){
   if(e.key==='j' && !e.ctrlKey && !e.metaKey && document.activeElement!==searchInput){
     e.preventDefault();
     var vis = [].filter.call(sections,function(s){return !s.classList.contains('hidden')});
-    var idx = vis.findIndex(function(s){return s.classList.contains('open')});
+    var idx = vis.findIndex(isOpenSection);
     var next = idx < vis.length-1 ? idx+1 : 0;
-    if(idx>=0){vis[idx].classList.remove('open')}
-    vis[next].classList.add('open');vis[next].scrollIntoView({behavior:'smooth',block:'center'});
+    if(idx>=0){closeSection(vis[idx])}
+    openSection(vis[next]);vis[next].scrollIntoView({behavior:'smooth',block:'center'});
   }
   if(e.key==='k' && !e.ctrlKey && !e.metaKey && document.activeElement!==searchInput){
     e.preventDefault();
     var vis = [].filter.call(sections,function(s){return !s.classList.contains('hidden')});
-    var idx = vis.findIndex(function(s){return s.classList.contains('open')});
+    var idx = vis.findIndex(isOpenSection);
     var prev = idx > 0 ? idx-1 : vis.length-1;
-    if(idx>=0){vis[idx].classList.remove('open')}
-    vis[prev].classList.add('open');vis[prev].scrollIntoView({behavior:'smooth',block:'center'});
+    if(idx>=0){closeSection(vis[idx])}
+    openSection(vis[prev]);vis[prev].scrollIntoView({behavior:'smooth',block:'center'});
   }
 });
 
@@ -948,7 +611,9 @@ document.querySelectorAll('.guide-diagram').forEach(function(d){
   d.style.cursor = 'zoom-in';
   d.onclick = function(){
     var lb = document.getElementById('lb-overlay');
-    var clone = d.querySelector('svg').cloneNode(true);
+    var svg = d.querySelector('svg');
+    if(!svg){renderMermaid(d);return}
+    var clone = svg.cloneNode(true);
     lb.innerHTML = '<button class="lb-close" onclick="closeLb()">&times;</button>';
     lb.appendChild(clone);
     lb.classList.add('open');
