@@ -608,7 +608,7 @@ static esp_err_t handle_get_logs(httpd_req_t *req)
             off += snprintf(buf + off, 4096 - off,
                 "{\"t\":%lu,\"l\":\"%s\",\"m\":\"%s\"}",
                 (unsigned long)e->time_ms, lvstr, escaped);
-            if (off >= 4096 - 128) { break; }
+            if (off >= 4096 - 128) { off = 4096 - 128; break; }
         }
         xSemaphoreGive(s_log_lock);
     }
