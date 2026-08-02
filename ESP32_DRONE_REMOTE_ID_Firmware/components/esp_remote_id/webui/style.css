@@ -2335,6 +2335,8 @@ hr{border:none;border-top:1px solid var(--border);margin:16px 0}
 .theme-opt .theme-opt-ic{font-size:1.6em;line-height:1}
 .theme-remember{display:flex;align-items:center;justify-content:center;gap:8px;font-size:.78em;color:var(--text-secondary);cursor:pointer;margin-top:2px}
 .theme-remember input{cursor:pointer}
+.theme-remember input:disabled{cursor:not-allowed;opacity:.5}
+.theme-remember:has(input:disabled){cursor:not-allowed;opacity:.7}
 .dialog-box{padding:28px}
 .dialog-box h3,.dialog-box h3.dialog-modal-title{margin:0 0 8px;font-size:1.05em;font-weight:600}
 .dialog-box h3.dialog-modal-icon{font-size:1.8em;text-align:center;margin-bottom:12px}

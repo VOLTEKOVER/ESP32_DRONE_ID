@@ -967,7 +967,7 @@ function themeBtnSync(){
 function pickTheme(t){
   setTheme(t);
   var cb=$('theme-remember');
-  try{if(cb&&cb.checked)localStorage.setItem('rid_theme_prompt','off')}catch(e){}
+  try{if(cb&&!cb.disabled&&cb.checked)localStorage.setItem('rid_theme_prompt','off')}catch(e){}
   closeDialog('dialog-theme');
 }
 (function(){

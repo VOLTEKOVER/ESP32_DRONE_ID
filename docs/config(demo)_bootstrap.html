@@ -166,6 +166,8 @@ hr{border:none;border-top:1px solid var(--border);margin:16px 0}
 .theme-opt .theme-opt-ic{font-size:1.6em;line-height:1}
 .theme-remember{display:flex;align-items:center;justify-content:center;gap:8px;font-size:.78em;color:var(--text-secondary);cursor:pointer;margin-top:2px}
 .theme-remember input{cursor:pointer}
+.theme-remember input:disabled{cursor:not-allowed;opacity:.5}
+.theme-remember:has(input:disabled){cursor:not-allowed;opacity:.7}
 .dialog-box{padding:28px}
 .dialog-box h3,.dialog-box h3.dialog-modal-title{margin:0 0 8px;font-size:1.05em;font-weight:600}
 .dialog-box h3.dialog-modal-icon{font-size:1.8em;text-align:center;margin-bottom:12px}
@@ -994,7 +996,7 @@ Live telemetry and serial console from the ESP32 Remote ID transmitter. The cons
 <button class="theme-opt" type="button" data-theme-opt="light" onclick="pickTheme('light')" data-tip="Switch to light theme"><span class="theme-opt-ic">&#x2600;&#xfe0f;</span><span>Light</span></button>
 <button class="theme-opt" type="button" data-theme-opt="dark" onclick="pickTheme('dark')" data-tip="Switch to dark theme"><span class="theme-opt-ic">&#x1f319;</span><span>Dark</span></button>
 </div>
-<label class="theme-remember"><input type="checkbox" id="theme-remember" checked> Remember my choice</label>
+<label class="theme-remember"><input type="checkbox" id="theme-remember" checked disabled> Remember my choice</label>
 </div>
 </dialog>
 
@@ -2216,7 +2218,7 @@ function themeBtnSync(){
 function pickTheme(t){
   setTheme(t);
   var cb=$('theme-remember');
-  try{if(cb&&cb.checked)localStorage.setItem('rid_theme_prompt','off')}catch(e){}
+  try{if(cb&&!cb.disabled&&cb.checked)localStorage.setItem('rid_theme_prompt','off')}catch(e){}
   closeDialog('dialog-theme');
 }
 (function(){
