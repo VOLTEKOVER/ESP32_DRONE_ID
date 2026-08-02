@@ -1998,6 +1998,11 @@ esp-web-install-button::part(unsupported) {
   width: auto;
 }
 
+[data-theme="dark"] .logo,
+[data-theme="dark"] .brand img {
+  filter: brightness(0) invert(1);
+}
+
 #splash .sub {
   font-size: 0.8em;
   color: var(--text-muted);

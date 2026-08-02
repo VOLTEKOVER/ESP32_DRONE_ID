@@ -124,7 +124,9 @@
 [data-theme="dark"] img[src*="logo"],
 [data-theme="dark"] .logo-img,
 [data-theme="dark"] .logo-hero,
-[data-theme="dark"] .logo-mini {
+[data-theme="dark"] .logo-mini,
+[data-theme="dark"] .logo,
+[data-theme="dark"] .brand img {
   filter: brightness(0) invert(1);
 }
 
