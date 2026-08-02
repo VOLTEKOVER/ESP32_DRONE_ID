@@ -1,6 +1,6 @@
 # ESP DRONE REMOTEID — Software Status
 
-Last updated: 2026-07-29
+Last updated: 2026-08-02
 Scope: all 80+ source files (excluding build artifacts)
 
 ---
@@ -32,6 +32,15 @@ Scope: all 80+ source files (excluding build artifacts)
 - [ ] **Stats tracking** — TX failures, parse errors, signatures
 
 ### ✅ DONE — Recently Completed
+- **Web UI split** — `config.html` + `style.css` (2374L) + `app.js` (1352L); `EMBED_FILES` + 2 new handlers `/style.css` `/app.js` in `web_config.c`
+- **Bootstrap 5.3.3 vendored inline** in app.js (works offline) + heap overflow fix in `handle_get_logs` (clamp off)
+- **Compliance Checklist** — 9 regions (auto/EUR/FAA/JPN/SGP/KOR/CHN/CAN/AUS/BRA/NZL), per-region `reqMap`, operator ID only for EUR
+- **Tooltip system** — `data-tip` on all buttons (63 real / 66 demo), glassmorphism CSS, keyboard/focus accessible
+- **Encoding repair** — fixed UTF-8 mojibake across webui + docs (theme icon ☀️/☾, em-dash, UAV favicon 🛸, BOM)
+- **Password hashing** — `rid_sec_pwd` now SHA-256 (pure-JS, works over http) instead of base64; auto-migrates legacy base64 on login
+- **Console persistence fix** — `rid_console` save `'1'/'0'` now matches restore check
+- **Theme dialog "Remember my choice" disabled** — checkbox `disabled`, `pickTheme` won't persist `rid_theme_prompt`
+- **Docs links fixed** — `config(demo).html` rename, dead `prototype_bom.md`/`shared.css` links removed, `#guide-installation` anchor repair
 - Kalman predictor (1D×3), WS2812 via RMT, Ed25519 auth pages
 - OTA server, DroneCAN/TWAI, MAVLink USB + ARM_STATUS
 - GPIO lighting (5-ch, 6 patterns), identity readiness gate
@@ -39,7 +48,7 @@ Scope: all 80+ source files (excluding build artifacts)
 - Demo GPS patrol, dark mode web UI, CI all 3 targets
 - Startup delay (`start_delay_ms`) — web-configurable via `/api/config`
 - BLE TX power — `ble_tx_set_power()` now respects `dbm` param
-- Full documentation sync — docs/index.html (~969L), guide.html (~2066L)
+- Full documentation sync — docs/index.html, guide.html
 - README, CONTRIBUTING, SECURITY synced with current project state
 - CI fix — rid-hub-ci.yml setup-node@v7 → v4
 - Issue/PR template overhaul — bug_report.yml, PULL_REQUEST_TEMPLATE.md
@@ -67,7 +76,7 @@ Scope: all 80+ source files (excluding build artifacts)
 | `opendroneid.h` | 762 | ✅ OK | Upstream Intel ODID lib |
 | `odid_wifi.h` | 106 | ✅ OK | 802.11 packed structs |
 | `esp_remote_id.c` | 543 | 🟡 ABSOLUTE GPS | Needs absolute GPS timeout |
-| `web_config.c` | 735 | ✅ OK | cJSON, rate limiting, signature verify |
+| `web_config.c` | 750 | ✅ OK | cJSON, rate limiting, signature verify, /style.css + /app.js handlers |
 | `cli.c` | 317 | 🟡 NEEDS | Missing `config set` command |
 | `wifi_tx.c` | 204 | 🟡 DEDUP | Dedup populate_uas_data with common lib |
 | `wifi.c` | 614 | ✅ OK | Intel ODID frame builder |
@@ -91,11 +100,13 @@ Scope: all 80+ source files (excluding build artifacts)
 | `rid_dronecan.c` | 142 | ✅ OK | TWAI Fix2 decode|
 | `rid_mavlink_usb.c` | 42 | ✅ OK | USB CDC transport|
 
-**`webui/`**
+**`webui/`** (split — `EMBED_FILES`)
 
 | File | Lines | Status | Notes |
 |------|-------|--------|-------|
-| `config.html` | ~2546 | ✅ OK | Full UI (inline CSS/JS)|
+| `config.html` | 862 | ✅ OK | Markup-only (no inline JS/CSS except theme restore) |
+| `style.css` | 2374 | ✅ OK | Full styling incl. tooltip system |
+| `app.js` | 1352 | ✅ OK | All logic incl. vendored Bootstrap 5.3.3, SHA-256 |
 
 ### `mavlink/` — Auto-generated v2 dialect headers
 - **Active**: ardupilotmega, common, minimal, protocol, types
@@ -124,11 +135,11 @@ Scope: all 80+ source files (excluding build artifacts)
 
 | File | Lines | Status | Notes |
 |------|-------|--------|-------|
-| `index.html` | ~969 | ✅ OK | Landing + Quick Start |
-| `guide.html` | ~2066 | ✅ OK | Technical wiki |
-| `config(demo).html` | ~2546 | ✅ OK | Offline demo simulation |
+| `index.html` | 634 | ✅ OK | Landing + Quick Start |
+| `guide.html` | 1839 | ✅ OK | Technical wiki (regulatory 2026 norms) |
+| `config(demo).html` | 2603 | ✅ OK | Offline demo simulation (public-safe, no password, auto-reset) |
+| `bootstrap-theme.css` | 2176 | ✅ OK | Shared Bootstrap theme (replaces shared.css) |
 | `manifest.json` | 57 | 🟡 VERSION | Hardcoded version — should be auto-generated |
-| `prototype_bom.md` | 68 | ✅ OK | XIAO C6 + L76K BOM |
 
 ### Root Files
 - `README.md` (460) ✅ Full feature table, project structure, protocol listing
@@ -142,12 +153,15 @@ Scope: all 80+ source files (excluding build artifacts)
 | Prio | Feature | Effort | Status |
 |------|---------|--------|--------|
 | P0 | OTA upload timeout | ~0.5d | 🔜 Next |
-| P1 | ESP-NOW mesh relay | ~4d | 🔜 Next |
 | P1 | CLI config set + history | ~2d | Future |
+| P1 | ESP-NOW mesh relay | ~4d | Future |
 | P1 | LoRa SX1262 backup | ~6d | Future |
 | P2 | SD Card + geofence | ~4d | Future |
 | P2 | Flash encryption (eFuse AES-256) | ~2d | Port from peinser |
 | P2 | Dual-core pinning + BLE 5.0 LR runtime | ~2d | Future |
+| P2 | Absolute GPS timeout | ~1d | Future |
+| P2 | Differential factory reset (keep auth keys) | ~1d | Future |
+| P3 | Kalman covariance export + stats tracking | ~2d | Future |
 
 ## 🖥️ Ground Tools Roadmap
 
@@ -159,6 +173,25 @@ Scope: all 80+ source files (excluding build artifacts)
 | Mesh Mapper | ~3d | Future |
 
 ---
+
+## 💡 Suggested Next Steps
+
+**Web UI / Docs (zero-hardware, easy wins)**
+- [ ] **Demo public-safe hardening** — hosted on GitHub Pages: clear `localStorage` on load, disable the Access Password field (it's public, password check is cosmetic in demo), reset state per visit so user A can't block user B
+- [ ] Settings search: index is built but field may be missing in some tabs — verify search works across all sections
+- [ ] `manifest.json` version auto-generated from CMake/CI instead of hardcoded
+- [ ] Add export/import of full config incl. auth keys (currently config JSON only)
+- [ ] Demo: visual "DEMO" banner + sample telemetry mode toggle (clearly public-facing)
+
+**Firmware (needs ESP32 / IDF build)**
+- [ ] P0 OTA timeout — guard the upload loop, abort after N seconds idle
+- [ ] Absolute GPS timeout — log stale GPS regardless of Kalman state
+- [ ] `cli.c` `config set <key> <value>` write command (parity with web UI)
+- [ ] Differential factory reset — preserve auth keys, erase only config
+
+**Ground tools**
+- [ ] NVS provisioning tool — flash a known-good config via CLI
+- [ ] Timing analysis — measure beacon inter-transmission gaps against ASTM 3411-22a
 
 ## Port Sources
 - **peinser/esp-remoteid** — Ed25519, OTA, DroneCAN, MAVLink features, flash encryption, WS2812, GPIO lighting, devcontainer, startup delay. Most ported; still missing flash encryption, devcontainer.
