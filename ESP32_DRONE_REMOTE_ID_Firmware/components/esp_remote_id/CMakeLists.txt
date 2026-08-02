@@ -46,7 +46,9 @@ idf_component_register(
         mbedtls
         efuse
         cjson
-    EMBED_TXTFILES
+    EMBED_FILES
         "webui/config.html"
+        "webui/style.css"
+        "webui/app.js"
 )
 target_compile_options(${COMPONENT_LIB} PRIVATE -Wno-error=address-of-packed-member)

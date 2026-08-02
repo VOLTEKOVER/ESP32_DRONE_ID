@@ -30,6 +30,14 @@ extern const char config_html_start[] asm("_binary_config_html_start");
 extern const char config_html_end[] asm("_binary_config_html_end");
 #define config_html_size ((size_t)(config_html_end - config_html_start))
 
+extern const char style_css_start[] asm("_binary_style_css_start");
+extern const char style_css_end[] asm("_binary_style_css_end");
+#define style_css_size ((size_t)(style_css_end - style_css_start))
+
+extern const char app_js_start[] asm("_binary_app_js_start");
+extern const char app_js_end[] asm("_binary_app_js_end");
+#define app_js_size ((size_t)(app_js_end - app_js_start))
+
 static httpd_handle_t g_server = NULL;
 
 #define SIG_RATE_MAX_FAILS   10
@@ -440,6 +448,22 @@ static esp_err_t handle_index(httpd_req_t *req)
     return ESP_OK;
 }
 
+static esp_err_t handle_style(httpd_req_t *req)
+{
+    httpd_resp_set_type(req, "text/css");
+    httpd_resp_set_hdr(req, "Cache-Control", "public, max-age=86400");
+    httpd_resp_send(req, style_css_start, style_css_size);
+    return ESP_OK;
+}
+
+static esp_err_t handle_app(httpd_req_t *req)
+{
+    httpd_resp_set_type(req, "application/javascript");
+    httpd_resp_set_hdr(req, "Cache-Control", "public, max-age=86400");
+    httpd_resp_send(req, app_js_start, app_js_size);
+    return ESP_OK;
+}
+
 static esp_err_t handle_factory_reset(httpd_req_t *req)
 {
     if (get_lock_level() >= 1) {
@@ -690,6 +714,8 @@ static esp_err_t handle_post_command(httpd_req_t *req)
 }
 
 static const httpd_uri_t uri_index = { "/", HTTP_GET, handle_index, NULL };
+static const httpd_uri_t uri_style = { "/style.css", HTTP_GET, handle_style, NULL };
+static const httpd_uri_t uri_app = { "/app.js", HTTP_GET, handle_app, NULL };
 static const httpd_uri_t uri_get_cfg = { "/api/config", HTTP_GET, handle_get_config, NULL };
 static const httpd_uri_t uri_set_cfg = { "/api/config", HTTP_POST, handle_post_config, NULL };
 static const httpd_uri_t uri_status = { "/api/status", HTTP_GET, handle_get_status, NULL };
@@ -708,6 +734,8 @@ void web_config_init(void)
 
     if (httpd_start(&g_server, &config) == ESP_OK) {
         httpd_register_uri_handler(g_server, &uri_index);
+        httpd_register_uri_handler(g_server, &uri_style);
+        httpd_register_uri_handler(g_server, &uri_app);
         httpd_register_uri_handler(g_server, &uri_get_cfg);
         httpd_register_uri_handler(g_server, &uri_set_cfg);
         httpd_register_uri_handler(g_server, &uri_status);
