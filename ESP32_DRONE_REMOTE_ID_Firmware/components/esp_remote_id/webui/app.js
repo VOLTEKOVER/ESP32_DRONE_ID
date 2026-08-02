@@ -533,7 +533,7 @@ function havDist(lat1,lon1,lat2,lon2){
 /* ---------- Presets ---------- */
 function loadPresets(){try{var d=localStorage.getItem('rid_presets');return d?JSON.parse(d):{}}catch(e){return{}}}
 function savePresets(d){try{localStorage.setItem('rid_presets',JSON.stringify(d))}catch(e){}}
-function getPresetList(){var p=loadPresets(),keys=Object.keys(p).sort(),list=$('preset-list');if(!list)return;if(!keys.length){list.innerHTML='<div style="color:var(--txt-muted);padding:8px;font-size:.85em">No presets saved yet. Save your current configuration as a named profile.</div>';return};list.textContent='';keys.forEach(function(k){var item=p[k];var div=document.createElement('div');div.className='preset-item';div.innerHTML='<span class="preset-name"></span><span class="preset-ts"></span><button class="btn-sm preset-apply" data-preset-name="" title="Apply" style="margin:0;padding:1px 6px;font-size:.8em">&#x25b6;</button><button class="btn-sm preset-delete" data-preset-name="" title="Delete" style="margin:0;padding:1px 6px;font-size:.8em;color:#c62828">&#x2716;</button>';div.querySelector('.preset-name').textContent=k;div.querySelector('.preset-ts').textContent=item.ts||'';div.querySelectorAll('[data-preset-name]').forEach(function(b){b.setAttribute('data-preset-name',k)});div.querySelector('.preset-apply').addEventListener('click',function(){applyPreset(k)});div.querySelector('.preset-delete').addEventListener('click',function(){deletePreset(k)});list.appendChild(div)})}
+function getPresetList(){var p=loadPresets(),keys=Object.keys(p).sort(),list=$('preset-list');if(!list)return;if(!keys.length){list.innerHTML='<div style="color:var(--txt-muted);padding:8px;font-size:.85em">No presets saved yet. Save your current configuration as a named profile.</div>';return};list.textContent='';keys.forEach(function(k){var item=p[k];var div=document.createElement('div');div.className='preset-item';div.innerHTML='<span class="preset-name"></span><span class="preset-ts"></span><button class="btn-sm preset-apply" data-preset-name="" data-tip="Apply this preset to the device" style="margin:0;padding:1px 6px;font-size:.8em">&#x25b6;</button><button class="btn-sm preset-delete" data-preset-name="" data-tip="Delete this preset" style="margin:0;padding:1px 6px;font-size:.8em;color:#c62828">&#x2716;</button>';div.querySelector('.preset-name').textContent=k;div.querySelector('.preset-ts').textContent=item.ts||'';div.querySelectorAll('[data-preset-name]').forEach(function(b){b.setAttribute('data-preset-name',k)});div.querySelector('.preset-apply').addEventListener('click',function(){applyPreset(k)});div.querySelector('.preset-delete').addEventListener('click',function(){deletePreset(k)});list.appendChild(div)})}
 function savePreset(){var name=$('preset-name');if(!name||!name.value.trim()){showMsg('Enter a preset name',1);return};var n=name.value.trim();name.value='';fetch('/api/config').then(function(r){return r.json()}).then(function(c){var p=loadPresets();p[n]={config:c,ts:new Date().toLocaleString()};savePresets(p);getPresetList();showMsg('Preset "'+n+'" saved')}).catch(function(){showMsg('Failed to fetch config',1)})}
 function applyPreset(name){var p=loadPresets();if(!p[name]){showMsg('Preset not found',1);return};showConfirm('Apply Preset','Load "'+name+'" configuration? This will overwrite current settings.',function(){fetch('/api/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p[name].config)}).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json()}).then(function(){showMsg('Preset "'+name+'" applied');getCfg()}).catch(function(e){showMsg('Failed: '+e.message,1)})})}
 function deletePreset(name){var p=loadPresets();if(!p[name])return;delete p[name];savePresets(p);getPresetList();showMsg('Preset "'+name+'" deleted')}
@@ -986,7 +986,7 @@ function toggleConsole(){
   document.body.classList.toggle('console-off',!consoleVisible);
   var btn=$('st-bar-console-btn');
   if(btn)btn.style.opacity=consoleVisible?'1':'.4';
-  localStorage.setItem('rid_console',consoleVisible?'1':'');
+  localStorage.setItem('rid_console',consoleVisible?'1':'0');
 }
 
 /* ---------- Compliance Checklist ---------- */
@@ -1037,11 +1037,14 @@ function updateCompliance(){
 /* ---------- Security / Login ---------- */
 var secTimer=null;
 function toggleSecPwd(){var el=$('sec-password');el.type=el.type==='password'?'text':'password'}
-function saveSecurity(e){
+
+function sha256Hex(s){function rrot(v,c){return (v>>>c)|(v<<(32-c))}var H=[0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19],K=[0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2],msg=[],i,j;for(i=0;i<s.length;i++)msg.push(s.charCodeAt(i));var bits=s.length*8;msg.push(128);while((msg.length*8)%512!==448)msg.push(0);var lh=Math.floor(bits/Math.pow(2,32)),ll=bits>>>0;msg.push((lh>>>24)&255,(lh>>>16)&255,(lh>>>8)&255,lh&255,(ll>>>24)&255,(ll>>>16)&255,(ll>>>8)&255,ll&255);var w=new Array(64),res='';function hx(x){x=x>>>0;return x.toString(16).padStart(8,'0')}for(i=0;i<msg.length;i+=64){for(j=0;j<16;j++)w[j]=((msg[i+j*4]<<24)|(msg[i+j*4+1]<<16)|(msg[i+j*4+2]<<8)|msg[i+j*4+3])|0;for(j=16;j<64;j++){var s0=rrot(w[j-15],7)^rrot(w[j-15],18)^(w[j-15]>>>3),s1=rrot(w[j-2],17)^rrot(w[j-2],19)^(w[j-2]>>>10);w[j]=(w[j-16]+s0+w[j-7]+s1)|0}var a=H[0],b=H[1],c=H[2],d=H[3],e=H[4],f=H[5],g=H[6],h=H[7];for(j=0;j<64;j++){var S1=rrot(e,6)^rrot(e,11)^rrot(e,25),ch=(e&f)^(~e&g),t1=(h+S1+ch+K[j]+w[j])|0,S0=rrot(a,2)^rrot(a,13)^rrot(a,22),ma=(a&b)^(a&c)^(b&c),t2=(S0+ma)|0;h=g;g=f;f=e;e=(d+t1)|0;d=c;c=b;b=a;a=(t1+t2)|0}H[0]=(H[0]+a)|0;H[1]=(H[1]+b)|0;H[2]=(H[2]+c)|0;H[3]=(H[3]+d)|0;H[4]=(H[4]+e)|0;H[5]=(H[5]+f)|0;H[6]=(H[6]+g)|0;H[7]=(H[7]+h)|0}for(i=0;i<8;i++)res+=hx(H[i]);return res}
+
+ function saveSecurity(e){
   e.preventDefault();
   var pwd=$('sec-password').value.trim();
   if(pwd.length>0&&pwd.length<4){showMsg('Password must be at least 4 characters',1);return}
-  localStorage.setItem('rid_sec_pwd',pwd?btoa(pwd):'');
+  localStorage.setItem('rid_sec_pwd',pwd?sha256Hex(pwd):'');
   localStorage.setItem('rid_sec_timeout',$('sec-timeout').value);
   showMsg('Security settings saved',0);
 }
@@ -1049,7 +1052,7 @@ function requireLogin(){
   var pwd=localStorage.getItem('rid_sec_pwd');
   if(!pwd){return true}
   var entered=prompt('Enter access password:');
-  if(atob(pwd)===entered){
+  var _ok=false;try{_ok=atob(pwd)===entered}catch(e){}if(entered&&(sha256Hex(entered)===pwd||_ok)){if(sha256Hex(entered)!==pwd){localStorage.setItem('rid_sec_pwd',sha256Hex(entered))}
     var t=parseInt(localStorage.getItem('rid_sec_timeout')||'15');
     if(t>0){secTimer=setTimeout(function(){localStorage.removeItem('rid_sec_logged');requireLogin()},t*60000)}
     localStorage.setItem('rid_sec_logged','1');
@@ -1283,4 +1286,67 @@ function stSearchGo(it){
     var r=$('settings-search-results');if(r)r.style.display='none'
   });
   buildSearchIndex();
+})();
+
+/* ===================== Tooltip System ===================== */
+(function(){
+  var tipEl=null,timer=null,cur=null;
+  function tip(){
+    if(!tipEl){
+      tipEl=document.createElement('div');
+      tipEl.className='ui-tip';
+      tipEl.setAttribute('role','tooltip');
+      tipEl.style.display='none';
+      document.body.appendChild(tipEl);
+    }
+    return tipEl;
+  }
+  function showTip(el){
+    var text=el.getAttribute('data-tip')||el.getAttribute('title')||'';
+    if(!text)return;
+    var hint=el.getAttribute('data-tip-kbd');
+    if(hint)text+=' <span class="tip-kbd">'+hint.replace(/</g,'&lt;')+'</span>';
+    var t=tip();
+    t.innerHTML=text;
+    t.style.display='block';
+    t.classList.add('tip-show');
+    var r=el.getBoundingClientRect(),tw=t.offsetWidth,th=t.offsetHeight;
+    var x=Math.round(r.left+(r.width-tw)/2);
+    x=Math.max(8,Math.min(x,document.documentElement.clientWidth-tw-8));
+    var y=r.top-th-10,pos='bottom';
+    if(y<8){y=r.bottom+10;pos='top';t.classList.add('tip-top')}else{t.classList.remove('tip-top')}
+    t.style.left=x+'px';t.style.top=y+'px';
+    t._pos=pos;
+  }
+  function hideTip(){
+    if(timer)clearTimeout(timer);
+    if(!tipEl)return;
+    tipEl.classList.remove('tip-show');
+    setTimeout(function(){if(tipEl&&!tipEl.classList.contains('tip-show'))tipEl.style.display='none'},180);
+  }
+  document.addEventListener('mouseover',function(e){
+    var el=e.target.closest?e.target.closest('[data-tip],[title]'):null;
+    if(!el)return;
+    if(cur===el){if(tipEl&&tipEl.style.display==='none')showTip(el);return}
+    cur=el;
+    hideTip();
+    timer=setTimeout(function(){showTip(el)},60);
+  },true);
+  document.addEventListener('mouseout',function(e){
+    if(!cur)return;
+    var rt=e.relatedTarget;
+    if(rt&&cur.contains(rt))return;
+    hideTip();cur=null;
+  },true);
+  document.addEventListener('scroll',hideTip,true);
+  window.addEventListener('blur',hideTip);
+  document.addEventListener('focusin',function(e){
+    var el=e.target.closest?e.target.closest('[data-tip],[title]'):null;
+    if(!el)return;
+    if(cur===el)return;
+    cur=el;
+    hideTip();
+    timer=setTimeout(function(){showTip(el)},80);
+  },true);
+  document.addEventListener('focusout',function(){hideTip();cur=null},true);
 })();

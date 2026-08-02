@@ -2165,3 +2165,12 @@ esp-web-install-button::part(unsupported) {
     scroll-behavior: auto !important;
   }
 }
+
+
+/* ===================== Tooltip System ===================== */
+.ui-tip{position:fixed;z-index:15000;max-width:280px;padding:9px 12px;border-radius:10px;font-size:.8rem;line-height:1.45;font-weight:500;color:var(--text,#fff);background:linear-gradient(160deg,var(--surface-hover,#1e1e1e),var(--surface,#111) 65%);border:1px solid var(--border,#2a2a2a);box-shadow:var(--shadow-lg,0 10px 30px rgba(0,0,0,.3)),0 2px 8px rgba(0,0,0,.25);pointer-events:none;opacity:0;transform:translateY(6px) scale(.96);transition:opacity .16s ease,transform .16s ease;white-space:normal;word-break:break-word;text-align:left}
+.ui-tip.tip-show{opacity:1;transform:translateY(0) scale(1)}
+.ui-tip::after{content:'';position:absolute;left:50%;bottom:-6px;width:10px;height:10px;transform:translateX(-50%) rotate(45deg);background:var(--surface-hover,#1e1e1e);border-right:1px solid var(--border,#2a2a2a);border-bottom:1px solid var(--border,#2a2a2a);border-radius:0 0 2px 0}
+.ui-tip.tip-top::after{top:-6px;bottom:auto;transform:translateX(-50%) rotate(45deg);border:none;border-left:1px solid var(--border,#2a2a2a);border-top:1px solid var(--border,#2a2a2a);border-radius:2px 0 0 0}
+.ui-tip .tip-kbd{display:inline-block;margin-left:2px;padding:0 5px;font-size:.72rem;font-weight:600;border:1px solid var(--border,#2a2a2a);border-bottom-width:2px;border-radius:4px;background:rgba(255,255,255,.06);font-family:var(--bs-font-monospace,monospace)}
+[data-tip]{position:relative}

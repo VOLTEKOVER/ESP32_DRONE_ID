@@ -210,7 +210,7 @@ try{var t=localStorage.getItem('rid_theme');if(t==='dark'){document.documentElem
 <div class="toast-center" id="toast-center"></div>
 
 <div class="hdr">
-<button class="hdr-menu-btn" id="menu-btn" onclick="toggleMobileMenu()" title="Menu">&#x2630;</button>
+<button class="hdr-menu-btn" id="menu-btn" onclick="toggleMobileMenu()" data-tip="Menu">&#x2630;</button>
 <a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID" target="_blank" class="brand">
 <img src="images/logo con scritta.svg" alt="" style="height:32px;width:auto;flex-shrink:0">
 </a>
@@ -230,12 +230,12 @@ try{var t=localStorage.getItem('rid_theme');if(t==='dark'){document.documentElem
 <span class="hdr-sensor" id="hdr-sns-ble5"><span class="sd"></span>BLE5</span>
 </div>
 <div class="hdr-actions">
-<button class="btn-save-all" id="btn-save-all" onclick="saveAll()">&#x1f4be; Save All</button>
-<button class="hdr-btn" onclick="exportCfg()">&#x1f4e5; Export</button>
-<button class="hdr-btn" onclick="document.getElementById('import-file').click()">&#x1f4e4; Import</button>
+<button class="btn-save-all" id="btn-save-all" onclick="saveAll()" data-tip="Save all settings to the device">&#x1f4be; Save All</button>
+<button class="hdr-btn" onclick="exportCfg()" data-tip="Export configuration as JSON file">&#x1f4e5; Export</button>
+<button class="hdr-btn" onclick="document.getElementById('import-file').click()" data-tip="Import configuration from JSON file">&#x1f4e4; Import</button>
 <input type="file" id="import-file" accept=".json" style="display:none" onchange="importCfg(this)">
-<button class="hdr-btn" id="btn-reconnect" onclick="getCfg()" title="Reconnect / Refresh">&#x1f504;</button>
-<button id="dark-toggle" onclick="toggleDark()" class="hdr-btn" title="Switch to dark theme"><span id="theme-icon">&#x263e;</span><span class="theme-label">Theme</span></button>
+<button class="hdr-btn" id="btn-reconnect" onclick="getCfg()" data-tip="Reconnect / Refresh">&#x1f504;</button>
+<button id="dark-toggle" onclick="toggleDark()" class="hdr-btn" data-tip="Switch to dark theme"><span id="theme-icon">&#x263e;</span><span class="theme-label">Theme</span></button>
 </div>
 </div>
 
@@ -246,26 +246,26 @@ try{var t=localStorage.getItem('rid_theme');if(t==='dark'){document.documentElem
 <div class="layout">
 <nav class="sidebar" id="sidebar">
     <div class="nav-group-label">Monitor</div>
-<button class="nav-item active" data-tab="dashboard" onclick="setView('dashboard')"><span class="nav-icon">&#x1f4ca;</span><span class="nav-label">Dashboard</span></button>
+<button class="nav-item active" data-tab="dashboard" onclick="setView('dashboard')" data-tip="Open Dashboard panel"><span class="nav-icon">&#x1f4ca;</span><span class="nav-label">Dashboard</span></button>
 <div class="nav-group-label">Configuration</div>
-<button class="nav-item" data-tab="identity" onclick="setView('identity')"><span class="nav-icon">&#x1f9d1;</span><span class="nav-label">Identity</span></button>
-<button class="nav-item" data-tab="transmission" onclick="setView('transmission')"><span class="nav-icon">&#x1f4e1;</span><span class="nav-label">Transmission</span></button>
-<button class="nav-item" data-tab="ap" onclick="setView('ap')"><span class="nav-icon">&#x1f4f6;</span><span class="nav-label">Access Point</span></button>
-<button class="nav-item" data-tab="fc" onclick="setView('fc')" data-fc-needed="true"><span class="nav-icon">&#x1f6f0;</span><span class="nav-label">Flight Controller</span></button>
-<button class="nav-item" data-tab="hardware" onclick="setView('hardware')"><span class="nav-icon">&#x1f527;</span><span class="nav-label">Hardware</span></button>
+<button class="nav-item" data-tab="identity" onclick="setView('identity')" data-tip="Open Identity settings"><span class="nav-icon">&#x1f464;</span><span class="nav-label">Identity</span></button>
+<button class="nav-item" data-tab="transmission" onclick="setView('transmission')" data-tip="Open Transmission settings"><span class="nav-icon">&#x1f4e1;</span><span class="nav-label">Transmission</span></button>
+<button class="nav-item" data-tab="ap" onclick="setView('ap')" data-tip="Open Access Point settings"><span class="nav-icon">&#x1f4f6;</span><span class="nav-label">Access Point</span></button>
+<button class="nav-item" data-tab="fc" onclick="setView('fc')" data-fc-needed="true" data-tip="Open Flight Controller settings"><span class="nav-icon">&#x1f6f0;</span><span class="nav-label">Flight Controller</span></button>
+<button class="nav-item" data-tab="hardware" onclick="setView('hardware')" data-tip="Open Hardware settings"><span class="nav-icon">&#x1f527;</span><span class="nav-label">Hardware</span></button>
 <div class="nav-group-label">Compliance &amp; Security</div>
-<button class="nav-item" data-tab="compliance" onclick="setView('compliance')"><span class="nav-icon">&#x2696;</span><span class="nav-label">Compliance</span></button>
-<button class="nav-item" data-tab="security" onclick="setView('security')"><span class="nav-icon">&#x1f510;</span><span class="nav-label">Security</span></button>
+<button class="nav-item" data-tab="compliance" onclick="setView('compliance')" data-tip="Open Compliance checklist"><span class="nav-icon">&#x2696;</span><span class="nav-label">Compliance</span></button>
+<button class="nav-item" data-tab="security" onclick="setView('security')" data-tip="Open Security settings"><span class="nav-icon">&#x1f510;</span><span class="nav-label">Security</span></button>
 <div class="nav-group-label">Advanced</div>
-<button class="nav-item" data-tab="system" onclick="setView('system')"><span class="nav-icon">&#x2699;</span><span class="nav-label">System</span></button>
-<button class="nav-item" data-tab="firmware" onclick="setView('firmware')"><span class="nav-icon">&#x1f4e4;</span><span class="nav-label">Firmware</span></button>
+<button class="nav-item" data-tab="system" onclick="setView('system')" data-tip="Open System settings"><span class="nav-icon">&#x2699;</span><span class="nav-label">System</span></button>
+<button class="nav-item" data-tab="firmware" onclick="setView('firmware')" data-tip="Open Firmware panel"><span class="nav-icon">&#x1f4e4;</span><span class="nav-label">Firmware</span></button>
 <div class="nav-group-label">Tools</div>
-<button class="nav-item" data-tab="console" onclick="setView('console')"><span class="nav-icon">&#x1f4bb;</span><span class="nav-label">Console</span></button>
-<button class="nav-item" data-tab="presets" onclick="setView('presets')"><span class="nav-icon">&#x1f4cb;</span><span class="nav-label">Presets</span></button>
-<button class="nav-item" data-tab="logging" onclick="setView('logging')"><span class="nav-icon">&#x1f4dd;</span><span class="nav-label">Logging</span></button>
-<button class="nav-item" data-tab="sensors" onclick="setView('sensors')"><span class="nav-icon">&#x1f50d;</span><span class="nav-label">Sensors</span></button>
+<button class="nav-item" data-tab="console" onclick="setView('console')" data-tip="Open Console panel"><span class="nav-icon">&#x1f4bb;</span><span class="nav-label">Console</span></button>
+<button class="nav-item" data-tab="presets" onclick="setView('presets')" data-tip="Open Presets panel"><span class="nav-icon">&#x1f4cb;</span><span class="nav-label">Presets</span></button>
+<button class="nav-item" data-tab="logging" onclick="setView('logging')" data-tip="Open Logging panel"><span class="nav-icon">&#x1f4dd;</span><span class="nav-label">Logging</span></button>
+<button class="nav-item" data-tab="sensors" onclick="setView('sensors')" data-tip="Open Sensors panel"><span class="nav-icon">&#x1f9ed;</span><span class="nav-label">Sensors</span></button>
 <div class="nav-sep"></div>
-<button class="nav-item" data-tab="help" onclick="setView('help')"><span class="nav-icon">&#x2753;</span><span class="nav-label">Help</span></button>
+<button class="nav-item" data-tab="help" onclick="setView('help')" data-tip="Open Help panel"><span class="nav-icon">&#x2753;</span><span class="nav-label">Help</span></button>
 </nav>
 <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="toggleMobileMenu()"></div>
 
@@ -324,8 +324,8 @@ try{var t=localStorage.getItem('rid_theme');if(t==='dark'){document.documentElem
 </div>
 
 <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;flex-shrink:0">
-<button class="hdr-btn" onclick="sendSigCmd('restart')" style="flex:1;justify-content:center">&#x1f504; Restart</button>
-<button class="hdr-btn danger" onclick="showModal('reset')" style="flex:1;justify-content:center">&#x21bb; Factory Reset</button>
+<button class="hdr-btn" onclick="sendSigCmd('restart')" style="flex:1;justify-content:center" data-tip="Restart the device">&#x1f504; Restart</button>
+<button class="hdr-btn danger" onclick="showModal('reset')" style="flex:1;justify-content:center" data-tip="Factory reset the device">&#x21bb; Factory Reset</button>
 </div>
 
 <div class="dash-bottom">
@@ -342,10 +342,10 @@ try{var t=localStorage.getItem('rid_theme');if(t==='dark'){document.documentElem
 <div class="term-header">
 <span class="term-title">&#x1f4bb; Console Output</span>
 <div class="term-toolbar">
-<button class="btn-sm" onclick="copyTerm('term-output2')" title="Copy console">&#x1f4cb; Copy</button>
-<button class="btn-sm" onclick="copyAllLogs()" title="Copy all logs from device">&#x1f4cb; All</button>
-<button class="btn-sm" onclick="clearTerm2()" title="Clear console">&#x1f5d1; Clear</button>
-<button class="btn-sm" id="term-scroll-btn2" onclick="toggleTermScroll2()" title="Toggle auto-scroll">&#x1f53d; Auto</button>
+<button class="btn-sm" onclick="copyTerm('term-output2')" data-tip="Copy console">&#x1f4cb; Copy</button>
+<button class="btn-sm" onclick="copyAllLogs()" data-tip="Copy all logs from device">&#x1f4cb; All</button>
+<button class="btn-sm" onclick="clearTerm2()" data-tip="Clear console">&#x1f5d1; Clear</button>
+<button class="btn-sm" id="term-scroll-btn2" onclick="toggleTermScroll2()" data-tip="Toggle auto-scroll">&#x1f53d; Auto</button>
 </div>
 </div>
 <div class="term-output" id="term-output2">
@@ -353,7 +353,7 @@ try{var t=localStorage.getItem('rid_theme');if(t==='dark'){document.documentElem
 </div>
 <div class="term-input-row">
 <input type="text" id="term-input2" placeholder="Type command (restart, status, reset)..." onkeydown="if(event.key==='Enter')sendCmd2()">
-<button class="btn-sm" onclick="sendCmd2()" style="margin:0;flex-shrink:0">Send</button>
+<button class="btn-sm" onclick="sendCmd2()" style="margin:0;flex-shrink:0" data-tip="Send command to console">Send</button>
 </div>
 </div>
 </div></div>
@@ -427,7 +427,7 @@ try{var t=localStorage.getItem('rid_theme');if(t==='dark'){document.documentElem
 </select>
 </fieldset>
 
-<button class="btn btn-primary w-100 mt-3" type="submit">Save Identity</button>
+<button class="btn btn-primary w-100 mt-3" type="submit" data-tip="Save Identity settings">Save Identity</button>
 </form>
 </div>
 </div>
@@ -452,8 +452,8 @@ try{var t=localStorage.getItem('rid_theme');if(t==='dark'){document.documentElem
 <div class="form-check"><input class="form-check-input" type="checkbox" id="tx_ble5"><label class="form-check-label" for="tx_ble5">BLE 5.0 LR <span class="tag tag-beta">Beta</span></label></div>
 </div>
 <div class="d-flex gap-2 mb-2">
-<button class="btn-sm" type="button" onclick="setAllTx(true)">&#x2713; Enable All</button>
-<button class="btn-sm" type="button" onclick="setAllTx(false)">&#x2717; Disable All</button>
+<button class="btn-sm" type="button" onclick="setAllTx(true)" data-tip="Enable all transmission channels">&#x2713; Enable All</button>
+<button class="btn-sm" type="button" onclick="setAllTx(false)" data-tip="Disable all transmission channels">&#x2717; Disable All</button>
 </div>
 <div class="hint">BLE 5.0 LR is experimental (ESP32-S3/C6). WiFi NAN experimental.</div>
 <div id="tx-mode-hint" class="hint" style="color:#2e7d32;margin-top:4px"></div>
@@ -490,7 +490,7 @@ try{var t=localStorage.getItem('rid_theme');if(t==='dark'){document.documentElem
 <div><label class="form-label" for="bt5_rate">BLE 5.0 Rate (Hz)</label><input class="form-control" id="bt5_rate" type="number" min="0" max="5" step=".1" value="1"></div>
 <div><label class="form-label" for="bt5_pwr">BLE 5.0 Power (dBm)</label><input class="form-control" id="bt5_pwr" type="number" min="-27" max="18" step="1" value="18"></div>
 </div>
-<button class="btn btn-primary w-100 mt-3" type="submit">Save Transmission</button>
+<button class="btn btn-primary w-100 mt-3" type="submit" data-tip="Save Transmission settings">Save Transmission</button>
 </form>
 </div>
 </div>
@@ -513,14 +513,14 @@ try{var t=localStorage.getItem('rid_theme');if(t==='dark'){document.documentElem
 
 <label class="form-label" for="wifi_pass">WiFi Password</label>
 <input class="form-control" id="wifi_pass" type="password" maxlength="20" placeholder="Leave empty for open network">
-<div style="margin:8px 0"><button class="btn-sm" type="button" id="toggle-pass">Show Password</button></div>
+<div style="margin:8px 0"><button class="btn-sm" type="button" id="toggle-pass" data-tip="Show / hide password">Show Password</button></div>
 
 <div class="form-check mb-2">
 <input class="form-check-input" type="checkbox" id="websrv_en" checked>
 <label class="form-check-label" for="websrv_en">Web Server Enabled</label>
 </div>
 
-<button class="btn btn-primary w-100 mt-3" type="submit">Save Access Point</button>
+<button class="btn btn-primary w-100 mt-3" type="submit" data-tip="Save Access Point settings">Save Access Point</button>
 </form>
 </div>
 </div>
@@ -530,7 +530,7 @@ try{var t=localStorage.getItem('rid_theme');if(t==='dark'){document.documentElem
 <div id="tab-fc" class="tab-pane">
 <div class="card">
 <div class="card-body">
-<h2><span class="ico">&#x1f433;</span> Flight Controller <span class="tag tag-stable">Stable</span></h2>
+<h2><span class="ico">&#x1f6f0;</span> Flight Controller <span class="tag tag-stable">Stable</span></h2>
 <form id="f3b">
 <div class="guide" onclick="toggleGuide(this)">
 <b>Serial &amp; Protocol</b> &mdash; Configure the UART connection between the ESP32 and your flight controller (Pixhawk, ArduPilot, iNAV, Betaflight, etc.). <b>MAVLink</b> is used by ArduPilot/PX4, <b>MSP</b> by Betaflight/iNAV, <b>NMEA</b> for generic GPS modules. Set the baud rate to match your FC's serial port speed — 57600 or 115200 are common. Select <b>Auto-detect</b> to let the firmware probe all protocols at startup.
@@ -574,7 +574,7 @@ try{var t=localStorage.getItem('rid_theme');if(t==='dark'){document.documentElem
 </div>
 </div>
 
-<button class="btn btn-primary w-100 mt-3" type="submit">Save Flight Controller</button>
+<button class="btn btn-primary w-100 mt-3" type="submit" data-tip="Save Flight Controller settings">Save Flight Controller</button>
 </form>
 </div>
 </div>
@@ -584,7 +584,7 @@ try{var t=localStorage.getItem('rid_theme');if(t==='dark'){document.documentElem
 <div id="tab-hardware" class="tab-pane">
 <div class="card">
 <div class="card-body">
-<h2><span class="ico">&#x1f4a1;</span> Hardware <span class="tag tag-stable">Stable</span></h2>
+<h2><span class="ico">&#x1f527;</span> Hardware <span class="tag tag-stable">Stable</span></h2>
 <form id="f5">
 <div class="guide" onclick="toggleGuide(this)">
 <b>Status LED</b> &mdash; Configure GPIO pins for the RGB status LED (common cathode). Wire the red, green, and blue channels to separate GPIO pins through current-limiting resistors (typically 100&ndash;220&#x2126;). <b>Red</b> = no GPS fix or error. <b>Green</b> = GPS 3D fix, normal operation. <b>Blue</b> = system booting or BLE active. Set unused channels to <code>-1</code>. Leave all at <code>-1</code> to disable the LED entirely.
@@ -645,7 +645,7 @@ try{var t=localStorage.getItem('rid_theme');if(t==='dark'){document.documentElem
 <div></div>
 </div>
 
-<button class="btn btn-primary w-100 mt-3" type="submit">Save Hardware</button>
+<button class="btn btn-primary w-100 mt-3" type="submit" data-tip="Save Hardware settings">Save Hardware</button>
 </form>
 </div>
 </div>
@@ -655,7 +655,7 @@ try{var t=localStorage.getItem('rid_theme');if(t==='dark'){document.documentElem
 <div id="tab-system" class="tab-pane">
 <div class="card">
 <div class="card-body">
-<h2><span class="ico">&#x1f512;</span> System <span class="tag tag-warning">Warning</span> <span class="tag" style="background:#e65100;color:#fff">Expert</span></h2>
+<h2><span class="ico">&#x2699;</span> System <span class="tag tag-warning">Warning</span> <span class="tag" style="background:#e65100;color:#fff">Expert</span></h2>
 <form id="f4">
 <div class="guide" onclick="toggleGuide(this)">
 <b>Security &amp; Options</b> &mdash; <b>Lock Level 0</b> (Normal) — no restrictions. <b>Level 1</b> (Locked) — only accepts commands signed with a registered public key; the web UI remains accessible but factory reset via CLI requires authentication. <b>Level 2</b> (eFuse permanent) — burns one-time programmable fuses to enforce lock; <strong style="color:#c62828">this cannot be undone and may brick the device if keys are lost!</strong> Set at least one public key before enabling lock levels 1 or 2.
@@ -692,10 +692,10 @@ try{var t=localStorage.getItem('rid_theme');if(t==='dark'){document.documentElem
 <label class="form-label" for="pubkey5">Key 5</label><input class="form-control" id="pubkey5" maxlength="512" placeholder="PEM public key or raw base64">
 </fieldset>
 
-<button class="btn btn-primary w-100 mt-3" type="submit">Save System</button>
+<button class="btn btn-primary w-100 mt-3" type="submit" data-tip="Save System settings">Save System</button>
 </form>
-<button class="btn-danger w-100" onclick="showModal('reset')">&#x21bb; Factory Reset <span class="tag tag-warning">Warning</span></button>
-<button class="hdr-btn" onclick="sendSigCmd('restart')" style="margin-top:6px;width:100%;justify-content:center">&#x1f504; Restart Device</button>
+<button class="btn-danger w-100" onclick="showModal('reset')" data-tip="Factory reset the device">&#x21bb; Factory Reset <span class="tag tag-warning">Warning</span></button>
+<button class="hdr-btn" onclick="sendSigCmd('restart')" style="margin-top:6px;width:100%;justify-content:center" data-tip="Restart the device">&#x1f504; Restart Device</button>
 </div>
 </div>
 </div>
@@ -712,9 +712,9 @@ try{var t=localStorage.getItem('rid_theme');if(t==='dark'){document.documentElem
 <div class="ota-zone" id="ota-zone">
 <div class="ico-big">&#x1f4c1;</div>
 <input type="file" id="fwfile" accept=".bin" style="display:none">
-<button class="btn-sm" type="button" onclick="document.getElementById('fwfile').click()">Select .bin file</button>
+<button class="btn-sm" type="button" onclick="document.getElementById('fwfile').click()" data-tip="Choose firmware .bin file">Select .bin file</button>
 <span id="fw_name" style="font-size:.8em;color:var(--text-muted);display:block;margin-top:8px">No file selected</span>
-<button class="btn btn-danger" type="button" onclick="showModal('ota')" style="margin-top:12px" id="ota-btn">Upload Firmware</button>
+<button class="btn btn-danger" type="button" onclick="showModal('ota')" style="margin-top:12px" id="ota-btn" data-tip="Upload new firmware (OTA)">Upload Firmware</button>
 <div id="ota_progress" style="margin-top:10px;font-size:.82em;color:var(--text-muted)"></div>
 </div>
 </div>
@@ -735,11 +735,11 @@ Live telemetry and serial console from the ESP32 Remote ID transmitter. The cons
 <div class="term-header">
 <span class="term-title">&#x1f4bb; Console Output</span>
 <div class="term-toolbar">
-<button class="btn-sm" onclick="copyTerm('term-output')" title="Copy console">&#x1f4cb; Copy</button>
-<button class="btn-sm" onclick="copyAllLogs()" title="Copy all logs from device">&#x1f4cb; All</button>
-<button class="btn-sm" onclick="clearTerm()" title="Clear console">&#x1f5d1; Clear</button>
-<button class="btn-sm" onclick="showCliDialog()" title="Open CLI in dialog">&#x26a1; CLI</button>
-<button class="btn-sm" id="term-scroll-btn" onclick="toggleTermScroll()" title="Toggle auto-scroll">&#x1f53d; Auto</button>
+<button class="btn-sm" onclick="copyTerm('term-output')" data-tip="Copy console">&#x1f4cb; Copy</button>
+<button class="btn-sm" onclick="copyAllLogs()" data-tip="Copy all logs from device">&#x1f4cb; All</button>
+<button class="btn-sm" onclick="clearTerm()" data-tip="Clear console">&#x1f5d1; Clear</button>
+<button class="btn-sm" onclick="showCliDialog()" data-tip="Open CLI in dialog">&#x26a1; CLI</button>
+<button class="btn-sm" id="term-scroll-btn" onclick="toggleTermScroll()" data-tip="Toggle auto-scroll">&#x1f53d; Auto</button>
 <span class="term-scroll-icon" id="scrollicon" title="Auto-scroll active">&#x2193;</span>
 </div>
 </div>
@@ -749,7 +749,7 @@ Live telemetry and serial console from the ESP32 Remote ID transmitter. The cons
 <div class="term-input-row">
 <input type="text" id="term-input" placeholder="Type command (restart, status, reset)..." onkeydown="if(event.key==='Enter')sendCmd()">
 <input type="text" id="term-sig" placeholder="X-Signature (base64, if locked)" style="width:120px;flex-shrink:0;display:none;font-size:.75em;padding:4px 8px;border:1px solid var(--border);border-radius:4px;background:var(--surface-hover);color:var(--text);margin-left:4px" title="Base64-encoded ECDSA P-256 signature for locked commands">
-<button class="btn-sm" onclick="sendCmd()" style="margin:0;flex-shrink:0">Send</button>
+<button class="btn-sm" onclick="sendCmd()" style="margin:0;flex-shrink:0" data-tip="Send command to console">Send</button>
 </div>
 </div>
 
@@ -769,9 +769,9 @@ Live telemetry and serial console from the ESP32 Remote ID transmitter. The cons
 <div class="guide">Save and load named configuration profiles. Profiles are stored in your browser and can be quickly applied. Use Export Config for sharing.</div>
 <div class="d-flex gap-2 mb-2 flex-wrap">
 <input id="preset-name" class="form-control" style="flex:1;min-width:120px" placeholder="New preset name...">
-<button class="btn-sm" onclick="savePreset()">&#x1f4be; Save</button>
-<button class="btn-sm" onclick="exportAllPresets()">&#x1f4e5; Export All</button>
-<button class="btn-sm" onclick="document.getElementById('preset-import-file').click()">&#x1f4e4; Import</button>
+<button class="btn-sm" onclick="savePreset()" data-tip="Save current settings as preset">&#x1f4be; Save</button>
+<button class="btn-sm" onclick="exportAllPresets()" data-tip="Export all presets">&#x1f4e5; Export All</button>
+<button class="btn-sm" onclick="document.getElementById('preset-import-file').click()" data-tip="Import presets from file">&#x1f4e4; Import</button>
 <input type="file" id="preset-import-file" accept=".json" style="display:none" onchange="importPresets(this)">
 </div>
 <div id="preset-list" style="font-size:.82em">No presets saved yet.</div>
@@ -814,10 +814,10 @@ Live telemetry and serial console from the ESP32 Remote ID transmitter. The cons
 </div>
 
 <div class="d-flex gap-2 align-items-center flex-wrap my-3">
-<button class="btn-sm" id="log-start-btn" onclick="startLogging()">&#x25b6; Start Logging</button>
-<button class="btn-sm" id="log-stop-btn" onclick="stopLogging()" style="display:none">&#x23f9; Stop Logging</button>
-<button class="btn-sm" id="log-dl-btn" onclick="downloadLog()" style="display:none">&#x1f4e5; Download CSV</button>
-<button class="btn-sm" id="log-clr-btn" onclick="clearLog()" style="display:none">&#x1f5d1; Clear</button>
+<button class="btn-sm" id="log-start-btn" onclick="startLogging()" data-tip="Start telemetry logging">&#x25b6; Start Logging</button>
+<button class="btn-sm" id="log-stop-btn" onclick="stopLogging()" style="display:none" data-tip="Stop telemetry logging">&#x23f9; Stop Logging</button>
+<button class="btn-sm" id="log-dl-btn" onclick="downloadLog()" style="display:none" data-tip="Download log file">&#x1f4e5; Download CSV</button>
+<button class="btn-sm" id="log-clr-btn" onclick="clearLog()" style="display:none" data-tip="Clear log data">&#x1f5d1; Clear</button>
 <span style="margin-left:auto;font-size:.72em;color:var(--text-muted)">Entries: <span id="log-count">0</span></span>
 <span style="font-size:.72em;color:var(--text-muted)">Duration: <span id="log-duration">00:00</span></span>
 </div>
@@ -831,7 +831,7 @@ Live telemetry and serial console from the ESP32 Remote ID transmitter. The cons
 <div id="tab-sensors" class="tab-pane">
 <div class="card">
 <div class="card-body">
-<h2>&#x1f4ca; Sensor Data <span class="tag tag-stable">Stable</span></h2>
+<h2>&#x1f9ed; Sensor Data <span class="tag tag-stable">Stable</span></h2>
 <div class="guide">Live sensor readings from the device. Refreshes every 2 seconds.</div>
 <div id="sensor-grid" class="sensor-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:.78em">
 <div class="sg-item"><span class="sg-label">Firmware</span><span class="sg-value" id="sns-fw">--</span></div>
@@ -927,7 +927,7 @@ Live telemetry and serial console from the ESP32 Remote ID transmitter. The cons
 <option value="BRA">Brazil (ANAC RBAC 100)</option>
 <option value="NZL">New Zealand (CAA NZ)</option>
 </select>
-<button class="btn-sm" onclick="updateCompliance()" style="padding:3px 12px">&#x1f504; Refresh</button>
+<button class="btn-sm" onclick="updateCompliance()" style="padding:3px 12px" data-tip="Re-evaluate compliance checklist">&#x1f504; Refresh</button>
 </div>
 <div id="compliance-list"></div>
 </div>
@@ -947,7 +947,7 @@ Live telemetry and serial console from the ESP32 Remote ID transmitter. The cons
 <label class="form-label" for="sec-password">Access Password</label>
 <div style="display:flex;gap:6px">
 <input class="form-control" type="password" id="sec-password" maxlength="32" placeholder="Leave empty to disable" value="fake" style="flex:1">
-<button type="button" class="btn-sm" onclick="toggleSecPwd()" style="padding:3px 10px" id="sec-pwd-toggle">&#x1f441;</button>
+<button type="button" class="btn-sm" onclick="toggleSecPwd()" style="padding:3px 10px" id="sec-pwd-toggle" data-tip="Show / hide password">&#x1f441;</button>
 </div>
 <div class="hint">Min 4 chars. If set, login is required to access any page.</div>
 <label class="form-label" for="sec-timeout">Session Timeout (minutes)</label>
@@ -958,7 +958,7 @@ Live telemetry and serial console from the ESP32 Remote ID transmitter. The cons
 <option value="60">60 min</option>
 <option value="0">Never</option>
 </select>
-<button class="btn btn-primary" type="submit" style="width:auto;align-self:flex-start">Save Security</button>
+<button class="btn btn-primary" type="submit" style="width:auto;align-self:flex-start" data-tip="Save Security settings">Save Security</button>
 </div>
 </form>
 </div>
@@ -991,8 +991,8 @@ Live telemetry and serial console from the ESP32 Remote ID transmitter. The cons
 <h3 class="dialog-modal-title">Choose your theme</h3>
 <div class="dialog-content" style="margin-bottom:14px">Pick a look for the app. You can switch anytime from the <strong>Theme</strong> button in the header.</div>
 <div class="theme-options">
-<button class="theme-opt" type="button" data-theme-opt="light" onclick="pickTheme('light')"><span class="theme-opt-ic">&#x2600;&#xfe0f;</span><span>Light</span></button>
-<button class="theme-opt" type="button" data-theme-opt="dark" onclick="pickTheme('dark')"><span class="theme-opt-ic">&#x1f319;</span><span>Dark</span></button>
+<button class="theme-opt" type="button" data-theme-opt="light" onclick="pickTheme('light')" data-tip="Switch to light theme"><span class="theme-opt-ic">&#x2600;&#xfe0f;</span><span>Light</span></button>
+<button class="theme-opt" type="button" data-theme-opt="dark" onclick="pickTheme('dark')" data-tip="Switch to dark theme"><span class="theme-opt-ic">&#x1f319;</span><span>Dark</span></button>
 </div>
 <label class="theme-remember"><input type="checkbox" id="theme-remember" checked> Remember my choice</label>
 </div>
@@ -1004,10 +1004,10 @@ Live telemetry and serial console from the ESP32 Remote ID transmitter. The cons
 <div class="dialog-int-output" id="dialog-int-output" style="flex:1;overflow-y:auto;min-height:200px;max-height:50vh;background:var(--surface-hover);border-radius:6px;padding:8px;font-size:.78em"></div>
 <div class="cli-input-row" style="display:flex;gap:6px;margin-top:8px">
 <input type="text" id="dialog-int-input" class="form-control" style="flex:1;font-family:monospace;font-size:.8em" placeholder="Type a command..." onkeydown="if(event.key==='Enter')sendDialogCmd()">
-<button class="btn-sm" onclick="sendDialogCmd()" style="flex-shrink:0">Send</button>
+<button class="btn-sm" onclick="sendDialogCmd()" style="flex-shrink:0" data-tip="Send command">Send</button>
 </div>
 <div class="modal-actions" style="margin-top:8px">
-<button class="btn-cancel" onclick="closeDialog('dialog-interactive')">Close</button>
+<button class="btn-cancel" onclick="closeDialog('dialog-interactive')" data-tip="Close dialog">Close</button>
 </div>
 </div>
 </dialog>
@@ -1032,8 +1032,8 @@ Live telemetry and serial console from the ESP32 Remote ID transmitter. The cons
 <span class="st-icon failsafe" id="st-icon-failsafe" title="Issues detected" style="display:none">&#x26a0;</span>
 <span class="st-icon link" id="st-icon-link" title="FC connected">&#x1f517;</span>
 <span class="hdr-chip" id="st-bar-warn" style="display:none;padding:1px 6px;font-size:.9em;color:#f57f17;cursor:pointer" onclick="showIssues()" title="Click for details">&#x26a0;</span>
-<button class="btn-sm" onclick="showIssues()" style="margin:0;padding:1px 6px;font-size:.82em" title="Check for problems">&#x1f50d;</button>
-<button class="btn-sm" id="st-bar-console-btn" onclick="toggleConsole()" style="margin:0;padding:1px 6px;font-size:.9em" title="Toggle console">&#x1f4bb;</button>
+<button class="btn-sm" onclick="showIssues()" style="margin:0;padding:1px 6px;font-size:.82em" data-tip="Check for problems">&#x1f50d;</button>
+<button class="btn-sm" id="st-bar-console-btn" onclick="toggleConsole()" style="margin:0;padding:1px 6px;font-size:.9em" data-tip="Toggle console">&#x1f4bb;</button>
 <div class="st-search">
 <span class="st-search-label">&#x1f50d; Search</span>
 <input class="st-search-input" id="settings-search" type="search" placeholder="Search settings..." title="Search settings in all tabs (/)">
@@ -1349,7 +1349,7 @@ function showMsg(t,e){
   var el=document.createElement('div');
   el.className='toast'+(e?' err':' ok');
   var icon=e?'&#x26a0;':'&#x2705;';
-  el.innerHTML='<span class="toast-icon">'+icon+'</span><span class="toast-msg">'+t.replace(/</g,'&lt;')+'</span><button class="toast-close" onclick="this.parentElement.remove()">&times;</button>';
+  el.innerHTML='<span class="toast-icon">'+icon+'</span><span class="toast-msg">'+t.replace(/</g,'&lt;')+'</span><button class="toast-close" onclick="this.parentElement.remove()" data-tip="Dismiss notification">&times;</button>';
   c.appendChild(el);
   while(c.children.length>3)c.firstChild.remove();
   requestAnimationFrame(function(){el.classList.add('show')});
@@ -1793,7 +1793,7 @@ function havDist(lat1,lon1,lat2,lon2){
 /* ---------- Presets ---------- */
 function loadPresets(){try{var d=localStorage.getItem('rid_presets');return d?JSON.parse(d):{}}catch(e){return{}}}
 function savePresets(d){try{localStorage.setItem('rid_presets',JSON.stringify(d))}catch(e){}}
-function getPresetList(){var p=loadPresets(),keys=Object.keys(p).sort(),list=$('preset-list');if(!list)return;if(!keys.length){list.innerHTML='<div style="color:var(--txt-muted);padding:8px;font-size:.85em">No presets saved yet. Save your current configuration as a named profile.</div>';return};list.textContent='';keys.forEach(function(k){var item=p[k];var div=document.createElement('div');div.className='preset-item';div.innerHTML='<span class="preset-name"></span><span class="preset-ts"></span><button class="btn-sm preset-apply" data-preset-name="" title="Apply" style="margin:0;padding:1px 6px;font-size:.8em">&#x25b6;</button><button class="btn-sm preset-delete" data-preset-name="" title="Delete" style="margin:0;padding:1px 6px;font-size:.8em;color:#c62828">&#x2716;</button>';div.querySelector('.preset-name').textContent=k;div.querySelector('.preset-ts').textContent=item.ts||'';div.querySelectorAll('[data-preset-name]').forEach(function(b){b.setAttribute('data-preset-name',k)});div.querySelector('.preset-apply').addEventListener('click',function(){applyPreset(k)});div.querySelector('.preset-delete').addEventListener('click',function(){deletePreset(k)});list.appendChild(div)})}
+function getPresetList(){var p=loadPresets(),keys=Object.keys(p).sort(),list=$('preset-list');if(!list)return;if(!keys.length){list.innerHTML='<div style="color:var(--txt-muted);padding:8px;font-size:.85em">No presets saved yet. Save your current configuration as a named profile.</div>';return};list.textContent='';keys.forEach(function(k){var item=p[k];var div=document.createElement('div');div.className='preset-item';div.innerHTML='<span class="preset-name"></span><span class="preset-ts"></span><button class="btn-sm preset-apply" data-preset-name="" style="margin:0;padding:1px 6px;font-size:.8em" data-tip="Apply this preset to the device">&#x25b6;</button><button class="btn-sm preset-delete" data-preset-name="" style="margin:0;padding:1px 6px;font-size:.8em;color:#c62828" data-tip="Delete this preset">&#x2716;</button>';div.querySelector('.preset-name').textContent=k;div.querySelector('.preset-ts').textContent=item.ts||'';div.querySelectorAll('[data-preset-name]').forEach(function(b){b.setAttribute('data-preset-name',k)});div.querySelector('.preset-apply').addEventListener('click',function(){applyPreset(k)});div.querySelector('.preset-delete').addEventListener('click',function(){deletePreset(k)});list.appendChild(div)})}
 function savePreset(){var name=$('preset-name');if(!name||!name.value.trim()){showMsg('Enter a preset name',1);return};var n=name.value.trim();name.value='';fetch('/api/config').then(function(r){return r.json()}).then(function(c){var p=loadPresets();p[n]={config:c,ts:new Date().toLocaleString()};savePresets(p);getPresetList();showMsg('Preset "'+n+'" saved')}).catch(function(){showMsg('Failed to fetch config',1)})}
 function applyPreset(name){var p=loadPresets();if(!p[name]){showMsg('Preset not found',1);return};showConfirm('Apply Preset','Load "'+name+'" configuration? This will overwrite current settings.',function(){fetch('/api/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p[name].config)}).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json()}).then(function(){showMsg('Preset "'+name+'" applied');getCfg()}).catch(function(e){showMsg('Failed: '+e.message,1)})})}
 function deletePreset(name){var p=loadPresets();if(!p[name])return;delete p[name];savePresets(p);getPresetList();showMsg('Preset "'+name+'" deleted')}
@@ -2235,7 +2235,7 @@ function toggleConsole(){
   document.body.classList.toggle('console-off',!consoleVisible);
   var btn=$('st-bar-console-btn');
   if(btn)btn.style.opacity=consoleVisible?'1':'.4';
-  localStorage.setItem('rid_console',consoleVisible?'1':'');
+  localStorage.setItem('rid_console',consoleVisible?'1':'0');
 }
 
 /* ---------- Compliance Checklist ---------- */
@@ -2286,11 +2286,14 @@ function updateCompliance(){
 /* ---------- Security / Login ---------- */
 var secTimer=null;
 function toggleSecPwd(){var el=$('sec-password');el.type=el.type==='password'?'text':'password'}
-function saveSecurity(e){
+
+function sha256Hex(s){function rrot(v,c){return (v>>>c)|(v<<(32-c))}var H=[0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19],K=[0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2],msg=[],i,j;for(i=0;i<s.length;i++)msg.push(s.charCodeAt(i));var bits=s.length*8;msg.push(128);while((msg.length*8)%512!==448)msg.push(0);var lh=Math.floor(bits/Math.pow(2,32)),ll=bits>>>0;msg.push((lh>>>24)&255,(lh>>>16)&255,(lh>>>8)&255,lh&255,(ll>>>24)&255,(ll>>>16)&255,(ll>>>8)&255,ll&255);var w=new Array(64),res='';function hx(x){x=x>>>0;return x.toString(16).padStart(8,'0')}for(i=0;i<msg.length;i+=64){for(j=0;j<16;j++)w[j]=((msg[i+j*4]<<24)|(msg[i+j*4+1]<<16)|(msg[i+j*4+2]<<8)|msg[i+j*4+3])|0;for(j=16;j<64;j++){var s0=rrot(w[j-15],7)^rrot(w[j-15],18)^(w[j-15]>>>3),s1=rrot(w[j-2],17)^rrot(w[j-2],19)^(w[j-2]>>>10);w[j]=(w[j-16]+s0+w[j-7]+s1)|0}var a=H[0],b=H[1],c=H[2],d=H[3],e=H[4],f=H[5],g=H[6],h=H[7];for(j=0;j<64;j++){var S1=rrot(e,6)^rrot(e,11)^rrot(e,25),ch=(e&f)^(~e&g),t1=(h+S1+ch+K[j]+w[j])|0,S0=rrot(a,2)^rrot(a,13)^rrot(a,22),ma=(a&b)^(a&c)^(b&c),t2=(S0+ma)|0;h=g;g=f;f=e;e=(d+t1)|0;d=c;c=b;b=a;a=(t1+t2)|0}H[0]=(H[0]+a)|0;H[1]=(H[1]+b)|0;H[2]=(H[2]+c)|0;H[3]=(H[3]+d)|0;H[4]=(H[4]+e)|0;H[5]=(H[5]+f)|0;H[6]=(H[6]+g)|0;H[7]=(H[7]+h)|0}for(i=0;i<8;i++)res+=hx(H[i]);return res}
+
+ function saveSecurity(e){
   e.preventDefault();
   var pwd=$('sec-password').value.trim();
   if(pwd.length>0&&pwd.length<4){showMsg('Password must be at least 4 characters',1);return}
-  localStorage.setItem('rid_sec_pwd',pwd?btoa(pwd):'');
+  localStorage.setItem('rid_sec_pwd',pwd?sha256Hex(pwd):'');
   localStorage.setItem('rid_sec_timeout',$('sec-timeout').value);
   showMsg('Security settings saved',0);
 }
@@ -2529,6 +2532,69 @@ function stSearchGo(it){
     var r=$('settings-search-results');if(r)r.style.display='none'
   });
   buildSearchIndex();
+})();
+
+/* ===================== Tooltip System ===================== */
+(function(){
+  var tipEl=null,timer=null,cur=null;
+  function tip(){
+    if(!tipEl){
+      tipEl=document.createElement('div');
+      tipEl.className='ui-tip';
+      tipEl.setAttribute('role','tooltip');
+      tipEl.style.display='none';
+      document.body.appendChild(tipEl);
+    }
+    return tipEl;
+  }
+  function showTip(el){
+    var text=el.getAttribute('data-tip')||el.getAttribute('title')||'';
+    if(!text)return;
+    var hint=el.getAttribute('data-tip-kbd');
+    if(hint)text+=' <span class="tip-kbd">'+hint.replace(/</g,'&lt;')+'</span>';
+    var t=tip();
+    t.innerHTML=text;
+    t.style.display='block';
+    t.classList.add('tip-show');
+    var r=el.getBoundingClientRect(),tw=t.offsetWidth,th=t.offsetHeight;
+    var x=Math.round(r.left+(r.width-tw)/2);
+    x=Math.max(8,Math.min(x,document.documentElement.clientWidth-tw-8));
+    var y=r.top-th-10,pos='bottom';
+    if(y<8){y=r.bottom+10;pos='top';t.classList.add('tip-top')}else{t.classList.remove('tip-top')}
+    t.style.left=x+'px';t.style.top=y+'px';
+    t._pos=pos;
+  }
+  function hideTip(){
+    if(timer)clearTimeout(timer);
+    if(!tipEl)return;
+    tipEl.classList.remove('tip-show');
+    setTimeout(function(){if(tipEl&&!tipEl.classList.contains('tip-show'))tipEl.style.display='none'},180);
+  }
+  document.addEventListener('mouseover',function(e){
+    var el=e.target.closest?e.target.closest('[data-tip],[title]'):null;
+    if(!el)return;
+    if(cur===el){if(tipEl&&tipEl.style.display==='none')showTip(el);return}
+    cur=el;
+    hideTip();
+    timer=setTimeout(function(){showTip(el)},60);
+  },true);
+  document.addEventListener('mouseout',function(e){
+    if(!cur)return;
+    var rt=e.relatedTarget;
+    if(rt&&cur.contains(rt))return;
+    hideTip();cur=null;
+  },true);
+  document.addEventListener('scroll',hideTip,true);
+  window.addEventListener('blur',hideTip);
+  document.addEventListener('focusin',function(e){
+    var el=e.target.closest?e.target.closest('[data-tip],[title]'):null;
+    if(!el)return;
+    if(cur===el)return;
+    cur=el;
+    hideTip();
+    timer=setTimeout(function(){showTip(el)},80);
+  },true);
+  document.addEventListener('focusout',function(){hideTip();cur=null},true);
 })();
 </script>
 </body>
