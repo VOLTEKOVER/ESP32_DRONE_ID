@@ -992,21 +992,34 @@ function toggleConsole(){
 /* ---------- Compliance Checklist ---------- */
 function updateCompliance(){
   var region=$('compliance-region').value;
+  var rk=region==='auto'?'EUR':region;
+  var reqMap={
+    EUR:['uas_id','ua_type','op_id','tx','gps','broadcast'],
+    FAA:['uas_id','ua_type','tx','gps','broadcast'],
+    JPN:['uas_id','ua_type','tx','gps','broadcast'],
+    SGP:['uas_id','ua_type','tx','gps','broadcast'],
+    KOR:['uas_id','ua_type','tx','gps','broadcast'],
+    CHN:['uas_id','ua_type','tx','gps','broadcast'],
+    CAN:['uas_id','ua_type','tx','gps','broadcast'],
+    AUS:['uas_id','ua_type','tx','gps','broadcast'],
+    BRA:['uas_id','ua_type','tx','gps','broadcast'],
+    NZL:['uas_id','ua_type','tx','gps','broadcast']
+  };
+  var reqItems=reqMap[rk]||[];
   var items=[
-    {id:'uas_id',label:'UAS ID set',check:function(){return $('uas_id').value.trim().length>0},faa:true,easa:true,caa:true,enac:true},
-    {id:'ua_type',label:'UA Type != None',check:function(){return parseInt($('ua_type').value)!==0},faa:true,easa:true,caa:true,enac:true},
-    {id:'op_id',label:'Operator ID set',check:function(){return $('op_id').value.trim().length>0},faa:false,easa:true,caa:true,enac:true},
-    {id:'tx',label:'At least 1 TX channel enabled',check:function(){return $('tx_wifi_bcn').checked||$('tx_wifi_nan').checked||$('tx_ble4').checked||$('tx_ble5').checked},faa:true,easa:true,caa:true,enac:true},
-    {id:'fc',label:'Flight Controller connected',check:function(){return fcConnected},faa:false,easa:false,caa:false,enac:false},
-    {id:'gps',label:'GPS fix acquired',check:function(){return typeof lastStatus!=='undefined'?!!(lastStatus.gps_valid&&lastStatus.fix_type>=2):false},faa:true,easa:true,caa:true,enac:true},
-    {id:'lock',label:'Lock Level configured securely',check:function(){return parseInt($('lock_lvl').value)>=1},faa:false,easa:false,caa:false,enac:false},
-    {id:'broadcast',label:'Broadcast active (sending packets)',check:function(){return lastTxTotal>0},faa:true,easa:true,caa:true,enac:true}
+    {id:'uas_id',label:'UAS ID set',check:function(){return $('uas_id').value.trim().length>0}},
+    {id:'ua_type',label:'UA Type != None',check:function(){return parseInt($('ua_type').value)!==0}},
+    {id:'op_id',label:'Operator ID set',check:function(){return $('op_id').value.trim().length>0}},
+    {id:'tx',label:'At least 1 TX channel enabled',check:function(){return $('tx_wifi_bcn').checked||$('tx_wifi_nan').checked||$('tx_ble4').checked||$('tx_ble5').checked}},
+    {id:'fc',label:'Flight Controller connected',check:function(){return fcConnected}},
+    {id:'gps',label:'GPS fix acquired',check:function(){return typeof lastStatus!=='undefined'?!!(lastStatus.gps_valid&&lastStatus.fix_type>=2):false}},
+    {id:'lock',label:'Lock Level configured securely',check:function(){return parseInt($('lock_lvl').value)>=1}},
+    {id:'broadcast',label:'Broadcast active (sending packets)',check:function(){return lastTxTotal>0}}
   ];
   var html='<table style="width:100%;border-collapse:collapse;font-size:.85em">';
   html+='<tr style="border-bottom:1px solid var(--line)"><th style="text-align:left;padding:6px 8px">Requirement</th><th style="text-align:center;padding:6px 8px;width:80px">Status</th><th style="text-align:center;padding:6px 8px;width:60px">Required</th></tr>';
   items.forEach(function(item){
-    var req=false;
-    if(region==='auto'){req=item.easa}else if(region==='FAA'){req=item.faa}else if(region==='EASA'){req=item.easa}else if(region==='CAA'){req=item.caa}else if(region==='ENAC'){req=item.enac}
+    var req=reqItems.indexOf(item.id)!==-1;
     var ok=item.check();
     var icon=ok?'&#x2705;':'&#x274c;';
     var color=ok?'var(--txt)':'#c62828';
@@ -1015,7 +1028,7 @@ function updateCompliance(){
   });
   html+='</table>';
   html+='<div style="margin-top:12px;padding:8px 12px;border-radius:6px;font-size:.78em;background:var(--hover)">';
-  var allOk=items.every(function(item){return item.check()||!item.easa});
+  var allOk=items.every(function(item){return item.check()||reqItems.indexOf(item.id)===-1});
   html+=allOk?'&#x2705; All required checks passed for this region.':'&#x26a0; Some required items are missing. Review the table above.';
   html+='</div>';
   $('compliance-list').innerHTML=html;

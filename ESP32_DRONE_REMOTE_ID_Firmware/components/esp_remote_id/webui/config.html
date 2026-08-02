@@ -726,16 +726,22 @@ Live telemetry and serial console from the ESP32 Remote ID transmitter. The cons
 <div class="card-body">
 <h2><span class="ico">&#x2696;</span> Compliance Checklist <span class="tag tag-beta">Beta</span></h2>
 <div class="guide" onclick="toggleGuide(this)">
-<b>Regulatory compliance</b> &mdash; Verify your current configuration against the requirements of your region's aviation authority. Select <b>FAA</b> (USA, Part 89), <b>EASA</b> (EU, Delegated Reg. 2019/945), <b>CAA</b> (UK), or <b>ENAC</b> (Italy). The checklist will highlight which mandatory fields are filled, missing, or incorrectly formatted. Use <b>Auto-detect</b> to infer the region from your current settings.
+<b>Regulatory compliance</b> &mdash; Verify your current configuration against the requirements of your region's aviation authority. Select your region: <b>Europe</b> (EASA/EEA &mdash; EU, EEA states, UK CAP 722, ENAC Italy), <b>USA</b> (FAA Part 89), <b>Japan</b>, <b>Singapore</b>, <b>South Korea</b>, <b>China</b>, <b>Canada</b>, <b>Australia</b>, <b>Brazil</b>, or <b>New Zealand</b>. The checklist will highlight which mandatory fields are filled, missing, or incorrectly formatted. Use <b>Auto-detect</b> to infer the region from your current settings.
 </div>
 <div class="d-flex gap-2 align-items-center flex-wrap mb-3">
 <label class="form-label" style="font-weight:600;margin:0">Region:</label>
 <select id="compliance-region" class="form-select" onchange="updateCompliance()" style="width:auto;min-width:120px">
 <option value="auto">Auto-detect</option>
-<option value="FAA">FAA (USA)</option>
-<option value="EASA">EASA (EU)</option>
-<option value="CAA">CAA (UK)</option>
-<option value="ENAC">ENAC (Italy)</option>
+<option value="EUR">Europe (EASA/EEA)</option>
+<option value="FAA">USA (FAA Part 89)</option>
+<option value="JPN">Japan (MLIT)</option>
+<option value="SGP">Singapore (CAAS B-RID)</option>
+<option value="KOR">South Korea (KASA)</option>
+<option value="CHN">China (GB 46750-2025)</option>
+<option value="CAN">Canada (Transport Canada)</option>
+<option value="AUS">Australia (CASA)</option>
+<option value="BRA">Brazil (ANAC RBAC 100)</option>
+<option value="NZL">New Zealand (CAA NZ)</option>
 </select>
 <button class="btn-sm" onclick="updateCompliance()" style="padding:3px 12px">&#x1f504; Refresh</button>
 </div>
