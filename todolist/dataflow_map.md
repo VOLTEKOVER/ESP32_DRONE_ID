@@ -1,6 +1,6 @@
 # ESP DRONE REMOTEID — Data Flow / Mega Graph
 
-Last updated: 2026-08-02
+Last updated: 2026-08-03
 Scope: all protocols, variables and data traversed by the firmware (`components/esp_remote_id/src/*.c`, `main/main.c`).
 
 ---
@@ -235,6 +235,169 @@ When the flight controller sends an `OPEN_DRONE_ID_SYSTEM` (ArduPilot does this 
 `/api/config` GET (r.300-345): all `rid_config_t` fields (protocol, uart, ua_type, id_type, uas_id, operator_id, tx_modes, wifi_*, ble4_*, ble5_*, operator_lat/lon/alt, options, led_*, ws2812_*, lighting_*, dronecan_*, mavlink_usb_enable, ota_trigger_gpio, auth_private_key, start_delay_ms).
 
 `/api/config` POST: verifies `X-Signature` (Ed25519) if `lock_level>=1` + rate limiting.
+
+---
+
+## 📋 FULL DATA INVENTORY — all data processed in EVERY configuration
+
+### A) Complete `rid_config_t` field inventory (default → NVS → Web/CLI)
+
+Sources: `default_config()` `esp_remote_id.c:46-115`, persisted in NVS namespace `"esp_rid"` (`nvs_storage.c`), edited via Web `POST /api/config` (`web_config.c:136-293`) and CLI `cli.c`.
+
+| # | Field | Type | Default | Writable (Web JSON key) | Consumers |
+|---|---|---|---|---|---|
+| 1 | `protocol` | enum | `AUTO` | `protocol` (1..4 else AUTO) | rid_task dispatch `:418-439` |
+| 2 | `uart_port` | u8 | 1 | `uart_port` | UART1 |
+| 3 | `baud_rate` | u32 | 57600 | `baud_rate` (>0) | UART reinit `:227-229` + parsers |
+| 4 | `tx_pin` | u8 | 17 | `tx_pin` | UART1 pin |
+| 5 | `rx_pin` | u8 | 18 | `rx_pin` | UART1 pin |
+| 6 | `ua_type` | u8 | 1 | `ua_type` | BasicID UAType |
+| 7 | `id_type` | u8 | 1 | `id_type` | BasicID IDType |
+| 8 | `uas_id` | str[21] | `"ESP32-RID-001"` | `uas_id` | BasicID + identity fallback `:474` |
+| 9 | `operator_id` | str[21] | `"OP-UNKNOWN"` | `operator_id` | OperatorID + fallback `:475` |
+| 10 | `self_id_text` | str[21] | `""` | `self_id_text` | SelfID + fallback `:476` |
+| 11 | `operator_lat/lon/alt` | f64/f64/f32 | 0 | `operator_lat/lon/alt` | `g_state.gps.operator_*` `:502-504`, demo `:537-539` |
+| 12 | `ua_type_2` | u8 | 0 | `ua_type_2` | BasicID[1] `wifi_tx.c:178` |
+| 13 | `id_type_2` | u8 | 0 | `id_type_2` | BasicID[1] `wifi_tx.c:177` |
+| 14 | `uas_id_2` | str[21] | `""` | `uas_id_2` | BasicID[1] (enabled if non-empty) |
+| 15 | `tx_modes` | u8 bitmask | `WIFI_BCN` | `tx_modes` | `update_transmissions()` `:296-326` |
+| 16 | `wifi_channel` | u8 | 6 | `wifi_channel` (1..13) | AP config + beacon `wifi_tx.c:91` |
+| 17 | `wifi_power_dbm` | f32 | 20.0 | `wifi_power_dbm` (2..20) | `esp_wifi_set_max_tx_power` `wifi_tx.c:111` |
+| 18 | `wifi_bcn_rate_hz` | f32 | 1.0 | (0..5) | rate_allowed beacon `:296-302` |
+| 19 | `wifi_nan_rate_hz` | f32 | 0.0 | (0..5) | rate_allowed NAN `:304-310` |
+| 20 | `ble4_rate_hz` | f32 | 1.0 | (0..5) | rate_allowed BLE4 `:312-318` |
+| 21 | `ble4_power_dbm` | f32 | 18.0 | (−27..18) | `ble_tx_set_power` `:233`, `esp_rid_set_config:233` |
+| 22 | `ble5_rate_hz` | f32 | 1.0 | (0..5) | rate_allowed BLE5 `:320-326` |
+| 23 | `ble5_power_dbm` | f32 | 18.0 | (−27..18) | `ble_tx_set_power` |
+| 24 | `wifi_ssid` | str[21] | `"ESP-RID"` | `wifi_ssid` | AP SSID `wifi_tx.c:86-90,135-139` |
+| 25 | `wifi_password` | str[21] | `""` | `wifi_password` | AP auth mode `wifi_tx.c:93-100` |
+| 26 | `webserver_en` | u8 | 1 | `webserver_en` | (accepted, AP always runs) |
+| 27 | `mavlink_sysid` | u8 | 0 (=any) | `mavlink_sysid` | `mavlink_parser_set_sysid_filter` `:158,230` |
+| 28 | `bcast_powerup` | u8 | 1 | `bcast_powerup` | TX gate `:286` (transmit w/o GPS) |
+| 29 | `options` | u16 bitmask | 0 | `options` | see matrix C |
+| 30 | `lock_level` | i8 | 0 | `lock_level` (0/1/2; ≥2 burns eFuse) | `get_lock_level()` `web_config.c:67-78` |
+| 31 | `led_r_gpio` | i8 | −1 | `led_r_gpio` | RGB status LED |
+| 32 | `led_g_gpio` | i8 | −1 | `led_g_gpio` | RGB status LED |
+| 33 | `led_b_gpio` | i8 | −1 | `led_b_gpio` | RGB status LED |
+| 34 | `ws2812_gpio` | i8 | −1 | `ws2812_gpio` | WS2812 (RMT) |
+| 35 | `ws2812_brightness` | u8 | 16 (%) | `ws2812_brightness` | RMT brightness scale |
+| 36 | `lighting_pins[5]` | i8[5] | −1 | `lighting_pin_0..4` | GPIO outputs |
+| 37 | `lighting_patterns[5]` | u8[5] | 0 | `lighting_pattern_0..4` | pattern selector |
+| 38 | `lighting_phase_offsets[5]` | i16[5] | 0 | `lighting_phase_0..4` | phase shift ms |
+| 39 | `dronecan_rx_gpio` | i8 | −1 | `dronecan_rx_gpio` | TWAI RX |
+| 40 | `dronecan_tx_gpio` | i8 | −1 | `dronecan_tx_gpio` | TWAI TX |
+| 41 | `dronecan_bitrate` | u32 | 1000000 | `dronecan_bitrate` | TWAI bitrate |
+| 42 | `mavlink_usb_enable` | bool | false | `mavlink_usb_enable` | USB Serial/JTAG MAVLink out `:198-200` |
+| 43 | `ota_trigger_gpio` | i8 | −1 | `ota_trigger_gpio` | boot-time OTA trigger `rid_ota.c` |
+| 44 | `auth_private_key` | str[512] | `""` | `auth_private_key` | Ed25519 signing `rid_auth.c` |
+| 45 | `start_delay_ms` | u32 | 10000 | `start_delay_ms` (≥0) | startup delay `:149-152` |
+| 46 | `public_keys[5]` | str[5][257] | `""` | `public_key_1..5` | Ed25519 verify (lock≥1) `rid_security.c` |
+
+**Boot ID fix-up** (`esp_remote_id.c:202-209`): if `uas_id=="ESP32-RID-001"` or `operator_id=="OP-UNKNOWN"`, both are regenerated from the eFuse MAC suffix (`ESP32-RID-`+MAC[4,5], `ESP32-OP-`+MAC[4,5]) and re-saved to NVS.
+
+### B) Per-protocol configuration matrix
+
+| Config | Active parser | UART baud | Gate (data accepted) | Extra data produced | Default `active_protocol` |
+|---|---|---|---|---|---|
+| `MAVLINK` (1) | `mavlink_parser_get` `:435` | config baud | lat≠0 (incl. force_tx) | identity, armed, operator loc | `MAVLINK` |
+| `MSP` (2) | `msp_parser_get` `:432` | config baud | fix≥3 && lat≠0 | armed (flag bit 0) | `MSP` |
+| `NMEA` (3) | `nmea_parser_get` `:429` | config baud | fix≥2 && lat≠0 | — | `NMEA` |
+| `NONE` (4) | none `:437-439` | — | — | — | `NONE` |
+| `AUTO` (255) | `protocol_detect_auto()` `:418-419` then dispatch | probe 115200 → config baud after first config write | per detected parser | — | detected (`MSP`>`NMEA`>MAVLink sniff>`NMEA` default, `protocol_detect.c:39-56`) |
+| **Fallback** (any) | DroneCAN `:442-445` (if `!have_data` && DroneCAN active) | CAN 1 Mbit | lat≠0 | — | `NONE` (overwrites) |
+| **Demo** (`RID_OPT_DEMO_MODE` and no GPS) | `rid_patrol_tick` `:523-544` | — | always | synthetic circle around Rome | `NONE` (overwrites) |
+
+⚠️ **Ordering note**: DroneCAN fallback runs only when the primary parser returned no data, and its success **overwrites** `g_state.active_protocol = NONE` (`:444`).
+
+### C) `options` bitfield matrix (`esp_remote_id.h:12-20`)
+
+| Bit | Flag | Effect |
+|---|---|---|
+| 0 | `RID_OPT_FORCE_ARM_OK` | GPS gate bypassed when `armed==true` (`:450`) |
+| 1 | `RID_OPT_DONT_SAVE_BASIC_ID` | clears `uas_id`/`uas_id_2` after identity assembly (`:509-512`) → transmits empty BasicID |
+| 2 | `RID_OPT_PRINT_RID_MAVLINK` | logs RID summary line each loop (`:608-615`) |
+| 3 | `RID_OPT_DEMO_MODE` | synthetic patrol when no GPS (`:523-544`); LED DEMO; Kalman auto-off (`:546`) |
+| 4 | `RID_OPT_KALMAN_FILTER` | 3×1D Kalman on lat/lon/alt, overwrites `g_state.gps` (`:546-572`) |
+| 5 | `RID_OPT_AUTH_ED25519` | `rid_auth_init(privkey)` (`:175-177`) → ODID Auth message |
+| 6 | `RID_OPT_MAVLINK_ARM_STATUS` | enables MAVLink TX task (heartbeat, armed) `:169-172` |
+| 7 | `RID_OPT_MAVLINK_OP_LOC_LOOP` | enables MAVLink TX operator-location loop `:169-172` |
+| 8 | `RID_OPT_IDENTITY_READY_GATE` | TX blocked until identity sane + position sane (`:289-292`, `:514-521`) |
+
+`sane()` rules (`esp_remote_id.c:117-131`): `uas_id` non-empty && ≠ `ESP32-RID-*`; `operator_id` non-empty && ≠ `OP-UNKNOWN`; lat ∈ [−90,90], lon ∈ [−180,180].
+
+### D) `tx_modes` bitfield matrix (`esp_remote_id.h:49-54`)
+
+| Bit | Flag | Builder | Rate source | Counters incremented |
+|---|---|---|---|---|
+| 0 | `RID_TRANSMIT_WIFI_BCN` | `wifi_tx_transmit` (`wifi_tx.c:209-235`) | `wifi_bcn_rate_hz` | `wifi_bcn_count`, `transmissions_count` |
+| 1 | `RID_TRANSMIT_WIFI_NAN` | `wifi_tx_transmit_nan` (`wifi_tx.c:237-258`) | `wifi_nan_rate_hz` | `wifi_nan_count`, `transmissions_count` |
+| 2 | `RID_TRANSMIT_BLE4` | `ble_tx_transmit_legacy` (`ble_tx.c:150-176`) | `ble4_rate_hz` | `ble4_count`, `transmissions_count` |
+| 3 | `RID_TRANSMIT_BLE5` | `ble_tx_transmit_lr` (`ble_tx.c:178-230`) | `ble5_rate_hz` | `ble5_count`, `transmissions_count` |
+
+Global gate (`esp_remote_id.c:284-292`): needs `gps_valid || bcast_powerup`, `active_protocol != UNKNOWN`, and identity gate if option set. Beacon TX uses 4-attempt fallback `{AP,STA,AP,STA} × {no-seq,no-seq,seq,seq}` (`wifi_tx.c:224-228`).
+
+### E) `rid_state_t` inventory — every field, writer → reader
+
+| Field | Written by | Read by |
+|---|---|---|
+| `gps.*` | parsers/demo/Kalman (`:455`, `:562-567`) | TX builders, `/api/status`, CLI status, LEDs |
+| `identity.*` | MAVLink (`:472`) else config fallback (`:474-481`); demo (`:531-535`) | TX builders, gate, `/api/status` |
+| `active_protocol` | rid_task (`:423`, `:444`, `:529`) | TX gate, `/api/status`, CLI |
+| `last_update_ms` | on GPS accept (`:457`, `:528`) | 10 s GPS timeout (`:576`) |
+| `transmissions_count` | `update_transmissions` | `/api/status` (tx_total) |
+| `wifi_bcn_count` | `:299` | `/api/status` (tx_wifi_bcn) |
+| `wifi_nan_count` | `:307` | `/api/status` (tx_wifi_nan) |
+| `ble4_count` | `:315` | `/api/status` (tx_ble4) |
+| `ble5_count` | `:323` | `/api/status` (tx_ble5) |
+| `gps_valid` | `:456`, `:526`, `:568`; cleared `:570`,`:577` | TX gate, LEDs, WS2812, lighting, status |
+| `identity_ready` | gate logic `:514-521`, demo `:543` | TX gate (`:291`), status |
+| `mavlink_armed` | `:461` | armed LED/lighting, `gps.armed` |
+| `mavlink_sysid` | (struct) | — |
+| `operator_lat/lon/alt` | MAVLink `:496-498` ⚠️ (BUG B: write-only) | — (never consumed!) |
+| `operator_position_updated_ms` | `:499` | — |
+| `operator_location_type` | `:500` | — |
+| `auth_enabled` | (struct) | — |
+| `takeoff_lat/lon/alt` | first 3D fix `:484-490` | `/api/status` |
+| `takeoff_captured` | `:489` | `/api/status` |
+
+### F) Subsystem data (per configuration detail)
+
+**Kalman** (`rid_kalman.c`): 3×1D filters, `q_pos/q_vel/r` per axis — lat `1e-9/1e-8/1e-9`, lon `1.5e-9/1.5e-8/1.5e-9`, alt `1.0/10.0/25.0` (`:26-28`); timeout `RID_KALMAN_TIMEOUT_US = 3 s` (`rid_kalman.h:7`); derived speed/climb/heading from filter velocities (`:105-122`); `valid_age` keeps `gps_valid=true` up to 3 s without new data.
+
+**LED status** (`led_status.h:10-16`, `esp_remote_id.c:586-595`): 7 states — `BOOT, NO_GPS, GPS_OK, DEMO, LOCKED (lock_level≥2), OTA, ERROR`; TX flash on successful transmit (`:583`).
+
+**WS2812** (`esp_remote_id.c:598-602`): green (GPS ok) / amber (no GPS), brightness % → `(pct*255/100)`.
+
+**Lighting** (`rid_lighting.c:9-16`): 5 patterns — OFF, SOLID, BLINK_SLOW (2 s), BLINK_FAST (0.5 s), BLINK_ARMED (1 s × armed), FLASH_ON_GPS; inputs `armed`, `gps_valid` (`:605`).
+
+**Web endpoints** (`web_config.c:716-725`): `/` (HTML UI), `/style.css`, `/app.js`, `GET /api/config`, `POST /api/config` (JSON apply `:136-293`), `GET /api/status`, `POST /api/reset`, `POST /ota` (SHA-256 + `X-Expected-SHA256` mandatory, `:507-604`), `GET /api/logs` (ring buffer 64×240 B), `POST /api/command` (`restart|reboot|reset|factory|status`, auth-gated when lock≥1 `:660-677`).
+Auth gating: `lock_level≥1` → Ed25519 `X-Signature` + rate limit 10 fails/60 s (`web_config.c:43-65`); `lock_level≥2` → eFuse magic `0x52494421` "RID!" (`:27`, `:67-78`) → `/ota` and config locked.
+Log ring: vprintf hook intercepts ESP_LOG (`web_config.c:96-134`), feeds `/api/logs`.
+
+**CLI** (`cli.c:50-66`): `help, status, config, restart, reboot, reset, factory, protocol [auto|mavlink|msp|nmea|none], heap, log_level <tag> <level>, patrol [on|off], transmit <wifi_bcn|wifi_nan|ble4|ble5|all> <on|off>, mac, uptime, kalman [on|off]` (MAX_ARGS 16, MAX_LINE 256).
+
+**NVS** (`nvs_storage.c`): namespace `"esp_rid"`; typed helpers store/load str/u8/u32/f32/i8; `esp_rid_factory_reset` erases + re-defaults + re-saves (`esp_remote_id.c:255-263`).
+
+**OTA** (`rid_ota.c`): `ota_trigger_gpio` boot check; three web forms — update, factory_reset, rollback.
+
+**Auth** (`rid_auth.c` / `rid_security.c`): Ed25519 private key (256-bit PEM, `rid_auth.c`), base64 strict decode, hex encode/decode; verify against `public_keys[5]`.
+
+**MAVLink TX** (`rid_mavlink_tx.c`): enabled by options bits 6|7 → UART1 task 2048 B; heartbeat + `OPEN_DRONE_ID_SYSTEM` operator loc loop.
+**MAVLink USB** (`rid_mavlink_usb.c`): `mavlink_usb_enable` → USB Serial/JTAG console @ 115200 MAVLink out.
+
+### G) Timeouts / rate constants
+
+| Constant | Value | Where |
+|---|---|---|
+| Parser data freshness | GPS 5 s, identity 10 s | `mavlink_parser.c:348`, `:358` |
+| Operator loc freshness | 30 s | `mavlink_parser.c:73` |
+| GPS validity timeout | 10 s | `esp_remote_id.c:576` |
+| Kalman timeout | 3 s | `rid_kalman.h:7` |
+| Rate limit | 10 fails / 60 s | `web_config.c:43-44` |
+| Startup delay default | 10 s | `esp_remote_id.c:111` |
+| Loop period | 100 ms | `esp_remote_id.c:625` |
+| Detect read window | 50 ms / 1 s timeout | `protocol_detect.c:11-12` |
+| WiFi NAN counter | 8-bit increment | `esp_remote_id.c:282`, `:306` |
 
 ---
 
