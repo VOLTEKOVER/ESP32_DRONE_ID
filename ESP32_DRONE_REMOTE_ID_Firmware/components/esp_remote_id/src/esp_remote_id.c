@@ -459,8 +459,8 @@ static void rid_task(void *arg)
                 /* MAVLink arm status */
                 if (proto == RID_PROTOCOL_MAVLINK) {
                     mavlink_parser_get_armed(&g_state.mavlink_armed);
+                    g_state.gps.armed = g_state.mavlink_armed;
                 }
-                g_state.gps.armed = g_state.mavlink_armed;
 
                 rid_identity_t mav_id;
                 bool have_mav_id = false;
@@ -602,7 +602,7 @@ static void rid_task(void *arg)
         }
 
         /* External lighting outputs */
-        rid_lighting_set_state(g_state.mavlink_armed, g_state.gps_valid);
+        rid_lighting_set_state(g_state.gps.armed, g_state.gps_valid);
         rid_lighting_tick();
 
         if (cfg_opts & RID_OPT_PRINT_RID_MAVLINK) {

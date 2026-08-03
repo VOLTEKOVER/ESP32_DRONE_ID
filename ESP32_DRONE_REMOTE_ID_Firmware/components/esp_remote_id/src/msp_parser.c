@@ -119,7 +119,7 @@ bool msp_parser_get(rid_gps_data_t *gps)
         }
     }
 
-    if (g_last_gps.fix_type >= 3 && g_last_gps.latitude != 0.0) {
+    if (g_last_gps.fix_type >= 2 && g_last_gps.latitude != 0.0) {
         memcpy(gps, &g_last_gps, sizeof(rid_gps_data_t));
         return true;
     }
