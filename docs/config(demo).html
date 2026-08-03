@@ -2550,10 +2550,10 @@ function stSearchGo(it){
     return tipEl;
   }
   function showTip(el){
-    var text=el.getAttribute('data-tip')||el.getAttribute('title')||'';
+    var text=escHtml(el.getAttribute('data-tip')||el.getAttribute('title')||'');
     if(!text)return;
     var hint=el.getAttribute('data-tip-kbd');
-    if(hint)text+=' <span class="tip-kbd">'+hint.replace(/</g,'&lt;')+'</span>';
+    if(hint)text+=' <span class="tip-kbd">'+escHtml(hint)+'</span>';
     var t=tip();
     t.innerHTML=text;
     t.style.display='block';
