@@ -185,7 +185,7 @@ static void populate_uas_data(ODID_UAS_Data *d, rid_gps_data_t *gps, rid_identit
     d->Location.Longitude = gps->longitude;
     d->Location.AltitudeGeo = gps->altitude_msl;
     d->Location.Height = gps->altitude_relative;
-    d->Location.PressureAltitude = gps->altitude_baro;
+    d->Location.AltitudeBaro = gps->altitude_baro;
     d->Location.SpeedHorizontal = gps->speed;
     d->Location.Direction = gps->heading;
     d->Location.SpeedVertical = gps->speed_vertical;

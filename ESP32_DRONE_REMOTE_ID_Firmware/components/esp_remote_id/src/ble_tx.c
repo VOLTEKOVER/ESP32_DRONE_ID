@@ -57,7 +57,7 @@ static void prepare_uas_data(rid_gps_data_t *gps, rid_identity_t *identity)
     g_uas_data.Location.Longitude = gps->longitude;
     g_uas_data.Location.AltitudeGeo = gps->altitude_msl;
     g_uas_data.Location.Height = gps->altitude_relative;
-    g_uas_data.Location.PressureAltitude = gps->altitude_baro;
+    g_uas_data.Location.AltitudeBaro = gps->altitude_baro;
     g_uas_data.Location.SpeedHorizontal = gps->speed;
     g_uas_data.Location.SpeedVertical = gps->speed_vertical;
     g_uas_data.Location.Direction = gps->heading;

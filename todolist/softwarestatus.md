@@ -32,7 +32,7 @@ Scope: all 80+ source files (excluding build artifacts)
 - [ ] **Stats tracking** — TX failures, parse errors, signatures
 
 ### ✅ DONE — Recently Completed
-- **Fix campaign C–K** (static audit) — armed/C, MSP gate/G, auth wiring+D, MAVLink TX/E, BLE4 adv/F, baud/H, UART+webserver/I, takeoff height/J, PressureAltitude+state/K; see `dataflow_verification.md`
+- **Fix campaign C–K** (static audit) — armed/C, MSP gate/G, auth wiring+D, MAVLink TX/E, BLE4 adv/F, baud/H, UART+webserver/I, takeoff height/J, `AltitudeBaro`+state/K; see `dataflow_verification.md`
 - **OTA upload timeout** — `rid_ota.c` `OTA_MAX_IDLE_STALLS=12` aborts stalled uploads (~60 s idle)
 - **Absolute GPS timeout** — `gps_valid` cleared at 10 s without fresh parser data, independent of Kalman (`esp_remote_id.c`)
 - **Differential factory reset** — `nvs_storage_reset_preserve_keys()` preserves provisioned public keys (device stays locked); used by OTA factory-reset form and `esp_rid_factory_reset`

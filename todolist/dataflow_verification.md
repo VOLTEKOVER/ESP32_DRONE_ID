@@ -48,9 +48,9 @@ Verdict legend:
 ### 1.4 `altitude_baro`
 | Producer | Where | Consumer | Verdict |
 |---|---|---|---|
-| MSP | `msp_parser.c:51` | `PressureAltitude` `wifi_tx.c:187`, `ble_tx.c:59` | ✅ **FIXED (K)** |
-| NMEA `$GPGGA` | `nmea_parser.c:60` | `PressureAltitude` `wifi_tx.c:187`, `ble_tx.c:59` | ✅ **FIXED (K)** |
-| MAVLink `ODID_LOCATION` | `mavlink_parser.c:168` | `PressureAltitude` `wifi_tx.c:187`, `ble_tx.c:59` | ✅ **FIXED (K)** |
+| MSP | `msp_parser.c:51` | `AltitudeBaro` `wifi_tx.c:188`, `ble_tx.c:60` | ✅ **FIXED (K)** |
+| NMEA `$GPGGA` | `nmea_parser.c:60` | `AltitudeBaro` `wifi_tx.c:188`, `ble_tx.c:60` | ✅ **FIXED (K)** |
+| MAVLink `ODID_LOCATION` | `mavlink_parser.c:168` | `AltitudeBaro` `wifi_tx.c:188`, `ble_tx.c:60` | ✅ **FIXED (K)** |
 | DroneCAN | — never set | — | — |
 
 ### 1.5 `speed`
@@ -197,7 +197,7 @@ Verdict legend:
 | H | MED | Boot ignores configured `baud_rate` (AUTO probes at hardcoded 115200) | `protocol_detect.c:17`, `esp_remote_id.c:149-152` | ✅ FIXED (boot baud = 115200 in AUTO, else configured) |
 | I | MED | `uart_port`/`tx_pin`/`rx_pin`/`webserver_en` config fields are dead (never honored) | `protocol_detect.c:26,72`, `web_config.c` | ✅ FIXED (UART config + `web_config_init(bool)`) |
 | J | MED | NMEA/MSP never set `altitude_relative` → ODID `Height=0` | `nmea_parser.c`, `msp_parser.c` | ✅ FIXED (`esp_remote_id.c` computes from takeoff) |
-| K | LOW | `takeoff_*` captured but never used in TX; `altitude_baro` never transmitted; state `mavlink_sysid`/`auth_enabled` never written; `area_count` misused as `satellites` | various | ✅ FIXED (`PressureAltitude`, `OperatorAltitudeGeo`, `area_count` removed, auth pages, `self_id_desc_type`, state `mavlink_sysid`/`auth_enabled`) |
+| K | LOW | `takeoff_*` captured but never used in TX; `altitude_baro` never transmitted; state `mavlink_sysid`/`auth_enabled` never written; `area_count` misused as `satellites` | various | ✅ FIXED (`AltitudeBaro`, `OperatorAltitudeGeo`, `area_count` removed, auth pages, `self_id_desc_type`, state `mavlink_sysid`/`auth_enabled`) |
 | L | LOW | DroneCAN `Identity` (8192) and `AHRS` (1000) stubs never decoded | `rid_dronecan.c:62-70` | 🟡 LIMITATION - custom wire formats not specified in repo |
 | M | MED | GPS validity never expired while Kalman kept predicting (stale positions transmitted forever) | `esp_remote_id.c:577-580` | ✅ FIXED - absolute 10 s timeout on `last_update_ms` clears `gps_valid` + WARN log |
 | N | MED | OTA upload loop could spin forever on a stalled client | `rid_ota.c:129-157` | ✅ FIXED - `OTA_MAX_IDLE_STALLS=12` consecutive socket timeouts abort (~60 s idle) |
