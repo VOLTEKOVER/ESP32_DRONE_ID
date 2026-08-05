@@ -62,6 +62,25 @@ Scope: all 80+ source files (excluding build artifacts)
 
 ---
 
+## 🔍 Dead Code Audit (2026-08-05)
+
+**Declared but never implemented** (header prototype with no definition anywhere → no link error, dead):
+
+| Function | Declared in | Note |
+|----------|-------------|------|
+| `frdid_build` | `opendroneid.h:778` | Vendored ODID header; impl file `frdid.c` (FRDID / US standard) was never vendored into the project |
+| `frdid_wifi_build_beacon_frame` | `opendroneid.h:775` | Same — FRDID WiFi beacon builder missing |
+
+**Defined but never declared nor called** (dead code):
+
+| Function | Defined in | Note |
+|----------|-----------|------|
+| `rid_ota_is_active` | `rid_ota.c:340` | No header declaration, no caller |
+
+Action options: remove the 2 FRDID prototypes (or vendor `frdid.c`) and drop `rid_ota_is_active`.
+
+---
+
 ## 📋 File Status Summary
 
 ### `ESP32_DRONE_REMOTE_ID_Firmware/`
@@ -71,7 +90,7 @@ Scope: all 80+ source files (excluding build artifacts)
 | `main.c` | 109 | ✅ OK | Entry point, splash |
 | `CMakeLists.txt` (root) | 18 | ✅ OK | Project name, components |
 | `partitions.csv` | 7 | ✅ OK | 4MB OTA dual-slot |
-| `sdkconfig.defaults` | 5 | ✅ OK | BT + SHA-256 defaults |
+| `sdkconfig.defaults` | 16 | ✅ OK | Bluedroid BLE on all 3 targets (GATT/SMP off), partition + flash 4MB defaults |
 
 **Component: `esp_remote_id/`**
 

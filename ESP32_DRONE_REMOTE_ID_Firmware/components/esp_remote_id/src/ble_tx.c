@@ -219,6 +219,26 @@ bool ble_tx_transmit_legacy(rid_gps_data_t *gps, rid_identity_t *identity)
     uint16_t len;
     if (!build_legacy_adv(gps, identity, g_adv_data, sizeof(g_adv_data), &len)) return false;
 
+#if defined(CONFIG_BT_BLE_50_EXTEND_ADV_EN)
+    /* esp32s3/esp32c6: the legacy GAP advertising API is not linked in
+     * Bluedroid when extended advertising is enabled, so broadcast the
+     * legacy-compatible 31-byte adv on the 1M PHY via a dedicated ext adv
+     * instance (instances 0/1 are used by the BLE5 long-range path). */
+    esp_ble_gap_ext_adv_params_t ext_params = {
+        .type = ESP_BLE_GAP_SET_EXT_ADV_PROP_LEGACY_NONCONN,
+        .interval_min = 0x100,
+        .interval_max = 0x100,
+        .channel_map = ADV_CHNL_ALL,
+        .own_addr_type = BLE_ADDR_TYPE_RANDOM,
+        .primary_phy = ESP_BLE_GAP_PHY_1M,
+        .secondary_phy = ESP_BLE_GAP_PHY_1M,
+        .scan_req_notif = false,
+    };
+    esp_ble_gap_ext_adv_set_params(2, &ext_params);
+    esp_ble_gap_config_ext_adv_data_raw(2, len, g_adv_data);
+    esp_ble_gap_ext_adv_t adv = { .instance = 2, .duration = 0, .max_events = 0 };
+    esp_ble_gap_ext_adv_start(1, &adv);
+#else
     esp_ble_adv_params_t adv_params = {
         .adv_int_min = 0x100,
         .adv_int_max = 0x100,
@@ -232,6 +252,7 @@ bool ble_tx_transmit_legacy(rid_gps_data_t *gps, rid_identity_t *identity)
 
     esp_ble_gap_config_adv_data_raw(g_adv_data, len);
     esp_ble_gap_start_advertising(&adv_params);
+#endif
 
     return true;
 #else
