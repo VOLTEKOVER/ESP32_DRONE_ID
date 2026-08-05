@@ -27,8 +27,14 @@ static uint32_t g_last_update = 0;
 static bool g_active = false;
 static bool g_initialized = false;
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Warray-bounds"
 static void decode_fix2(const uint8_t *data, uint8_t len)
 {
+    /* DroneCAN Fix2 (32 bytes) spans multiple classic-CAN frames, so the
+     * len < 32 guard below is never satisfied by a single twai frame
+     * (DLC <= 8). The body is unreachable until multi-frame transfer
+     * reassembly is implemented; bounds reads are suppressed for -Os. */
     if (len < 32) return;
 
     int32_t lat_deg_1e7 = (data[0] << 24) | (data[1] << 16) | (data[2] << 8) | data[3];
@@ -58,6 +64,7 @@ static void decode_fix2(const uint8_t *data, uint8_t len)
     uint8_t num_sats = data[25];
     g_last_gps.satellites = num_sats;
 }
+#pragma GCC diagnostic pop
 
 static void decode_ahrs(const uint8_t *data, uint8_t len)
 {

@@ -79,6 +79,8 @@ Scope: all 80+ source files (excluding build artifacts)
 
 Action options: remove the 2 FRDID prototypes (or vendor `frdid.c`) and drop `rid_ota_is_active`.
 
+**Non-functional feature exposed by `-Os`:** `decode_fix2` (`rid_dronecan.c:36`) reads `data[0..25]` from a classic-CAN frame (`twai_message_t.data[8]`); the `len < 32` guard is never satisfied (DLC ≤ 8), so DroneCAN Fix2 GPS decoding is unreachable until multi-frame transfer reassembly is implemented. `-Warray-bounds` suppressed for that function only (`-Werror` was tripping the whole build).
+
 ---
 
 ## 📋 File Status Summary
