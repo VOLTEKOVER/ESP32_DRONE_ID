@@ -51,13 +51,6 @@ jobs:
           git config --global --add safe.directory "$(pwd)" > /dev/null 2>&1
           cd ESP32_DRONE_REMOTE_ID_Firmware
           idf.py set-target ${{ matrix.target }}
-          echo "CONFIG_PARTITION_TABLE_CUSTOM=y" >> sdkconfig
-          echo "CONFIG_PARTITION_TABLE_CUSTOM_FILENAME=\"partitions.csv\"" >> sdkconfig
-          echo "CONFIG_PARTITION_TABLE_FILENAME=\"partitions.csv\"" >> sdkconfig
-          echo "CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y" >> sdkconfig
-          if [ "${{ matrix.target }}" != "esp32" ]; then
-            echo "CONFIG_BT_NIMBLE_ENABLED=y" >> sdkconfig
-          fi
           export CCACHE_BASEDIR="$PWD"
           idf.py build
         shell: bash

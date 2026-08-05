@@ -296,8 +296,12 @@ bool ble_tx_transmit_lr(rid_gps_data_t *gps, rid_identity_t *identity)
 void ble_tx_set_power(int8_t dbm)
 {
 #if defined(CONFIG_BT_BLUEDROID_ENABLED) && defined(SOC_BT_SUPPORTED)
-    esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_ADV, (esp_power_level_t)((dbm + 12) / 3));
-    esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_SCAN, (esp_power_level_t)((dbm + 12) / 3));
+    if (dbm > 9) dbm = 9;
+    if (dbm < -12) dbm = -12;
+    esp_power_level_t level = (esp_power_level_t)((dbm + 12) / 3);
+    esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, level);
+    esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_ADV, level);
+    esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_SCAN, level);
     ESP_LOGI(TAG, "BLE TX power set to %d dBm", dbm);
 #endif
 }
