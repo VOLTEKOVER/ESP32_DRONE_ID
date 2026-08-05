@@ -90,7 +90,7 @@ Action options: remove the 2 FRDID prototypes (or vendor `frdid.c`) and drop `ri
 | `main.c` | 109 | ✅ OK | Entry point, splash |
 | `CMakeLists.txt` (root) | 18 | ✅ OK | Project name, components |
 | `partitions.csv` | 7 | ✅ OK | 4MB OTA dual-slot |
-| `sdkconfig.defaults` | 16 | ✅ OK | Bluedroid BLE on all 3 targets (GATT/SMP off), partition + flash 4MB defaults |
+| `sdkconfig.defaults` | 17 | ✅ OK | Bluedroid BLE on all 3 targets (GATT/SMP off), size optimization, partition + flash 4MB defaults |
 
 **Component: `esp_remote_id/`**
 
