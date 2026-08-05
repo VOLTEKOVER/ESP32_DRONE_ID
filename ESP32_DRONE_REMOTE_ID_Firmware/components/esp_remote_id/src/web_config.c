@@ -724,9 +724,14 @@ static const httpd_uri_t uri_ota = { "/ota", HTTP_POST, handle_ota, NULL };
 static const httpd_uri_t uri_logs = { "/api/logs", HTTP_GET, handle_get_logs, NULL };
 static const httpd_uri_t uri_cmd = { "/api/command", HTTP_POST, handle_post_command, NULL };
 
-void web_config_init(void)
+void web_config_init(bool enable)
 {
     log_init();
+    if (!enable) {
+        ESP_LOGI(TAG, "Web server disabled by config");
+        return;
+    }
+
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
     config.server_port = 80;
     config.max_uri_handlers = 16;

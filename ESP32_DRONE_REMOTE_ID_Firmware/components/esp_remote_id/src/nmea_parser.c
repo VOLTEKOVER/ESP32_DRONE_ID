@@ -7,14 +7,15 @@
 
 #define TAG "NMEA"
 #define NMEA_BUF_SIZE 256
-#define UART_NMEA UART_NUM_1
 
 static char g_nmea_buf[NMEA_BUF_SIZE];
 static int g_buf_idx = 0;
 static rid_gps_data_t g_last_gps;
+static uint8_t g_uart_port = UART_NUM_1;
 
-void nmea_parser_init(void)
+void nmea_parser_init(uint8_t uart_port)
 {
+    g_uart_port = uart_port;
     memset(&g_last_gps, 0, sizeof(rid_gps_data_t));
     memset(g_nmea_buf, 0, NMEA_BUF_SIZE);
 }
@@ -114,7 +115,7 @@ static void parse_nmea_line(const char *line)
 bool nmea_parser_get(rid_gps_data_t *gps)
 {
     uint8_t buf[64];
-    int len = uart_read_bytes(UART_NMEA, buf, sizeof(buf), 0);
+    int len = uart_read_bytes((uart_port_t)g_uart_port, buf, sizeof(buf), 0);
     for (int i = 0; i < len; i++) {
         uint8_t c = buf[i];
         if (c == '\n' || g_buf_idx >= NMEA_BUF_SIZE - 1) {

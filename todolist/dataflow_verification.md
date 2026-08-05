@@ -1,6 +1,6 @@
 # ESP DRONE REMOTEID — Data Verification (field by field)
 
-Last updated: 2026-08-03
+Last updated: 2026-08-05
 Method: static code audit, one data item at a time. For each field we trace the full chain:
 **producer (parser) → core (rid_task) → consumer (TX / status / LED)** and mark it OK / BUG / DEAD / RISK.
 
@@ -41,16 +41,16 @@ Verdict legend:
 | MAVLink (GPI / ODID_LOC / PACK) | `mavlink_parser.c:110,167,274` | WiFi `wifi_tx.c:186`, BLE `ble_tx.c:58` | ✅ OK |
 | DroneCAN `Fix2` (ellipsoid mm) | `rid_dronecan.c:44` | same | 🟡 RISK — ellipsoid height ≠ height-above-takeoff (ODID `Height` semantics); value semantically wrong |
 | Demo patrol | `rid_patrol.c:19` | same | ✅ OK |
-| **MSP** | — never set | stays 0 | 🔴 **GAP** — MSP mode transmits `Height=0` always |
-| **NMEA** | — never set | stays 0 | 🔴 **GAP** — NMEA mode transmits `Height=0` always |
-| **Takeoff capture** | `esp_remote_id.c:484-490` | only `/api/status` | ⚫ **DEAD** — `takeoff_alt` captured but never used to compute ODID `Height` (ASTM F3411 wants height-above-takeoff) |
+| **MSP** | — never set | stays 0 | ✅ **FIXED (J)** — derived from takeoff in `esp_remote_id.c:496-499` |
+| **NMEA** | — never set | stays 0 | ✅ **FIXED (J)** — derived from takeoff in `esp_remote_id.c:496-499` |
+| **Takeoff capture** | `esp_remote_id.c:487-493` | `/api/status` + ODID `Height` for MSP/NMEA `:496-499` | ✅ **FIXED (J)** — now consumed for `Height` (ASTM F3411 height-above-takeoff); still unused for MAVLink/DroneCAN which provide `altitude_relative` directly |
 
 ### 1.4 `altitude_baro`
 | Producer | Where | Consumer | Verdict |
 |---|---|---|---|
-| MSP | `msp_parser.c:51` | **none** — never read in TX | ⚫ **DEAD** |
-| NMEA `$GPGGA` | `nmea_parser.c:60` | **none** | ⚫ **DEAD** |
-| MAVLink `ODID_LOCATION` | `mavlink_parser.c:168` | **none** | ⚫ **DEAD** |
+| MSP | `msp_parser.c:51` | `PressureAltitude` `wifi_tx.c:187`, `ble_tx.c:59` | ✅ **FIXED (K)** |
+| NMEA `$GPGGA` | `nmea_parser.c:60` | `PressureAltitude` `wifi_tx.c:187`, `ble_tx.c:59` | ✅ **FIXED (K)** |
+| MAVLink `ODID_LOCATION` | `mavlink_parser.c:168` | `PressureAltitude` `wifi_tx.c:187`, `ble_tx.c:59` | ✅ **FIXED (K)** |
 | DroneCAN | — never set | — | — |
 
 ### 1.5 `speed`
@@ -108,7 +108,7 @@ Verdict legend:
 |---|---|---|---|
 | Static config (fallback) | `esp_remote_id.c:502-504` (and demo `:537-539`) | ODID `System` `wifi_tx.c:194-195`, `ble_tx.c:72-73` | ✅ OK |
 | MAVLink op-loc → **`g_state.operator_*`** | `esp_remote_id.c:496-498` | **no consumer** | 🔴 **BUG B** — MAVLink operator location is written to a write-only field; TX always uses static config. Confirmed. |
-| DroneCAN `Identity` (8192) | — | — | 🔴 **stub** `rid_dronecan.c:67-70` — never decoded |
+| DroneCAN `Identity` (8192) | — | — | 🟡 **stub** `rid_dronecan.c:67-70` — never decoded (custom `org.drone_id.Identity` wire format not specified in repo; documented limitation) |
 | `OperatorAltitudeGeo` | — | — | ⚫ **DEAD** — `wifi_tx.c`/`ble_tx.c` set Lat/Lon but never `OperatorAltitudeGeo` (stays 0) |
 
 ---
@@ -122,9 +122,9 @@ Verdict legend:
 | `self_id_text` | config `:476` / MAVLink `:203,302` / demo `:533` | WiFi `wifi_tx.c:200-202`, BLE `ble_tx.c:65-68` | ✅ OK |
 | `id_type`, `ua_type` | config `:477-478` / MAVLink `:182-183,262-263` | WiFi `wifi_tx.c:171-172`, BLE `ble_tx.c:43-44` | ✅ OK |
 | `uas_id_2`, `id_type_2`, `ua_type_2` | config `:479-481` **only** (never from MAVLink) | WiFi `wifi_tx.c:175-180`, BLE `ble_tx.c:47-52` | ✅ OK |
-| `has_self_id`, `self_id_desc_type` | MAVLink `:205-206,305` | **none** — TX hardcodes `ODID_DESC_TYPE_TEXT` | ⚫ **DEAD** |
-| `ext_auth_pages[]`, `has_ext_auth`, `ext_auth_last_page` | MAVLink RX `:214-218,288-292` | **none** — no TX path reads them | 🔴 **BUG D** |
-| Auth signing (`rid_auth_sign_message`) | defined `rid_auth.c:63-102` | **never called anywhere** | ⚫ **DEAD** — `RID_OPT_AUTH_ED25519` only calls `rid_auth_init` (`esp_remote_id.c:175-177`); `AuthValid` never set in `wifi_tx.c`/`ble_tx.c`; ODID `Auth` message is never transmitted |
+| `has_self_id`, `self_id_desc_type` | MAVLink `:205-206,305` | TX `wifi_tx.c:202`, `ble_tx.c:68` | ✅ **FIXED** — DescType now taken from identity when `has_self_id`, else `TEXT` |
+| `ext_auth_pages[]`, `has_ext_auth`, `ext_auth_last_page` | MAVLink RX `:214-220,288-296` | TX `wifi_tx.c:211-249`, `ble_tx.c:81-119` — relay when pages 0..last all received | ✅ **FIXED (D)** — pages + `ext_auth_type`/`ext_auth_length` stored and re-broadcast; priority over local signing |
+| Auth signing (`rid_auth_sign_identity`) | `rid_auth.c:59-108` | `wifi_tx.c:211-226`, `ble_tx.c:81-96` - sets `AuthValid`/`Auth` pages (capped to `ODID_PACK_MAX_MESSAGES`) | ✅ **FIXED (D)** - was `rid_auth_sign_message` never called; replaced with correct wire format (page 0 = 17 B payload) and wired into both TX |
 | `identity_ready` gate sanity | `identity_is_sane` `:117-124` | TX gate `:289-292` | ✅ OK (by design rejects `ESP32-RID-*` / `OP-UNKNOWN`) |
 
 ---
@@ -133,13 +133,13 @@ Verdict legend:
 
 | Field | Writer | Reader | Verdict |
 |---|---|---|---|
-| `gps_valid` | `:456,526,568`; cleared `:570,577` | TX gate, LED, status | ✅ OK |
+| `gps_valid` | `:456,526,568`; cleared `:570,586-593` | TX gate, LED, status | ✅ OK — absolute 10 s timeout now clears it regardless of Kalman predictions |
 | `identity_ready` | `:518,520,543` | TX gate `:291` | ✅ OK |
 | `mavlink_armed` | `:461` | `:463`, lighting `:605` | ✅ OK (MAVLink only) |
-| `mavlink_sysid` (state) | **none** (`mavlink_parser_get_sysid` never called) | — | ⚫ **DEAD** |
-| `operator_lat/lon/alt` (state) | `:496-498` | **none** | 🔴 **BUG B** (write-only) |
-| `operator_position_updated_ms`, `operator_location_type` | `:499-500` | **none** | ⚫ **DEAD** (part of BUG B) |
-| `auth_enabled` (state) | **none** | — | ⚫ **DEAD** |
+| `mavlink_sysid` (state) | `mavlink_parser_get_sysid` in `:463-468` | `/api/status` | ✅ **FIXED** |
+| `operator_lat/lon/alt` (state) | `:496-498` | **none** | ✅ **FIXED (B)** - MAVLink op-loc now written to state `operator_*` and consumed as `System` in both TX |
+| `operator_position_updated_ms`, `operator_location_type` | `:499-500` | **none** | ✅ **FIXED (B)** - part of BUG B |
+| `auth_enabled` (state) | `rid_auth_enabled()` in `esp_rid_init` | `/api/status` | ✅ **FIXED** |
 | `takeoff_lat/lon/alt`, `takeoff_captured` | `:484-490` | `/api/status` only | 🟡 **UNDERUSED** — captured but never used in TX `Height` |
 | `transmissions_count`, `wifi_bcn_count`, `wifi_nan_count`, `ble4_count`, `ble5_count` | `update_transmissions` `:299-324` | `/api/status` | ✅ OK |
 | `last_update_ms` | `:457,528` | 10 s timeout `:576` | ✅ OK |
@@ -157,16 +157,16 @@ Verdict legend:
 | `mavlink_sysid` | yes | filter `:158,230` | ✅ OK |
 | `bcast_powerup` | yes | TX gate `:286` | ✅ OK |
 | `start_delay_ms` | yes | `:149-152` | ✅ OK |
-| `baud_rate` | **partially** | `protocol_detect_init` sets **115200** hardcoded `protocol_detect.c:17`; configured baud applied **only** on `protocol_detect_reinit` (after a config save `:228`), **not at boot** | 🟡 **RISK/BUG** — boot in AUTO mode probes at 115200 regardless of configured 57600 → misdetect or garbage |
-| `uart_port`, `tx_pin`, `rx_pin` | **no** | shown in UI (`webui/app.js:431-433`, `config.html:425-428`) but UART1/pins 17/18 are hardcoded in `protocol_detect.c:26,72` | ⚫ **DEAD config** — changing them does nothing |
-| `webserver_en` | **no** | saved/loaded/displayed but never checked; web server always starts | ⚫ **DEAD config** |
+| `baud_rate` | **partially** | `protocol_detect_init` sets **115200** hardcoded `protocol_detect.c:17`; configured baud applied **only** on `protocol_detect_reinit` (after a config save `:228`), **not at boot** | ✅ **FIXED (H)** - boot baud = 115200 in AUTO, else configured `baud_rate` (`protocol_detect_init` takes `baud`; `esp_remote_id.c:149-158`) |
+| `uart_port`, `tx_pin`, `rx_pin` | **no** | shown in UI (`webui/app.js:431-433`, `config.html:425-428`) but UART1/pins 17/18 are hardcoded in `protocol_detect.c:26,72` | ✅ **FIXED (I)** - `protocol_detect_init/reinit` take `uart_port`/`tx_pin`/`rx_pin` and configure the UART; `web_config_init(bool)` honors `webserver_en` |
+| `webserver_en` | **no** | saved/loaded/displayed but never checked; web server always starts | ✅ **FIXED (I)** - web server now started only when `webserver_en` set |
 | `ws2812_gpio`, `ws2812_brightness` | yes | `esp_remote_id.c:180,232` | ✅ OK |
 | `led_r/g/b_gpio` | yes | `led_status_reconfigure` `:211,231` | ✅ OK |
 | `lighting_*[5]` | yes | `rid_lighting_init` `:183-189` | ✅ OK |
 | `dronecan_rx/tx_gpio`, `dronecan_bitrate` | yes | `rid_dronecan_init` `:192-195` | ✅ OK |
-| `mavlink_usb_enable` | **partial** | init only `:198-200` — nothing writes MAVLink to the USB UART | ⚫ **DEAD feature** |
+| `mavlink_usb_enable` | yes | `rid_mavlink_usb_init` + mirror in `rid_mavlink_tx.c:send_mavlink_message`; TX task started when enabled | ✅ **FIXED** - MAVLink heartbeat/state written to USB UART |
 | `ota_trigger_gpio` | yes | `rid_ota_check_and_run` | ✅ OK |
-| `auth_private_key` | **partial** | parsed in `rid_auth_init` but never used for signing | 🔴 **BUG D** |
+| `auth_private_key` | **partial** | parsed in `rid_auth_init` but never used for signing | ✅ **FIXED (D)** - key parsed and used by `rid_auth_sign_identity` |
 | `public_keys[5]` | yes | signature verify `rid_security.c:118-160` | ✅ OK |
 
 ---
@@ -175,26 +175,31 @@ Verdict legend:
 
 | Path | Pack | Result | Verdict |
 |---|---|---|---|
-| WiFi Beacon | `odid_wifi_build_message_pack_beacon_frame` (`wifi.c:438`) via `esp_wifi_80211_tx` 4-attempt fallback | BasicID+Location+System+SelfID+OperatorID | ✅ OK (subject to BUG A/B) |
+| WiFi Beacon | `odid_wifi_build_message_pack_beacon_frame` (`wifi.c:438`) via `esp_wifi_80211_tx` 4-attempt fallback | BasicID+Location+System+SelfID+OperatorID+Auth | ✅ OK |
 | WiFi NAN | `odid_wifi_build_message_pack_nan_action_frame` (`wifi.c:357`) | same | ✅ OK |
-| **BLE 4.x legacy** | `build_legacy_adv` `ble_tx.c:96-128` | comment says "one message/cycle" but code copies **the whole pack** (`pack_len`, no rotation) into `g_adv_data`; total adv = 11 B header + pack → **>31 B legacy limit** → `esp_ble_gap_config_adv_data_raw` rejected/truncated | 🔴 **BUG F** — legacy BLE advertising is broken (whole pack in 31-byte ADV; no per-message rotation) |
+| **BLE 4.x legacy** | `build_legacy_adv` `ble_tx.c:96-128` | comment says "one message/cycle" but code copies **the whole pack** (`pack_len`, no rotation) into `g_adv_data`; total adv = 11 B header + pack → **>31 B legacy limit** → `esp_ble_gap_config_adv_data_raw` rejected/truncated | ✅ **FIXED (F)** - `build_legacy_adv` `ble_tx.c:97-170` now builds exactly one 25-byte message per 31-byte ADV (Service Data 0xFFFA + app code 0x0D + counter) and rotates messages across cycles |
 | BLE 5.0 long-range | ext adv instances 0/1 (`ble_tx.c:178-230`) | full pack, 254 B OK | ✅ OK |
-| **MAVLink TX** (UART1) | heartbeat every 1 s + `OPEN_DRONE_ID_SYSTEM` every 6 s | **hardcoded dummy payload** `rid_mavlink_tx.c:52-54`: `id_or_mac={0}`, `operator_lat/lon=-1000.0f`, all zeros — reads **no** `g_state` | 🔴 **BUG E** — the "operator location loop" transmits garbage; real state never read |
-| MAVLink USB | `rid_mavlink_usb_init` | installs UART on console port only; **no writer** | ⚫ **DEAD feature** |
-| ODID `Auth` message | — | `AuthValid` never set anywhere | ⚫ **DEAD** (BUG D) |
+| **MAVLink TX** (UART1) | heartbeat every 1 s + `OPEN_DRONE_ID_SYSTEM` every 6 s | **hardcoded dummy payload** `rid_mavlink_tx.c:52-54`: `id_or_mac={0}`, `operator_lat/lon=-1000.0f`, all zeros — reads **no** `g_state` | ✅ **FIXED (E)** - SYSTEM now built from `mavlink_parser_get_operator_location` real state (`rid_mavlink_tx.c:48-72`) |
+| MAVLink USB | `rid_mavlink_usb_init` | mirrors heartbeat + `OPEN_DRONE_ID_SYSTEM` from `rid_mavlink_tx_task` to the USB UART | ✅ **FIXED** - writer added (`rid_mavlink_usb_write`) |
+| ODID `Auth` message | — | `AuthValid` never set anywhere | ✅ **FIXED (D)** - `AuthValid`/`Auth` pages set from Ed25519 signing (`wifi_tx.c:211-226`, `ble_tx.c:81-96`) |
 
 ---
 
-## 6) Summary of issues found (new, beyond the known A/B)
+## 6) Summary of issues found and fix status
 
-| # | Severity | Issue | Location |
-|---|---|---|---|
-| C | HIGH | `armed` always overwritten to false for non-MAVLink protocols | `esp_remote_id.c:463` |
-| D | HIGH | Ed25519 auth configured but **never transmitted**; MAVLink-relayed auth pages also never re-broadcast | `rid_auth.c:63` (uncalled), `wifi_tx.c:166-207`, `ble_tx.c:38-77` |
-| E | HIGH | MAVLink TX sends hardcoded zero/−1000 SYSTEM payload, never real operator/state | `rid_mavlink_tx.c:52-54` |
-| F | HIGH | BLE 4.x legacy advertising broken: whole pack (>31 B) in one legacy ADV, no message rotation | `ble_tx.c:96-128` |
-| G | HIGH | MSP `fix_type>=3` gate never passes on Betaflight/iNav (max 2) → MSP mode dead in practice | `msp_parser.c:122` |
-| H | MED | Boot ignores configured `baud_rate` (AUTO probes at hardcoded 115200) | `protocol_detect.c:17`, `esp_remote_id.c:149-152` |
-| I | MED | `uart_port`/`tx_pin`/`rx_pin`/`webserver_en` config fields are dead (never honored) | `protocol_detect.c:26,72`, `web_config.c` |
-| J | MED | NMEA/MSP never set `altitude_relative` → ODID `Height=0` | `nmea_parser.c`, `msp_parser.c` |
-| K | LOW | `takeoff_*` captured but never used in TX; `altitude_baro` never transmitted; state `mavlink_sysid`/`auth_enabled` never written; `area_count` misused as `satellites` | various |
+| # | Severity | Issue | Location | Status |
+|---|---|---|---|---|
+| C | HIGH | `armed` always overwritten to false for non-MAVLink protocols | `esp_remote_id.c:463` | ✅ FIXED (commit `8b5361b`) |
+| D | HIGH | Ed25519 auth configured but **never transmitted**; MAVLink-relayed auth pages also never re-broadcast | `rid_auth.c` (uncalled), `wifi_tx.c`, `ble_tx.c` | ✅ FIXED - self-signing wired (`rid_auth_sign_identity`, page-0 wire format corrected) AND MAVLink-relayed auth pages re-broadcast (priority over local signing) |
+| E | HIGH | MAVLink TX sends hardcoded zero/−1000 SYSTEM payload, never real operator/state | `rid_mavlink_tx.c:52-54` | ✅ FIXED (uses `mavlink_parser_get_operator_location`) |
+| F | HIGH | BLE 4.x legacy advertising broken: whole pack (>31 B) in one legacy ADV, no message rotation | `ble_tx.c:96-128` | ✅ FIXED (31-byte ADV, one rotated message + counter) |
+| G | HIGH | MSP `fix_type>=3` gate never passes on Betaflight/iNav (max 2) → MSP mode dead in practice | `msp_parser.c:122` | ✅ FIXED (commit `8b5361b`, gate `>=2`) |
+| H | MED | Boot ignores configured `baud_rate` (AUTO probes at hardcoded 115200) | `protocol_detect.c:17`, `esp_remote_id.c:149-152` | ✅ FIXED (boot baud = 115200 in AUTO, else configured) |
+| I | MED | `uart_port`/`tx_pin`/`rx_pin`/`webserver_en` config fields are dead (never honored) | `protocol_detect.c:26,72`, `web_config.c` | ✅ FIXED (UART config + `web_config_init(bool)`) |
+| J | MED | NMEA/MSP never set `altitude_relative` → ODID `Height=0` | `nmea_parser.c`, `msp_parser.c` | ✅ FIXED (`esp_remote_id.c` computes from takeoff) |
+| K | LOW | `takeoff_*` captured but never used in TX; `altitude_baro` never transmitted; state `mavlink_sysid`/`auth_enabled` never written; `area_count` misused as `satellites` | various | ✅ FIXED (`PressureAltitude`, `OperatorAltitudeGeo`, `area_count` removed, auth pages, `self_id_desc_type`, state `mavlink_sysid`/`auth_enabled`) |
+| L | LOW | DroneCAN `Identity` (8192) and `AHRS` (1000) stubs never decoded | `rid_dronecan.c:62-70` | 🟡 LIMITATION - custom wire formats not specified in repo |
+| M | MED | GPS validity never expired while Kalman kept predicting (stale positions transmitted forever) | `esp_remote_id.c:577-580` | ✅ FIXED - absolute 10 s timeout on `last_update_ms` clears `gps_valid` + WARN log |
+| N | MED | OTA upload loop could spin forever on a stalled client | `rid_ota.c:129-157` | ✅ FIXED - `OTA_MAX_IDLE_STALLS=12` consecutive socket timeouts abort (~60 s idle) |
+| O | MED | Factory reset wiped provisioned public keys (device had to be re-keyed / could be unlocked) | `rid_ota.c` factory reset, `esp_rid_factory_reset` | ✅ FIXED - `nvs_storage_reset_preserve_keys()` preserves pubkey1..5, erases only config |
+| P | LOW | CLI could read config but not write it (no parity with web UI) | `cli.c` `cmd_config` | ✅ FIXED - `config set <field> <value>` for 20+ fields |

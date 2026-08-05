@@ -6,10 +6,6 @@
 
 #define TAG "RID_AUTH"
 
-#ifndef ODID_AUTH_PAGE_DATA_SIZE
-#define ODID_AUTH_PAGE_DATA_SIZE (ODID_AUTH_PAGE_SIZE - 5)
-#endif
-
 static bool g_auth_initialized = false;
 static bool g_auth_enabled = false;
 static mbedtls_pk_context g_pk;
@@ -60,43 +56,53 @@ bool rid_auth_enabled(void)
     return g_auth_initialized && g_auth_enabled;
 }
 
-bool rid_auth_sign_message(uint8_t msg_type, const uint8_t *msg_data, uint8_t msg_len,
-                           uint8_t page_buf[ODID_AUTH_PAGE_SIZE], uint8_t *page_count)
+bool rid_auth_sign_identity(const char *uas_id, ODID_Auth_data *auth_out, uint8_t *page_count)
 {
     if (!g_auth_enabled || !g_auth_initialized) return false;
+    if (!uas_id || uas_id[0] == '\0') return false;
 
+    size_t id_len = strlen(uas_id);
     uint8_t sig[RID_AUTH_SIG_SIZE];
     size_t sig_len = 0;
 
-    int ret = mbedtls_pk_sign(&g_pk, MBEDTLS_MD_NONE, msg_data, msg_len,
-                             sig, sizeof(sig), &sig_len);
-    if (ret != 0) {
+    int ret = mbedtls_pk_sign(&g_pk, MBEDTLS_MD_NONE,
+                              (const unsigned char *)uas_id, id_len,
+                              sig, sizeof(sig), &sig_len);
+    if (ret != 0 || sig_len == 0) {
         char err[128];
         mbedtls_strerror(ret, err, sizeof(err));
         ESP_LOGE(TAG, "Sign failed: %s", err);
         return false;
     }
 
-    uint8_t pages_needed = (sig_len + ODID_AUTH_PAGE_DATA_SIZE - 1) / ODID_AUTH_PAGE_DATA_SIZE;
-    if (pages_needed > ODID_AUTH_MAX_PAGES) {
-        ESP_LOGW(TAG, "Auth exceeds max pages (%d > %d)", pages_needed, ODID_AUTH_MAX_PAGES);
+    /* Page 0 carries ODID_AUTH_PAGE_ZERO_DATA_SIZE bytes, later pages carry
+     * ODID_AUTH_PAGE_NONZERO_DATA_SIZE bytes each. */
+    uint8_t pages = 1;
+    if (sig_len > ODID_AUTH_PAGE_ZERO_DATA_SIZE) {
+        pages += (uint8_t)((sig_len - ODID_AUTH_PAGE_ZERO_DATA_SIZE +
+                            ODID_AUTH_PAGE_NONZERO_DATA_SIZE - 1) /
+                           ODID_AUTH_PAGE_NONZERO_DATA_SIZE);
+    }
+    if (pages > ODID_AUTH_MAX_PAGES) {
+        ESP_LOGW(TAG, "Auth exceeds max pages (%d > %d)", pages, ODID_AUTH_MAX_PAGES);
         return false;
     }
 
-    *page_count = pages_needed;
-    for (uint8_t p = 0; p < pages_needed; p++) {
-        memset(page_buf + p * ODID_AUTH_PAGE_SIZE, 0, ODID_AUTH_PAGE_SIZE);
-        page_buf[p * ODID_AUTH_PAGE_SIZE + 0] = msg_type;
-        page_buf[p * ODID_AUTH_PAGE_SIZE + 1] = p;
-        page_buf[p * ODID_AUTH_PAGE_SIZE + 2] = pages_needed - 1;
-        page_buf[p * ODID_AUTH_PAGE_SIZE + 3] = 0;
-        uint8_t copy_len = ODID_AUTH_PAGE_DATA_SIZE;
-        if (p == pages_needed - 1) {
-            copy_len = sig_len - p * ODID_AUTH_PAGE_DATA_SIZE;
-        }
-        page_buf[p * ODID_AUTH_PAGE_SIZE + 4] = 7;
-        memcpy(page_buf + p * ODID_AUTH_PAGE_SIZE + 5, sig + p * ODID_AUTH_PAGE_DATA_SIZE, copy_len);
+    uint8_t offset = 0;
+    for (uint8_t p = 0; p < pages; p++) {
+        memset(&auth_out[p], 0, sizeof(ODID_Auth_data));
+        auth_out[p].DataPage = p;
+        auth_out[p].AuthType = ODID_AUTH_UAS_ID_SIGNATURE;
+        auth_out[p].LastPageIndex = pages - 1;
+        auth_out[p].Length = (uint8_t)sig_len;
+
+        uint8_t cap = (p == 0) ? ODID_AUTH_PAGE_ZERO_DATA_SIZE
+                               : ODID_AUTH_PAGE_NONZERO_DATA_SIZE;
+        uint8_t chunk = (sig_len - offset < cap) ? (uint8_t)(sig_len - offset) : cap;
+        memcpy(auth_out[p].AuthData, sig + offset, chunk);
+        offset += chunk;
     }
 
+    *page_count = pages;
     return true;
 }

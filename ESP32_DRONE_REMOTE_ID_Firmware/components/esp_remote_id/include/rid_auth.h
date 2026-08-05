@@ -3,15 +3,17 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "esp_remote_id.h"
+#include "opendroneid.h"
 
 #define RID_AUTH_KEY_SIZE 32
 #define RID_AUTH_SIG_SIZE 64
-#define ODID_AUTH_PAGE_SIZE 23
 
 bool rid_auth_init(const char *pem_key);
 bool rid_auth_enabled(void);
-bool rid_auth_sign_message(uint8_t msg_type, const uint8_t *msg_data, uint8_t msg_len,
-                           uint8_t page_buf[ODID_AUTH_PAGE_SIZE], uint8_t *page_count);
+
+/* Signs the UAS ID with the configured Ed25519 key and fills the ODID
+ * Auth message data pages (AuthType = ODID_AUTH_UAS_ID_SIGNATURE).
+ * Returns true and sets *page_count when at least one page was produced. */
+bool rid_auth_sign_identity(const char *uas_id, ODID_Auth_data *auth_out, uint8_t *page_count);
 
 #endif

@@ -12,6 +12,7 @@
 #include "esp_netif.h"
 #include "wifi_tx.h"
 #include "opendroneid.h"
+#include "rid_auth.h"
 #include "odid_wifi.h"
 #include "esp_remote_id.h"
 
@@ -184,6 +185,7 @@ static void populate_uas_data(ODID_UAS_Data *d, rid_gps_data_t *gps, rid_identit
     d->Location.Longitude = gps->longitude;
     d->Location.AltitudeGeo = gps->altitude_msl;
     d->Location.Height = gps->altitude_relative;
+    d->Location.PressureAltitude = gps->altitude_baro;
     d->Location.SpeedHorizontal = gps->speed;
     d->Location.Direction = gps->heading;
     d->Location.SpeedVertical = gps->speed_vertical;
@@ -193,17 +195,54 @@ static void populate_uas_data(ODID_UAS_Data *d, rid_gps_data_t *gps, rid_identit
     d->SystemValid = 1;
     d->System.OperatorLatitude = gps->operator_lat;
     d->System.OperatorLongitude = gps->operator_lon;
+    d->System.OperatorAltitudeGeo = gps->operator_alt;
     d->System.AreaCount = 0;
     d->System.AreaRadius = 0;
 
     if (identity->self_id_text[0] != '\0') {
         d->SelfIDValid = 1;
-        d->SelfID.DescType = ODID_DESC_TYPE_TEXT;
+        d->SelfID.DescType = identity->has_self_id
+                                 ? (ODID_desctype_t)identity->self_id_desc_type
+                                 : ODID_DESC_TYPE_TEXT;
         strncpy((char *)d->SelfID.Desc, identity->self_id_text, ODID_STR_SIZE);
     }
 
     d->OperatorIDValid = 1;
     strncpy((char *)d->OperatorID.OperatorId, identity->operator_id, ODID_ID_SIZE);
+
+    /* Authentication: MAVLink-relayed pages take priority, otherwise sign locally */
+    uint8_t auth_pages = 0;
+    ODID_Auth_data auth[ODID_AUTH_MAX_PAGES];
+
+    if (identity->has_ext_auth && identity->ext_auth_last_page < ODID_AUTH_MAX_PAGES) {
+        uint16_t last = identity->ext_auth_last_page;
+        uint16_t need = (uint16_t)((1u << (last + 1)) - 1);
+        if ((identity->ext_auth_pages_received & need) == need) {
+            for (uint16_t p = 0; p <= last; p++) {
+                memset(&auth[p], 0, sizeof(ODID_Auth_data));
+                auth[p].DataPage = (uint8_t)p;
+                auth[p].AuthType = (ODID_authtype_t)identity->ext_auth_type;
+                auth[p].LastPageIndex = identity->ext_auth_last_page;
+                auth[p].Length = identity->ext_auth_length;
+                memcpy(auth[p].AuthData, identity->ext_auth_pages[p],
+                       ODID_AUTH_PAGE_NONZERO_DATA_SIZE);
+            }
+            auth_pages = (uint8_t)(last + 1);
+        }
+    } else if (rid_auth_enabled()) {
+        (void)rid_auth_sign_identity(identity->uas_id, auth, &auth_pages);
+    }
+
+    if (auth_pages > 0) {
+        uint8_t fixed = 1 + (identity->uas_id_2[0] ? 1 : 0) + 1 +
+                        (identity->self_id_text[0] ? 1 : 0) + 1 + 1;
+        if (auth_pages <= ODID_PACK_MAX_MESSAGES - fixed) {
+            for (uint8_t p = 0; p < auth_pages; p++) {
+                d->Auth[p] = auth[p];
+                d->AuthValid[p] = 1;
+            }
+        }
+    }
 }
 
 bool wifi_tx_transmit(rid_gps_data_t *gps, rid_identity_t *identity)

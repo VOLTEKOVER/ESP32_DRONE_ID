@@ -151,10 +151,13 @@ void esp_rid_init(void)
         vTaskDelay(pdMS_TO_TICKS(g_config.start_delay_ms));
     }
 
-    protocol_detect_init();
-    nmea_parser_init();
-    msp_parser_init();
-    mavlink_parser_init();
+    /* Probe at 115200 for AUTO detection; honour the configured baud for a fixed protocol */
+    uint32_t boot_baud = (g_config.protocol == RID_PROTOCOL_AUTO) ? 115200 : g_config.baud_rate;
+    if (boot_baud == 0) boot_baud = 115200;
+    protocol_detect_init(g_config.uart_port, g_config.tx_pin, g_config.rx_pin, boot_baud);
+    nmea_parser_init(g_config.uart_port);
+    msp_parser_init(g_config.uart_port);
+    mavlink_parser_init(g_config.uart_port);
     mavlink_parser_set_sysid_filter(g_config.mavlink_sysid);
 
     esp_netif_init();
@@ -166,8 +169,9 @@ void esp_rid_init(void)
     ble_tx_set_power(9);
 
     /* MAVLink bidirectional link */
-    if (g_config.options & (RID_OPT_MAVLINK_ARM_STATUS | RID_OPT_MAVLINK_OP_LOC_LOOP)) {
-        rid_mavlink_tx_init();
+    if (g_config.options & (RID_OPT_MAVLINK_ARM_STATUS | RID_OPT_MAVLINK_OP_LOC_LOOP) ||
+        g_config.mavlink_usb_enable) {
+        rid_mavlink_tx_init(g_config.uart_port);
         xTaskCreate(rid_mavlink_tx_task, "rid_mavlink_tx", 2048, NULL, 3, NULL);
     }
 
@@ -175,6 +179,7 @@ void esp_rid_init(void)
     if (g_config.options & RID_OPT_AUTH_ED25519) {
         rid_auth_init(g_config.auth_private_key);
     }
+    g_state.auth_enabled = rid_auth_enabled();
 
     /* WS2812 addressable LED */
     led_ws2812_init(g_config.ws2812_gpio, g_config.ws2812_brightness);
@@ -209,7 +214,7 @@ void esp_rid_init(void)
     }
 
     led_status_reconfigure(g_config.led_r_gpio, g_config.led_g_gpio, g_config.led_b_gpio);
-    web_config_init();
+    web_config_init(g_config.webserver_en != 0);
 
     cli_init();
 
@@ -225,7 +230,7 @@ void esp_rid_set_config(const rid_config_t *config)
         memcpy(&g_config, config, sizeof(rid_config_t));
         nvs_storage_save(&g_config);
         if (g_config.baud_rate != old_baud && g_config.baud_rate > 0) {
-            protocol_detect_reinit(g_config.baud_rate);
+            protocol_detect_reinit(g_config.uart_port, g_config.tx_pin, g_config.rx_pin, g_config.baud_rate);
         }
         mavlink_parser_set_sysid_filter(g_config.mavlink_sysid);
         led_status_reconfigure(g_config.led_r_gpio, g_config.led_g_gpio, g_config.led_b_gpio);
@@ -254,11 +259,18 @@ void esp_rid_get_state(rid_state_t *state)
 
 void esp_rid_factory_reset(void)
 {
-    nvs_storage_erase();
+    char keys[ESP_RID_NUM_KEYS][ESP_RID_MAX_KEY_LEN + 1];
+    memset(keys, 0, sizeof(keys));
+
     if (g_lock && xSemaphoreTake(g_lock, pdMS_TO_TICKS(100)) == pdTRUE) {
+        for (int i = 0; i < ESP_RID_NUM_KEYS; i++)
+            strncpy(keys[i], g_config.public_keys[i], sizeof(keys[i]));
         default_config(&g_config);
+        for (int i = 0; i < ESP_RID_NUM_KEYS; i++)
+            strncpy(g_config.public_keys[i], keys[i], sizeof(g_config.public_keys[i]));
         xSemaphoreGive(g_lock);
     }
+    nvs_storage_reset_preserve_keys();
     nvs_storage_save(&g_config);
 }
 
@@ -460,6 +472,10 @@ static void rid_task(void *arg)
                 if (proto == RID_PROTOCOL_MAVLINK) {
                     mavlink_parser_get_armed(&g_state.mavlink_armed);
                     g_state.gps.armed = g_state.mavlink_armed;
+                    uint8_t sysid = 0;
+                    if (mavlink_parser_get_sysid(&sysid)) {
+                        g_state.mavlink_sysid = sysid;
+                    }
                 }
 
                 rid_identity_t mav_id;
@@ -489,6 +505,12 @@ static void rid_task(void *arg)
                     g_state.takeoff_captured = true;
                 }
 
+                /* MSP/NMEA do not provide relative altitude; derive it from takeoff */
+                if ((proto == RID_PROTOCOL_MSP || proto == RID_PROTOCOL_NMEA) &&
+                    g_state.takeoff_captured) {
+                    g_state.gps.altitude_relative = g_state.gps.altitude_msl - g_state.takeoff_alt;
+                }
+
                 /* Update operator location from MAVLink */
                 double op_lat, op_lon;
                 float op_alt;
@@ -498,6 +520,10 @@ static void rid_task(void *arg)
                     g_state.operator_alt = op_alt;
                     g_state.operator_position_updated_ms = xTaskGetTickCount() * portTICK_PERIOD_MS;
                     g_state.operator_location_type = 1;
+                    /* Also feed the TX paths, which read gps->operator_* */
+                    g_state.gps.operator_lat = op_lat;
+                    g_state.gps.operator_lon = op_lon;
+                    g_state.gps.operator_alt = op_alt;
                 } else {
                     g_state.gps.operator_lat = g_config.operator_lat;
                     g_state.gps.operator_lon = g_config.operator_lon;
@@ -572,10 +598,12 @@ static void rid_task(void *arg)
         }
 
         uint32_t now_ms = xTaskGetTickCount() * portTICK_PERIOD_MS;
-        if (!kalman_en || !rid_kalman_valid_age(&g_kalman, now_us)) {
-            if (g_state.gps_valid && (now_ms - g_state.last_update_ms > 10000)) {
-                g_state.gps_valid = false;
-            }
+        /* Absolute GPS timeout: without fresh parser data, GPS is stale
+         * regardless of Kalman predictions. */
+        if (g_state.gps_valid && (now_ms - g_state.last_update_ms > 10000)) {
+            g_state.gps_valid = false;
+            ESP_LOGW(TAG, "GPS data stale (no fix for %lu ms)",
+                     (unsigned long)(now_ms - g_state.last_update_ms));
         }
 
         if (had_gps) {

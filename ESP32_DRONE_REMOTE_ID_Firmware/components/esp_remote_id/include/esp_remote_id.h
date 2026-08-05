@@ -85,6 +85,8 @@ typedef struct {
     /* Authentication from MAVLink relay */
     bool has_ext_auth;
     uint8_t ext_auth_last_page;
+    uint8_t ext_auth_type;
+    uint8_t ext_auth_length;
     uint16_t ext_auth_pages_received;
     uint8_t ext_auth_pages[ODID_AUTH_MAX_PAGES][ODID_MESSAGE_SIZE];
 } rid_identity_t;

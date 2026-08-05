@@ -50,7 +50,7 @@ typedef struct { const char *name; const char *help; int (*func)(int, char**); }
 static const cmd_t cmds[] = {
     { "help",     "Show this help", cmd_help },
     { "status",   "Show system status (protocol, GPS, TX, heap, uptime)", cmd_status },
-    { "config",   "Show current configuration", cmd_config },
+    { "config",   "Show/set configuration: config [set <field> <value>]", cmd_config },
     { "restart",  "Restart the device", cmd_restart },
     { "reboot",   "Restart the device (alias)", cmd_restart },
     { "reset",    "Factory reset and restart", cmd_reset },
@@ -108,6 +108,56 @@ static int cmd_config(int argc, char **argv)
 {
     rid_config_t cfg;
     esp_rid_get_config(&cfg);
+
+    if (argc >= 2 && strcasecmp(argv[1], "set") == 0) {
+        if (argc < 4) {
+            printf("Usage: config set <field> <value>\n");
+            return 1;
+        }
+        const char *f = argv[2];
+        const char *v = argv[3];
+
+        if (strcasecmp(f, "uas_id") == 0 || strcasecmp(f, "operator_id") == 0 ||
+            strcasecmp(f, "self_id") == 0 || strcasecmp(f, "wifi_ssid") == 0 ||
+            strcasecmp(f, "wifi_password") == 0) {
+            char *dst;
+            size_t dst_len;
+            if (strcasecmp(f, "uas_id") == 0) { dst = cfg.uas_id; dst_len = sizeof(cfg.uas_id); }
+            else if (strcasecmp(f, "operator_id") == 0) { dst = cfg.operator_id; dst_len = sizeof(cfg.operator_id); }
+            else if (strcasecmp(f, "self_id") == 0) { dst = cfg.self_id_text; dst_len = sizeof(cfg.self_id_text); }
+            else if (strcasecmp(f, "wifi_ssid") == 0) { dst = cfg.wifi_ssid; dst_len = sizeof(cfg.wifi_ssid); }
+            else { dst = cfg.wifi_password; dst_len = sizeof(cfg.wifi_password); }
+            strncpy(dst, v, dst_len - 1);
+            dst[dst_len - 1] = '\0';
+        } else if (strcasecmp(f, "ua_type") == 0) cfg.ua_type = (uint8_t)strtol(v, NULL, 0);
+        else if (strcasecmp(f, "id_type") == 0) cfg.id_type = (uint8_t)strtol(v, NULL, 0);
+        else if (strcasecmp(f, "wifi_channel") == 0) cfg.wifi_channel = (uint8_t)strtol(v, NULL, 0);
+        else if (strcasecmp(f, "mavlink_sysid") == 0) cfg.mavlink_sysid = (uint8_t)strtol(v, NULL, 0);
+        else if (strcasecmp(f, "bcast_powerup") == 0) cfg.bcast_powerup = (uint8_t)strtol(v, NULL, 0);
+        else if (strcasecmp(f, "webserver") == 0) cfg.webserver_en = (uint8_t)(strcasecmp(v, "on") == 0 || strtol(v, NULL, 0) != 0);
+        else if (strcasecmp(f, "lock_level") == 0) cfg.lock_level = (int8_t)strtol(v, NULL, 0);
+        else if (strcasecmp(f, "baud_rate") == 0) cfg.baud_rate = (uint32_t)strtoul(v, NULL, 0);
+        else if (strcasecmp(f, "wifi_power_dbm") == 0) cfg.wifi_power_dbm = (float)strtod(v, NULL);
+        else if (strcasecmp(f, "wifi_bcn_rate") == 0) cfg.wifi_bcn_rate_hz = (float)strtod(v, NULL);
+        else if (strcasecmp(f, "wifi_nan_rate") == 0) cfg.wifi_nan_rate_hz = (float)strtod(v, NULL);
+        else if (strcasecmp(f, "ble4_rate") == 0) cfg.ble4_rate_hz = (float)strtod(v, NULL);
+        else if (strcasecmp(f, "ble4_power") == 0) cfg.ble4_power_dbm = (float)strtod(v, NULL);
+        else if (strcasecmp(f, "ble5_rate") == 0) cfg.ble5_rate_hz = (float)strtod(v, NULL);
+        else if (strcasecmp(f, "ble5_power") == 0) cfg.ble5_power_dbm = (float)strtod(v, NULL);
+        else if (strcasecmp(f, "operator_lat") == 0) cfg.operator_lat = strtod(v, NULL);
+        else if (strcasecmp(f, "operator_lon") == 0) cfg.operator_lon = strtod(v, NULL);
+        else if (strcasecmp(f, "operator_alt") == 0) cfg.operator_alt = (float)strtod(v, NULL);
+        else if (strcasecmp(f, "start_delay_ms") == 0) cfg.start_delay_ms = (uint32_t)strtoul(v, NULL, 0);
+        else {
+            printf("Unknown field: %s\n", f);
+            return 1;
+        }
+
+        esp_rid_set_config(&cfg);
+        printf("  %s set to '%s'\n", f, v);
+        return 0;
+    }
+
     printf("\n  Configuration:\n\n");
     printf("  Protocol    : %s\n", proto_name(cfg.protocol));
     printf("  UART        : port=%d baud=%lu tx=%d rx=%d\n", cfg.uart_port, (unsigned long)cfg.baud_rate, cfg.tx_pin, cfg.rx_pin);
@@ -128,7 +178,12 @@ static int cmd_config(int argc, char **argv)
     printf("  Options     : 0x%02x  (Kalman=%s)\n", cfg.options,
            (cfg.options & RID_OPT_KALMAN_FILTER) ? "ON" : "OFF");
     printf("  Web server  : %s\n", cfg.webserver_en ? "enabled" : "disabled");
-    printf("  Lock level  : %d\n\n", cfg.lock_level);
+    printf("  Lock level  : %d\n", cfg.lock_level);
+    printf("  Fields      : uas_id operator_id self_id wifi_ssid wifi_password ua_type id_type\n");
+    printf("                wifi_channel mavlink_sysid bcast_powerup webserver lock_level\n");
+    printf("                baud_rate wifi_power_dbm wifi_bcn_rate wifi_nan_rate ble4_rate\n");
+    printf("                ble4_power ble5_rate ble5_power operator_lat operator_lon\n");
+    printf("                operator_alt start_delay_ms\n\n");
     return 0;
 }
 

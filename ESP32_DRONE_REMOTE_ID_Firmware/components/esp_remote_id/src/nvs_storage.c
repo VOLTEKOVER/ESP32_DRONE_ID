@@ -188,3 +188,31 @@ void nvs_storage_erase(void)
         nvs_close(h);
     }
 }
+
+void nvs_storage_reset_preserve_keys(void)
+{
+    char keys[ESP_RID_NUM_KEYS][ESP_RID_MAX_KEY_LEN + 1];
+    memset(keys, 0, sizeof(keys));
+
+    nvs_handle_t h;
+    if (nvs_open(NS, NVS_READWRITE, &h) != ESP_OK) return;
+
+    for (int i = 0; i < ESP_RID_NUM_KEYS; i++) {
+        char key[16];
+        snprintf(key, sizeof(key), "pubkey%d", i + 1);
+        load_str(h, key, keys[i], ESP_RID_MAX_KEY_LEN + 1, "");
+    }
+
+    nvs_erase_all(h);
+
+    for (int i = 0; i < ESP_RID_NUM_KEYS; i++) {
+        if (keys[i][0] != '\0') {
+            char key[16];
+            snprintf(key, sizeof(key), "pubkey%d", i + 1);
+            store_str(h, key, keys[i]);
+        }
+    }
+
+    nvs_commit(h);
+    nvs_close(h);
+}

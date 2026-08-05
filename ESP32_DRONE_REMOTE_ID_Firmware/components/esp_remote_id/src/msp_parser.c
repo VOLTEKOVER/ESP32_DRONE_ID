@@ -6,7 +6,6 @@
 
 #define TAG "MSP"
 #define MSP_BUF_SIZE 256
-#define UART_MSP UART_NUM_1
 
 #define MSP_RAW_GPS 106
 #define MSP_ATTITUDE 108
@@ -16,9 +15,11 @@ static uint8_t g_msp_buf[MSP_BUF_SIZE];
 static int g_buf_idx = 0;
 static bool g_in_message = false;
 static rid_gps_data_t g_last_gps;
+static uint8_t g_uart_port = UART_NUM_1;
 
-void msp_parser_init(void)
+void msp_parser_init(uint8_t uart_port)
 {
+    g_uart_port = uart_port;
     memset(&g_last_gps, 0, sizeof(rid_gps_data_t));
 }
 
@@ -100,7 +101,7 @@ static void parse_msp(uint8_t *buf, int len)
 bool msp_parser_get(rid_gps_data_t *gps)
 {
     uint8_t buf[64];
-    int len = uart_read_bytes(UART_MSP, buf, sizeof(buf), 0);
+    int len = uart_read_bytes((uart_port_t)g_uart_port, buf, sizeof(buf), 0);
     for (int i = 0; i < len; i++) {
         uint8_t c = buf[i];
         if (c == '$') {

@@ -7,6 +7,8 @@
 
 #define USB_UART_PORT CONFIG_ESP_CONSOLE_UART_NUM
 
+static bool g_usb_ready = false;
+
 bool rid_mavlink_usb_init(void)
 {
     uart_config_t uart_cfg = {
@@ -37,6 +39,13 @@ bool rid_mavlink_usb_init(void)
         return false;
     }
 
+    g_usb_ready = true;
     ESP_LOGI(TAG, "USB Serial/JTAG MAVLink transport on UART%d", USB_UART_PORT);
     return true;
+}
+
+bool rid_mavlink_usb_write(const uint8_t *buf, size_t len)
+{
+    if (!g_usb_ready || !buf || len == 0) return false;
+    return uart_write_bytes((uart_port_t)USB_UART_PORT, buf, len) >= 0;
 }

@@ -1,6 +1,6 @@
 # ESP DRONE REMOTEID — Software Status
 
-Last updated: 2026-08-02
+Last updated: 2026-08-05
 Scope: all 80+ source files (excluding build artifacts)
 
 ---
@@ -13,15 +13,15 @@ Scope: all 80+ source files (excluding build artifacts)
 - [x] **Task watchdog** (`esp_remote_id.c:627`) — no recovery if rid_task hangs
 - [x] **Rate limiting on signature** (`web_config.c:306-375`) — brute-force on eFuse sigs
 - [x] **Base64 strict padding** (`rid_security.c:12-41`) — accepts malformed base64
-- [ ] **OTA timeout** (`rid_ota.c:129-157`) — infinite loop if upload stalled
+- [x] **OTA timeout** (`rid_ota.c:129-157`) — abort upload after N consecutive idle socket timeouts (`OTA_MAX_IDLE_STALLS=12`, ~60 s)
 
 ### 🟡 HIGH — Quality & Robustness
-- [ ] **Absolute GPS timeout** (`esp_remote_id.c:577-580`) — log stale GPS regardless of Kalman
-- [ ] **CLI config set** (`cli.c`) — add `config set <key> <value>` write command
-- [ ] **Differential factory reset** (`rid_ota.c:105`) — preserve auth keys, erase only config
-- [ ] **populate_uas_data dedup** (`wifi_tx.c`) — shared function → `odid_common.c`
+- [x] **Absolute GPS timeout** (`esp_remote_id.c:586-593`) — `gps_valid` cleared at 10 s regardless of Kalman predictions + WARN log
+- [x] **CLI config set** (`cli.c`) — `config set <field> <value>` for 20+ fields
+- [x] **Differential factory reset** (`nvs_storage.c`) — new `nvs_storage_reset_preserve_keys()` keeps pubkey1..5; wired into OTA handler + `esp_rid_factory_reset`
+- [ ] **populate_uas_data dedup** (`wifi_tx.c` + `ble_tx.c`) — shared function → `odid_common.c`
 - [ ] **Dual-core pinning** — Core 0 (WiFi TX) / Core 1 (BLE+UI)
-- [ ] **BLE 5.0 LR runtime check** (`ble_tx.c`) — detect Coded PHY capability
+- [x] **BLE 5.0 LR gate verified** (`ble_tx.c:246`) — `CONFIG_BT_BLE_50_EXTEND_ADV_EN` is the correct Bluedroid Kconfig symbol in IDF v5/v6, already gated by `SOC_BLE_50_SUPPORTED` (compiles only on S3/C6). Remaining: check return codes of `esp_ble_gap_ext_adv_*` calls at runtime
 
 ### 🟢 MEDIUM — Features & Polish
 - [ ] **ESP-NOW mesh relay** — multi-hop range extension (4d effort)
@@ -32,6 +32,12 @@ Scope: all 80+ source files (excluding build artifacts)
 - [ ] **Stats tracking** — TX failures, parse errors, signatures
 
 ### ✅ DONE — Recently Completed
+- **Fix campaign C–K** (static audit) — armed/C, MSP gate/G, auth wiring+D, MAVLink TX/E, BLE4 adv/F, baud/H, UART+webserver/I, takeoff height/J, PressureAltitude+state/K; see `dataflow_verification.md`
+- **OTA upload timeout** — `rid_ota.c` `OTA_MAX_IDLE_STALLS=12` aborts stalled uploads (~60 s idle)
+- **Absolute GPS timeout** — `gps_valid` cleared at 10 s without fresh parser data, independent of Kalman (`esp_remote_id.c`)
+- **Differential factory reset** — `nvs_storage_reset_preserve_keys()` preserves provisioned public keys (device stays locked); used by OTA factory-reset form and `esp_rid_factory_reset`
+- **CLI `config set`** — `config` now reads and writes (uas_id, operator_id, self_id, wifi_*, rates, power, operator_*, lock_level, start_delay_ms, …)
+- **BLE 5.0 LR gate verified** — compile guard `CONFIG_BT_BLE_50_EXTEND_ADV_EN` confirmed correct for IDF v5/v6 Bluedroid (auto-excluded on ESP32)
 - **Web UI split** — `config.html` + `style.css` (2374L) + `app.js` (1352L); `EMBED_FILES` + 2 new handlers `/style.css` `/app.js` in `web_config.c`
 - **Bootstrap 5.3.3 vendored inline** in app.js (works offline) + heap overflow fix in `handle_get_logs` (clamp off)
 - **Compliance Checklist** — 9 regions (auto/EUR/FAA/JPN/SGP/KOR/CHN/CAN/AUS/BRA/NZL), per-region `reqMap`, operator ID only for EUR
@@ -75,24 +81,24 @@ Scope: all 80+ source files (excluding build artifacts)
 | `esp_remote_id.h` | 200 | ✅ OK | Full config+state structs |
 | `opendroneid.h` | 762 | ✅ OK | Upstream Intel ODID lib |
 | `odid_wifi.h` | 106 | ✅ OK | 802.11 packed structs |
-| `esp_remote_id.c` | 543 | 🟡 ABSOLUTE GPS | Needs absolute GPS timeout |
+| `esp_remote_id.c` | 672 | ✅ OK | Absolute GPS timeout, differential reset, fix B/J/K |
 | `web_config.c` | 750 | ✅ OK | cJSON, rate limiting, signature verify, /style.css + /app.js handlers |
-| `cli.c` | 317 | 🟡 NEEDS | Missing `config set` command |
-| `wifi_tx.c` | 204 | 🟡 DEDUP | Dedup populate_uas_data with common lib |
+| `cli.c` | 395 | ✅ OK | `config set <field> <value>` write command |
+| `wifi_tx.c` | 297 | 🟡 DEDUP | Dedup populate_uas_data with common lib |
 | `wifi.c` | 614 | ✅ OK | Intel ODID frame builder |
-| `ble_tx.c` | 239 | ✅ OK | ble_tx_set_power() respects dbm |
+| `ble_tx.c` | 303 | ✅ OK | ble_tx_set_power() respects dbm; LR gate verified |
 | `mavlink_parser.c` | 276 | ✅ OK | MESSAGE_PACK unpack |
 | `mav2odid.c` | 636 | ✅ OK | Upstream Intel lib |
 | `opendroneid.c` | 1477 | ✅ OK | Upstream Intel lib |
 | `nmea_parser.c` | 136 | ✅ OK | GGA+RMC parser |
 | `msp_parser.c` | 126 | ✅ OK | MSP v1 parser |
 | `protocol_detect.c` | 75 | ✅ OK | Auto-detect UART protocol |
-| `nvs_storage.c` | 190 | ✅ OK | Config persistence |
+| `nvs_storage.c` | 218 | ✅ OK | Config persistence + `reset_preserve_keys` |
 | `led_status.c` | 211 | ✅ OK | 7-state RGB via LEDC|
 | `led_ws2812.c` | 110 | ✅ OK | RMT-driven addressable LED|
 | `rid_kalman.c` | 146 | ✅ OK | 1D×3 filter|
 | `rid_auth.c` | 107 | ✅ OK | Ed25519 via mbedTLS|
-| `rid_ota.c` | 329 | 🟡 TIMEOUT | Add OTA upload timeout|
+| `rid_ota.c` | 343 | ✅ OK | Upload timeout guard + differential factory reset|
 | `rid_patrol.c` | 31 | ✅ OK | Demo GPS patrol|
 | `rid_security.c` | 158 | ✅ OK | SHA-256, Ed25519, base64 strict, hex|
 | `rid_mavlink_tx.c` | 59 | ✅ OK | HEARTBEAT out|
@@ -152,15 +158,16 @@ Scope: all 80+ source files (excluding build artifacts)
 
 | Prio | Feature | Effort | Status |
 |------|---------|--------|--------|
-| P0 | OTA upload timeout | ~0.5d | 🔜 Next |
-| P1 | CLI config set + history | ~2d | Future |
+| P0 | OTA upload timeout | ~0.5d | ✅ Done |
+| P1 | CLI config set | ~0.5d | ✅ Done |
+| P1 | CLI command history | ~1d | Future |
 | P1 | ESP-NOW mesh relay | ~4d | Future |
 | P1 | LoRa SX1262 backup | ~6d | Future |
 | P2 | SD Card + geofence | ~4d | Future |
 | P2 | Flash encryption (eFuse AES-256) | ~2d | Port from peinser |
-| P2 | Dual-core pinning + BLE 5.0 LR runtime | ~2d | Future |
-| P2 | Absolute GPS timeout | ~1d | Future |
-| P2 | Differential factory reset (keep auth keys) | ~1d | Future |
+| P2 | Dual-core pinning | ~1d | Future |
+| P2 | Absolute GPS timeout | ~1d | ✅ Done |
+| P2 | Differential factory reset (keep auth keys) | ~1d | ✅ Done |
 | P3 | Kalman covariance export + stats tracking | ~2d | Future |
 
 ## 🖥️ Ground Tools Roadmap
@@ -184,10 +191,12 @@ Scope: all 80+ source files (excluding build artifacts)
 - [ ] Demo: visual "DEMO" banner + sample telemetry mode toggle (clearly public-facing)
 
 **Firmware (needs ESP32 / IDF build)**
-- [ ] P0 OTA timeout — guard the upload loop, abort after N seconds idle
-- [ ] Absolute GPS timeout — log stale GPS regardless of Kalman state
-- [ ] `cli.c` `config set <key> <value>` write command (parity with web UI)
-- [ ] Differential factory reset — preserve auth keys, erase only config
+- [x] P0 OTA timeout — guard the upload loop, abort after N idle timeouts (~60 s)
+- [x] Absolute GPS timeout — `gps_valid` cleared at 10 s regardless of Kalman state
+- [x] `cli.c` `config set <field> <value>` write command (parity with web UI)
+- [x] Differential factory reset — `nvs_storage_reset_preserve_keys()` keeps auth keys, erases only config
+- [ ] `populate_uas_data` dedup — shared ODID pack builder between `wifi_tx.c` and `ble_tx.c`
+- [ ] BLE 5.0 LR — check return codes of `esp_ble_gap_ext_adv_set_params/config/start` at runtime
 
 **Ground tools**
 - [ ] NVS provisioning tool — flash a known-good config via CLI

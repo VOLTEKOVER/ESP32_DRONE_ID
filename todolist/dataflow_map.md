@@ -1,6 +1,6 @@
 # ESP DRONE REMOTEID — Data Flow / Mega Graph
 
-Last updated: 2026-08-03
+Last updated: 2026-08-05
 Scope: all protocols, variables and data traversed by the firmware (`components/esp_remote_id/src/*.c`, `main/main.c`).
 
 ---
@@ -190,7 +190,7 @@ Writes only: `altitude_msl/baro/relative` (sinusoidal) + `latitude/longitude` (c
 | Identity gate | 514-521 | `RID_OPT_IDENTITY_READY_GATE` |
 | Demo | 523-544 | `rid_patrol_tick` + identity from config |
 | Kalman | 546-572 | update+predict+overwrite `g_state.gps` |
-| GPS timeout | 574-579 | `gps_valid=false` after 10s |
+| GPS timeout | 586-593 | `gps_valid=false` after 10 s **regardless of Kalman** (absolute timeout on `last_update_ms`) + WARN log |
 | TX | 581-584 | `update_transmissions()` → WiFi/BLE |
 
 ---
@@ -374,9 +374,9 @@ Global gate (`esp_remote_id.c:284-292`): needs `gps_valid || bcast_powerup`, `ac
 Auth gating: `lock_level≥1` → Ed25519 `X-Signature` + rate limit 10 fails/60 s (`web_config.c:43-65`); `lock_level≥2` → eFuse magic `0x52494421` "RID!" (`:27`, `:67-78`) → `/ota` and config locked.
 Log ring: vprintf hook intercepts ESP_LOG (`web_config.c:96-134`), feeds `/api/logs`.
 
-**CLI** (`cli.c:50-66`): `help, status, config, restart, reboot, reset, factory, protocol [auto|mavlink|msp|nmea|none], heap, log_level <tag> <level>, patrol [on|off], transmit <wifi_bcn|wifi_nan|ble4|ble5|all> <on|off>, mac, uptime, kalman [on|off]` (MAX_ARGS 16, MAX_LINE 256).
+**CLI** (`cli.c:50-66`): `help, status, config [set <field> <value>], restart, reboot, reset, factory, protocol [auto|mavlink|msp|nmea|none], heap, log_level <tag> <level>, patrol [on|off], transmit <wifi_bcn|wifi_nan|ble4|ble5|all> <on|off>, mac, uptime, kalman [on|off]` (MAX_ARGS 16, MAX_LINE 256). `config set` writes uas_id/operator_id/self_id/wifi_*/rates/powers/operator_*/lock_level/start_delay_ms/etc.
 
-**NVS** (`nvs_storage.c`): namespace `"esp_rid"`; typed helpers store/load str/u8/u32/f32/i8; `esp_rid_factory_reset` erases + re-defaults + re-saves (`esp_remote_id.c:255-263`).
+**NVS** (`nvs_storage.c`): namespace `"esp_rid"`; typed helpers store/load str/u8/u32/f32/i8; `esp_rid_factory_reset` → **differential reset** (`nvs_storage_reset_preserve_keys`) keeps `pubkey1..5`, erases the rest, re-defaults + re-saves (`esp_remote_id.c:260-283`); OTA factory-reset form uses the same preserve-keys path.
 
 **OTA** (`rid_ota.c`): `ota_trigger_gpio` boot check; three web forms — update, factory_reset, rollback.
 
@@ -391,7 +391,7 @@ Log ring: vprintf hook intercepts ESP_LOG (`web_config.c:96-134`), feeds `/api/l
 |---|---|---|
 | Parser data freshness | GPS 5 s, identity 10 s | `mavlink_parser.c:348`, `:358` |
 | Operator loc freshness | 30 s | `mavlink_parser.c:73` |
-| GPS validity timeout | 10 s | `esp_remote_id.c:576` |
+| GPS validity timeout | 10 s | `esp_remote_id.c:586` |
 | Kalman timeout | 3 s | `rid_kalman.h:7` |
 | Rate limit | 10 fails / 60 s | `web_config.c:43-44` |
 | Startup delay default | 10 s | `esp_remote_id.c:111` |
@@ -403,8 +403,10 @@ Log ring: vprintf hook intercepts ESP_LOG (`web_config.c:96-134`), feeds `/api/l
 
 ## ⚠️ Risk notes / dead ends
 
-1. **`g_state.operator_*` is write-only** → only treats the symptom; bug B is in the routing.
+1. **`g_state.operator_*` is now consumed** — bug B fixed: MAVLink op-loc copied to `g_state.gps.operator_*` (`esp_remote_id.c:524-526`) and used as `System` in both TX builders. Historical: was write-only.
 2. **DroneCAN AHRS/Identity are stubs** → operator position and identity from CAN never populated.
 3. **ODID RX (WiFi) is dead library code** (`wifi.c:520/535` never called) → for a drone-to-drone relay you'll need `esp_wifi_set_promiscuous` + callback.
 4. **MAVLink TX does not send Location** → only heartbeat + System (GCS cannot see full position over MAVLink).
-5. **`BLE 5 LR` and `RID_OPT_PRINT_RID_MAVLINK`** depend on config/option flags.
+5. **`BLE 5 LR` and `RID_OPT_PRINT_RID_MAVLINK`** depend on config/option flags; BLE 5 LR compiled only when `CONFIG_BT_BLE_50_EXTEND_ADV_EN` (S3/C6).
+6. **OTA idle timeout** — `OTA_MAX_IDLE_STALLS=12` (~60 s) aborts stalled uploads.
+7. **Differential factory reset** — public keys survive a reset (locked unit stays locked); full wipe requires explicit `nvs_flash_erase()`.

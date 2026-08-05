@@ -9,6 +9,7 @@
 #endif
 #include "ble_tx.h"
 #include "opendroneid.h"
+#include "rid_auth.h"
 
 #define TAG "BLE_TX"
 
@@ -56,6 +57,7 @@ static void prepare_uas_data(rid_gps_data_t *gps, rid_identity_t *identity)
     g_uas_data.Location.Longitude = gps->longitude;
     g_uas_data.Location.AltitudeGeo = gps->altitude_msl;
     g_uas_data.Location.Height = gps->altitude_relative;
+    g_uas_data.Location.PressureAltitude = gps->altitude_baro;
     g_uas_data.Location.SpeedHorizontal = gps->speed;
     g_uas_data.Location.SpeedVertical = gps->speed_vertical;
     g_uas_data.Location.Direction = gps->heading;
@@ -64,66 +66,128 @@ static void prepare_uas_data(rid_gps_data_t *gps, rid_identity_t *identity)
 
     if (identity->self_id_text[0] != '\0') {
         g_uas_data.SelfIDValid = 1;
-        g_uas_data.SelfID.DescType = ODID_DESC_TYPE_TEXT;
+        g_uas_data.SelfID.DescType = identity->has_self_id
+                                         ? (ODID_desctype_t)identity->self_id_desc_type
+                                         : ODID_DESC_TYPE_TEXT;
         strncpy((char *)g_uas_data.SelfID.Desc, identity->self_id_text, ODID_STR_SIZE);
     }
 
     g_uas_data.SystemValid = 1;
     g_uas_data.System.OperatorLatitude = gps->operator_lat;
     g_uas_data.System.OperatorLongitude = gps->operator_lon;
+    g_uas_data.System.OperatorAltitudeGeo = gps->operator_alt;
 
     g_uas_data.OperatorIDValid = 1;
     strncpy((char *)g_uas_data.OperatorID.OperatorId, identity->operator_id, ODID_ID_SIZE);
-}
 
-static int build_ble_header(uint8_t *buf, uint16_t buf_size)
-{
-    uint16_t idx = 0;
-    if (idx + 3 > buf_size) return 0;
-    buf[idx++] = 2;
-    buf[idx++] = 0x01;
-    buf[idx++] = 0x06;
+    /* Authentication: MAVLink-relayed pages take priority, otherwise sign locally */
+    uint8_t auth_pages = 0;
+    ODID_Auth_data auth[ODID_AUTH_MAX_PAGES];
 
-    if (idx + 3 > buf_size) return 0;
-    buf[idx++] = 3;
-    buf[idx++] = 0x03;
-    buf[idx++] = 0xFA;
-    buf[idx++] = 0xFF;
+    if (identity->has_ext_auth && identity->ext_auth_last_page < ODID_AUTH_MAX_PAGES) {
+        uint16_t last = identity->ext_auth_last_page;
+        uint16_t need = (uint16_t)((1u << (last + 1)) - 1);
+        if ((identity->ext_auth_pages_received & need) == need) {
+            for (uint16_t p = 0; p <= last; p++) {
+                memset(&auth[p], 0, sizeof(ODID_Auth_data));
+                auth[p].DataPage = (uint8_t)p;
+                auth[p].AuthType = (ODID_authtype_t)identity->ext_auth_type;
+                auth[p].LastPageIndex = identity->ext_auth_last_page;
+                auth[p].Length = identity->ext_auth_length;
+                memcpy(auth[p].AuthData, identity->ext_auth_pages[p],
+                       ODID_AUTH_PAGE_NONZERO_DATA_SIZE);
+            }
+            auth_pages = (uint8_t)(last + 1);
+        }
+    } else if (rid_auth_enabled()) {
+        (void)rid_auth_sign_identity(identity->uas_id, auth, &auth_pages);
+    }
 
-    return idx;
+    if (auth_pages > 0) {
+        uint8_t fixed = 1 + (identity->uas_id_2[0] ? 1 : 0) + 1 +
+                        (identity->self_id_text[0] ? 1 : 0) + 1 + 1;
+        if (auth_pages <= ODID_PACK_MAX_MESSAGES - fixed) {
+            for (uint8_t p = 0; p < auth_pages; p++) {
+                g_uas_data.Auth[p] = auth[p];
+                g_uas_data.AuthValid[p] = 1;
+            }
+        }
+    }
 }
 
 static bool build_legacy_adv(rid_gps_data_t *gps, rid_identity_t *identity, uint8_t *buf, uint16_t buf_size, uint16_t *len)
 {
-    if (buf_size < 16) return false;
+    /* Legacy BLE advertising data is limited to 31 bytes, so exactly one
+     * 25-byte ODID message fits per advertisement, sent as a Service Data
+     * AD structure on the Remote ID UUID 0xFFFA:
+     *   0x1E 0x16 0xFA 0xFF | 0x0D (app code) | counter | 25-byte message
+     * Messages are rotated across advertising cycles. */
+    if (buf_size < 31) return false;
     memset(buf, 0, buf_size);
-    uint16_t idx = build_ble_header(buf, buf_size);
-    if (idx == 0) return false;
 
     prepare_uas_data(gps, identity);
 
-    uint8_t pack_buf[ODID_PACK_MAX_MESSAGES * ODID_MESSAGE_SIZE + 8];
-    int pack_len = odid_message_build_pack(&g_uas_data, pack_buf, sizeof(pack_buf));
-    if (pack_len <= 0) return false;
+    static uint8_t rotation = 0;
 
-    /* Send only one complete message per advertising cycle for legacy BLE.
-     * ODID_MESSAGE_SIZE = 25 bytes, plus 4-byte service data header = 29 bytes.
-     * Legacy BLE advertising data limit is 31 bytes (27 usable after headers). */
-    int copy_len = pack_len;
-    if (copy_len > (int)(buf_size - idx - 5)) copy_len = buf_size - idx - 5;
+    /* Count the currently valid messages */
+    uint8_t total = 0;
+    for (int i = 0; i < ODID_BASIC_ID_MAX_MESSAGES; i++) {
+        if (g_uas_data.BasicIDValid[i]) total++;
+    }
+    if (g_uas_data.LocationValid) total++;
+    for (int i = 0; i < ODID_AUTH_MAX_PAGES; i++) {
+        if (g_uas_data.AuthValid[i]) total++;
+    }
+    if (g_uas_data.SelfIDValid) total++;
+    if (g_uas_data.SystemValid) total++;
+    if (g_uas_data.OperatorIDValid) total++;
 
-    uint8_t adv_idx = idx;
-    if (idx + 4 + copy_len > buf_size) return false;
-    buf[idx++] = 0;
-    buf[idx++] = 0x16;
-    buf[idx++] = 0xFA;
-    buf[idx++] = 0xFF;
+    if (total == 0) return false;
 
-    memcpy(buf + idx, pack_buf, copy_len);
-    idx += copy_len;
-    buf[adv_idx] = idx - adv_idx - 1;
+    uint8_t target = rotation++ % total;
+    uint8_t n = 0;
+    bool found = false;
+    ODID_Message_encoded msg;
 
-    *len = idx;
+    for (int i = 0; i < ODID_BASIC_ID_MAX_MESSAGES && !found; i++) {
+        if (!g_uas_data.BasicIDValid[i]) continue;
+        if (n++ == target) {
+            found = encodeBasicIDMessage(&msg.basicId, &g_uas_data.BasicID[i]) == ODID_SUCCESS;
+            break;
+        }
+    }
+    if (!found && g_uas_data.LocationValid && n++ == target) {
+        found = encodeLocationMessage(&msg.location, &g_uas_data.Location) == ODID_SUCCESS;
+    }
+    for (int i = 0; i < ODID_AUTH_MAX_PAGES && !found; i++) {
+        if (!g_uas_data.AuthValid[i]) continue;
+        if (n++ == target) {
+            found = encodeAuthMessage(&msg.auth, &g_uas_data.Auth[i]) == ODID_SUCCESS;
+            break;
+        }
+    }
+    if (!found && g_uas_data.SelfIDValid && n++ == target) {
+        found = encodeSelfIDMessage(&msg.selfId, &g_uas_data.SelfID) == ODID_SUCCESS;
+    }
+    if (!found && g_uas_data.SystemValid && n++ == target) {
+        found = encodeSystemMessage(&msg.system, &g_uas_data.System) == ODID_SUCCESS;
+    }
+    if (!found && g_uas_data.OperatorIDValid && n++ == target) {
+        found = encodeOperatorIDMessage(&msg.operatorId, &g_uas_data.OperatorID) == ODID_SUCCESS;
+    }
+
+    if (!found) return false;
+
+    /* Service Data AD structure, 31 bytes total */
+    buf[0] = 0x1E;              /* length: 30 bytes follow */
+    buf[1] = 0x16;              /* Service Data - 16-bit UUID */
+    buf[2] = 0xFA;              /* UUID 0xFFFA (little endian) */
+    buf[3] = 0xFF;
+    buf[4] = 0x0D;              /* ASTM Open Drone ID application code */
+    buf[5] = rotation - 1;      /* message counter */
+    memcpy(buf + 6, msg.rawData, ODID_MESSAGE_SIZE);
+
+    *len = 31;
     return true;
 }
 #endif

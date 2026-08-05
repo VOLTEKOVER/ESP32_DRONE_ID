@@ -10,7 +10,6 @@
 #include "mav2odid.h"
 
 #define TAG "MAVLINK"
-#define UART_MAV UART_NUM_1
 #define MAV_RX_BUF 512
 
 static rid_gps_data_t g_last_gps;
@@ -20,6 +19,7 @@ static uint32_t g_last_identity_update = 0;
 static mavlink_status_t g_mav_status;
 static uint8_t g_mav_buf[MAV_RX_BUF];
 static uint8_t g_sysid_filter = 0;
+static uint8_t g_uart_port = UART_NUM_1;
 
 /* Extended state */
 static bool g_has_armed = false;
@@ -30,8 +30,9 @@ static double g_operator_lon = 0.0;
 static float g_operator_alt = 0.0f;
 static uint32_t g_operator_location_update = 0;
 
-void mavlink_parser_init(void)
+void mavlink_parser_init(uint8_t uart_port)
 {
+    g_uart_port = uart_port;
     memset(&g_last_gps, 0, sizeof(rid_gps_data_t));
     memset(&g_last_identity, 0, sizeof(rid_identity_t));
     memset(&g_mav_status, 0, sizeof(g_mav_status));
@@ -89,7 +90,7 @@ void mavlink_parser_set_operator_location(double lat, double lon, float alt)
 
 bool mavlink_parser_get(rid_gps_data_t *gps)
 {
-    int len = uart_read_bytes(UART_MAV, g_mav_buf, sizeof(g_mav_buf), 0);
+    int len = uart_read_bytes((uart_port_t)g_uart_port, g_mav_buf, sizeof(g_mav_buf), 0);
     if (len > 0) {
         mavlink_message_t msg;
         mavlink_status_t status;
@@ -212,8 +213,10 @@ bool mavlink_parser_get(rid_gps_data_t *gps)
                     mavlink_msg_open_drone_id_authentication_decode(&msg, &odid_auth);
                     if (odid_auth.data_page < ODID_AUTH_MAX_PAGES) {
                         memcpy(g_last_identity.ext_auth_pages[odid_auth.data_page],
-                               odid_auth.authentication_data, ODID_MESSAGE_SIZE);
+                               odid_auth.authentication_data, sizeof(odid_auth.authentication_data));
                         g_last_identity.ext_auth_last_page = odid_auth.last_page_index;
+                        g_last_identity.ext_auth_type = odid_auth.authentication_type;
+                        g_last_identity.ext_auth_length = odid_auth.length;
                         g_last_identity.ext_auth_pages_received |= (1 << odid_auth.data_page);
                         g_last_identity.has_ext_auth = true;
                     }
@@ -223,9 +226,8 @@ bool mavlink_parser_get(rid_gps_data_t *gps)
                 case MAVLINK_MSG_ID_OPEN_DRONE_ID_SYSTEM: {
                     mavlink_open_drone_id_system_t odid_sys;
                     mavlink_msg_open_drone_id_system_decode(&msg, &odid_sys);
-                    g_last_gps.latitude = odid_sys.operator_latitude / 1e7;
-                    g_last_gps.longitude = odid_sys.operator_longitude / 1e7;
-                    g_last_gps.satellites = odid_sys.area_count;
+                    /* This message carries the operator location, not the UA
+                     * position: do NOT overwrite g_last_gps.latitude/longitude. */
                     g_operator_lat = odid_sys.operator_latitude / 1e7;
                     g_operator_lon = odid_sys.operator_longitude / 1e7;
                     g_operator_alt = odid_sys.operator_altitude_geo;
@@ -283,11 +285,16 @@ bool mavlink_parser_get(rid_gps_data_t *gps)
                         }
                         case 2: {
                             ODID_Auth_data auth;
+                            memset(&auth, 0, sizeof(auth));
                             decodeAuthMessage(&auth, &m->auth);
                             if (auth.DataPage < ODID_AUTH_MAX_PAGES) {
                                 memcpy(g_last_identity.ext_auth_pages[auth.DataPage],
-                                       m->auth.page_non_zero.AuthData, ODID_MESSAGE_SIZE);
-                                g_last_identity.ext_auth_last_page = auth.LastPageIndex;
+                                       auth.AuthData, ODID_AUTH_PAGE_NONZERO_DATA_SIZE);
+                                if (auth.DataPage == 0) {
+                                    g_last_identity.ext_auth_last_page = auth.LastPageIndex;
+                                    g_last_identity.ext_auth_length = auth.Length;
+                                }
+                                g_last_identity.ext_auth_type = auth.AuthType;
                                 g_last_identity.ext_auth_pages_received |= (1 << auth.DataPage);
                                 g_last_identity.has_ext_auth = true;
                                 g_last_identity_update = xTaskGetTickCount() * portTICK_PERIOD_MS;
@@ -315,7 +322,6 @@ bool mavlink_parser_get(rid_gps_data_t *gps)
                                 g_operator_alt = sys.OperatorAltitudeGeo;
                                 g_operator_location_update = xTaskGetTickCount() * portTICK_PERIOD_MS;
                             }
-                            g_last_gps.satellites = sys.AreaCount;
                             break;
                         }
                         case 5: {

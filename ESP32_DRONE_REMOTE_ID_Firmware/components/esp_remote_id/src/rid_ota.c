@@ -15,11 +15,15 @@
 #include "rid_ota.h"
 #include "esp_remote_id.h"
 #include "rid_security.h"
+#include "nvs_storage.h"
 #include "psa/crypto.h"
 
 #define TAG "RID_OTA"
 
 #define OTA_BUF_SIZE 1024
+/* Abort the upload if the client stalls for this many consecutive socket
+ * timeouts (each httpd_req_recv timeout is ~5 s, so ~60 s idle). */
+#define OTA_MAX_IDLE_STALLS 12
 
 static bool g_ota_mode = false;
 static httpd_handle_t g_ota_server = NULL;
@@ -125,13 +129,21 @@ static esp_err_t ota_update_handler(httpd_req_t *req)
     char buf[OTA_BUF_SIZE];
     int remaining = req->content_len;
     bool success = false;
+    int idle_stalls = 0;
 
     while (remaining > 0) {
         int recv = httpd_req_recv(req, buf, MIN(remaining, OTA_BUF_SIZE));
         if (recv <= 0) {
-            if (recv == HTTPD_SOCK_ERR_TIMEOUT) continue;
+            if (recv == HTTPD_SOCK_ERR_TIMEOUT) {
+                if (++idle_stalls >= OTA_MAX_IDLE_STALLS) {
+                    ESP_LOGW(TAG, "OTA upload stalled (%d idle timeouts); aborting", idle_stalls);
+                    break;
+                }
+                continue;
+            }
             break;
         }
+        idle_stalls = 0;
 
         if (psa_hash_update(&sha_ctx, (const unsigned char *)buf, recv) != PSA_SUCCESS) {
             psa_hash_abort(&sha_ctx);
@@ -228,7 +240,9 @@ static esp_err_t ota_update_handler(httpd_req_t *req)
 
 static esp_err_t ota_factory_reset_handler(httpd_req_t *req)
 {
-    nvs_flash_erase();
+    /* Differential reset: wipe configuration but keep the provisioned
+     * public keys so a locked unit stays locked. */
+    nvs_storage_reset_preserve_keys();
     httpd_resp_set_type(req, "text/html");
     const char *ok = "<html><body><h1>Factory Reset</h1><p>Rebooting...</p></body></html>";
     httpd_resp_send(req, ok, strlen(ok));
