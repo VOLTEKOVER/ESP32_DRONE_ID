@@ -4,10 +4,56 @@
 
 <p align="center">
   <a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/actions/workflows/build.yml"><img src="https://img.shields.io/github/actions/workflow/status/VOLTEKOVER/ESP_DRONE_REMOTEID/build.yml?logo=github" alt="Build"></a>
-  <a href="https://VOLTEKOVER.github.io/ESP_DRONE_REMOTEID/"><img src="https://img.shields.io/badge/BETA-000?logo=esphome&color=f9a825" alt="BETA"></a>
+  <a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/actions/workflows/rid-hub-ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/VOLTEKOVER/ESP_DRONE_REMOTEID/rid-hub-ci.yml?logo=github" alt="RID Hub CI"></a>
+  <a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/actions/workflows/release.yml"><img src="https://img.shields.io/github/actions/workflow/status/VOLTEKOVER/ESP_DRONE_REMOTEID/release.yml?logo=github" alt="Release"></a>
+  <a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/actions/workflows/deploy-pages.yml"><img src="https://img.shields.io/github/actions/workflow/status/VOLTEKOVER/ESP_DRONE_REMOTEID/deploy-pages.yml?logo=github" alt="Deploy Pages"></a>
+</p>
+
+<p align="center">
   <a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/releases"><img src="https://img.shields.io/github/v/release/VOLTEKOVER/ESP_DRONE_REMOTEID?include_prereleases&logo=github&label=version" alt="Release"></a>
-  <a href="https://www.espressif.com/"><img src="https://img.shields.io/badge/ESP32%20|%20S3%20|%20C6-000?logo=espressif" alt="Platform"></a>
+  <a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/tags"><img src="https://img.shields.io/github/v/tag/VOLTEKOVER/ESP_DRONE_REMOTEID?label=tag" alt="Tag"></a>
+  <a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/releases"><img src="https://img.shields.io/github/release-date/VOLTEKOVER/ESP_DRONE_REMOTEID" alt="Release date"></a>
+  <a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/commits/main"><img src="https://img.shields.io/github/last-commit/VOLTEKOVER/ESP_DRONE_REMOTEID?logo=git" alt="Last commit"></a>
+  <a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/graphs/commit-activity"><img src="https://img.shields.io/github/commit-activity/m/VOLTEKOVER/ESP_DRONE_REMOTEID?logo=github" alt="Commit activity"></a>
+  <a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/commits/main"><img src="https://img.shields.io/github/commits-since/VOLTEKOVER/ESP_DRONE_REMOTEID/v1beta?label=commits%20since%20v1beta" alt="Commits since v1beta"></a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/stargazers"><img src="https://img.shields.io/github/stars/VOLTEKOVER/ESP_DRONE_REMOTEID?logo=github" alt="Stars"></a>
+  <a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/forks"><img src="https://img.shields.io/github/forks/VOLTEKOVER/ESP_DRONE_REMOTEID?logo=github" alt="Forks"></a>
+  <a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID"><img src="https://img.shields.io/github/watchers/VOLTEKOVER/ESP_DRONE_REMOTEID?logo=github" alt="Watchers"></a>
+  <a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/graphs/contributors"><img src="https://img.shields.io/github/contributors/VOLTEKOVER/ESP_DRONE_REMOTEID?logo=github" alt="Contributors"></a>
+  <a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/issues"><img src="https://img.shields.io/github/issues/VOLTEKOVER/ESP_DRONE_REMOTEID?logo=github" alt="Open issues"></a>
+  <a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/issues?q=is%3Aissue+is%3Aclosed"><img src="https://img.shields.io/github/issues-closed/VOLTEKOVER/ESP_DRONE_REMOTEID?logo=github" alt="Closed issues"></a>
+  <a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/pulls"><img src="https://img.shields.io/github/issues-pr/VOLTEKOVER/ESP_DRONE_REMOTEID?logo=github" alt="Open PRs"></a>
+  <a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/pulls?q=is%3Apr+is%3Aclosed"><img src="https://img.shields.io/github/issues-pr-closed/VOLTEKOVER/ESP_DRONE_REMOTEID?logo=github" alt="Closed PRs"></a>
+  <a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/discussions"><img src="https://img.shields.io/github/discussions/VOLTEKOVER/ESP_DRONE_REMOTEID?logo=github" alt="Discussions"></a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID"><img src="https://img.shields.io/github/repo-size/VOLTEKOVER/ESP_DRONE_REMOTEID" alt="Repo size"></a>
+  <a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID"><img src="https://img.shields.io/github/languages/code-size/VOLTEKOVER/ESP_DRONE_REMOTEID" alt="Code size"></a>
+  <a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID"><img src="https://img.shields.io/github/languages/top/VOLTEKOVER/ESP_DRONE_REMOTEID" alt="Top language"></a>
+  <a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID"><img src="https://img.shields.io/github/languages/count/VOLTEKOVER/ESP_DRONE_REMOTEID" alt="Languages"></a>
   <a href="LICENSE"><img src="https://img.shields.io/github/license/VOLTEKOVER/ESP_DRONE_REMOTEID?color=blue" alt="License"></a>
+</p>
+
+<p align="center">
+  <a href="https://VOLTEKOVER.github.io/ESP_DRONE_REMOTEID/"><img src="https://img.shields.io/badge/BETA-000?logo=esphome&color=f9a825" alt="BETA"></a>
+  <a href="https://www.espressif.com/"><img src="https://img.shields.io/badge/ESP32%20%7C%20S3%20%7C%20C6-000?logo=espressif" alt="Platform"></a>
+  <a href="https://github.com/espressif/esp-idf"><img src="https://img.shields.io/badge/ESP--IDF-v6.0.1-4C4C4C?logo=espressif" alt="ESP-IDF"></a>
+  <a href="https://en.wikipedia.org/wiki/C_(programming_language)"><img src="https://img.shields.io/badge/Language-C-555?logo=c" alt="C"></a>
+  <a href="https://www.electronjs.org/"><img src="https://img.shields.io/badge/RID%20Hub-Electron%20%7C%20React-47848F?logo=electron&logoColor=white" alt="RID Hub"></a>
+  <a href="RID_Hub/package.json"><img src="https://img.shields.io/github/package-json/version/VOLTEKOVER/ESP_DRONE_REMOTEID?filename=RID_Hub/package.json&label=RID%20Hub%20v" alt="RID Hub version"></a>
+</p>
+
+<p align="center">
+  <a href="#-features"><img src="https://img.shields.io/badge/Standard-ASTM%20F3411--22a-blue" alt="ASTM F3411-22a"></a>
+  <a href="#-features"><img src="https://img.shields.io/badge/Standard-ASD--STAN%20prEN%204709--002-blue" alt="prEN 4709-002"></a>
+  <a href="#-communication-overview"><img src="https://img.shields.io/badge/Input-MAVLink%20%7C%20MSP%20%7C%20NMEA%20%7C%20DroneCAN-2ea44f" alt="Input protocols"></a>
+  <a href="#-communication-overview"><img src="https://img.shields.io/badge/TX-WiFi%20Beacon%20%7C%20NAN%20%7C%20BLE%204.0%20%7C%20BLE%205.0-0095D5" alt="Transmitters"></a>
+  <a href="#-features"><img src="https://img.shields.io/badge/Auth-Ed25519-6f42c1" alt="Ed25519"></a>
+  <a href="#-features"><img src="https://img.shields.io/badge/OTA-SHA--256%20%2B%20Ed25519-orange" alt="OTA"></a>
 </p>
 
 <p align="center">
