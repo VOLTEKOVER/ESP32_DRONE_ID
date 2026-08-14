@@ -1,6 +1,6 @@
 # ESP DRONE REMOTEID — Software Status
 
-Last updated: 2026-08-05
+Last updated: 2026-08-14
 Scope: all 80+ source files (excluding build artifacts)
 
 ---
@@ -22,6 +22,36 @@ Scope: all 80+ source files (excluding build artifacts)
 - [ ] **populate_uas_data dedup** (`wifi_tx.c` + `ble_tx.c`) — shared function → `odid_common.c`
 - [ ] **Dual-core pinning** — Core 0 (WiFi TX) / Core 1 (BLE+UI)
 - [x] **BLE 5.0 LR gate verified** (`ble_tx.c:246`) — `CONFIG_BT_BLE_50_EXTEND_ADV_EN` is the correct Bluedroid Kconfig symbol in IDF v5/v6, already gated by `SOC_BLE_50_SUPPORTED` (compiles only on S3/C6). Remaining: check return codes of `esp_ble_gap_ext_adv_*` calls at runtime
+
+### 🟠 PRIORITY REFACTORS — 5 suggestions verified 2026-08-14
+- [ ] **Copy `g_config` to a local struct at the start of the `rid_task` loop** — HIGH value, low cost. Real data race today: `rid_task` reads `g_config` without lock (`esp_remote_id.c:308-338`, `:490-497`, `:528-530`, `:557-565`, `:614`) while `esp_rid_set_config()` writes it under `g_lock`. Only `protocol`/`options` are currently copied locally (`:425-428`).
+- [ ] **Return checks on `xTaskCreate` / `esp_task_wdt_add`** — low cost, robustness. Missing at `esp_remote_id.c:175` (rid_mavlink_tx_task), `:664` (rid_task), `cli.c:393` (cli_task), and `esp_task_wdt_add(NULL)` at `esp_remote_id.c:417`.
+- [ ] **Parser → producer isolation (queue per parser + single-thread consumer)** — medium value, high cost. Parsers are polled synchronously from `rid_task` (`esp_remote_id.c:441-447`) and each `*_get()` reads the same UART inline (`mavlink_parser.c:93`, nmea/msp alike) → byte loss risk during WiFi/BLE TX in the same task. Cheap alternative first: larger UART RX buffer or interrupt-driven driver.
+- [ ] **Fuzz harness for nmea/msp/mavlink parsers** — host libFuzzer. Blocked on parser refactor (separate byte-ingest from `uart_read_bytes` to make them host-testable). Would have caught the `decode_fix2` `-Warray-bounds` issue.
+- [ ] **Configurable timeouts via web (`config.html`)** — low value. GPS stale is hardcoded 10 s (`esp_remote_id.c:603`), parser-internal 5 s, operator-location 30 s, identity 10 s, OTA idle stall `OTA_MAX_IDLE_STALLS` (`rid_ota.c:24`). Only session auth timeout is web-configurable today.
+
+### 🔴 CONCURRENCY AUDIT — verified against code 2026-08-14
+- [ ] **Fix AUTO-mode UART starvation (urgent)** — `protocol_detect_auto()` (`protocol_detect.c:42-69`) consumes up to 256 B from the same UART with a 50 ms blocking read on **every** `rid_task` loop, before the active parser reads → parser starved, framing broken in AUTO mode. Fix: lock the protocol after the first detection, or peek without consuming (`uart_get_buffered_data_len`), or detect only once at boot.
+- [ ] **Data race on `g_state`** — written under `g_lock` (`esp_remote_id.c:466-533`) but read/written unlocked at `:435`, `:456`, `:588-597`, `:600-641`, and passed by reference to the TX paths (`:310-334`) while cli/web read it under lock. Fix: snapshot `gps`/`identity` under lock and pass copies to `wifi_tx_*`/`ble_tx_*`.
+- [ ] **Replace `portMAX_DELAY` with timed waits** — `esp_remote_id.c:425`, `:466`, `:550` block forever on `g_lock`; a stuck holder (NVS write / httpd) hangs `rid_task` until WDT. Use `pdMS_TO_TICKS()` + log on timeout.
+- [ ] **`rid_mavlink_tx` shares the same UART as the parsers** (`esp_remote_id.c:174`) — TX and parsing contend on one port when enabled together; document or gate the combination.
+- [ ] **Stale MAVLink operator location** — `mavlink_parser_get_operator_location` (`esp_remote_id.c:517`) is used even when the active protocol is NMEA/MSP; its 30 s freshness window can feed stale data. Gate it on `proto == RID_PROTOCOL_MAVLINK`.
+
+### 🟡 CONFIG PERSISTENCE — `esp_remote_id.h` verified 2026-08-14
+- [ ] **NVS save/load gaps** (`nvs_storage.c`) — fields settable via web/CLI but never persisted, lost on reboot: `protocol`, `uart_port`, `tx_pin`, `rx_pin`, `ws2812_gpio`, `ws2812_brightness`, `lighting_pins/patterns/phase_offsets`, `dronecan_rx/tx_gpio`, `dronecan_bitrate`, `mavlink_usb_enable`, `ota_trigger_gpio`, `auth_private_key`, `start_delay_ms` (absent from `nvs_storage_save/load`). E.g. CLI `protocol` and `config set start_delay_ms` revert after reboot.
+- [ ] **Auth lifecycle** — `rid_auth_init()` runs only at boot (`esp_remote_id.c:180`) and `auth_private_key` is not persisted → auth pages silently stop after reboot; a key change via web applies only after a reboot. Re-init on config change, or persist key (or document one-time provisioning).
+- [ ] **`wifi_ssid`/`wifi_password` capped at `ESP_RID_MAX_STR_LEN` (20)** — WiFi spec allows 32/63 chars. Widen the field (NVS layout impact) or enforce the 20-char limit in the UI.
+- [ ] **`operator_lat`/`operator_lon` precision** — stored as `float` in NVS (`nvs_storage.c:118-119`) while the struct fields are `double` (~1 m error at mid latitudes). Use a f64 blob or accept.
+
+### 🟢 ARCHITECTURE — portability & dependency mgmt 2026-08-14
+- [ ] **Split parsers: pure `process_bytes()` vs UART transport** — the key step for hardware independence. `nmea_parser_get()`/`msp_parser_get()`/`mavlink_parser_get()` read UART directly (`nmea_parser.c:118`, `msp_parser.c:104`, `mavlink_parser.c:93`). Split into a host-testable byte-ingest function (no ESP-IDF includes) + a thin transport port. Unblocks 3 existing items: fuzz harness, queue producer, host unit tests.
+- [ ] **Formalize layered structure** — pure core (protocols, ODID encode, config) without ESP-IDF includes vs port/driver layer (UART, WiFi, BLE, TWAI, LED). `opendroneid.c`/`mav2odid.c` are already pure; parsers are the main coupling point left.
+- [ ] **Migrate vendored libs to IDF Component Manager** — replace vendored `mavlink/` (ardupilotmega headers) and `opendroneid` with managed components (from the Espressif registry, if maintained upstream) using semver ranges in `idf_component.yml` (as already done for `espressif/cjson`). Libs then track upstream at build time.
+- [ ] **Pin exact dependency versions for release** — `idf.py reconfigure` floats within `^range` in dev, but release/CI must pin exact versions (e.g. in `idf_component.lock`) for reproducible builds; note firmware OTA already covers runtime self-update of the whole image.
+- [ ] **Commit `idf_component.lock`** — the Component Manager generates it on `idf.py reconfigure`; no lock file is committed today, so managed deps (`espressif/cjson`) can float and builds are not reproducible.
+- [ ] **Add `version:` to `components/esp_remote_id/idf_component.yml`** — required only to publish the component to the registry; currently derived from git.
+- [ ] **Use `PRIV_REQUIRES` for internal-only deps** (`CMakeLists.txt:30-48`) — mbedtls, cjson, nvs_flash, app_update, `esp_driver_*` are not part of the public API; moving them to `PRIV_REQUIRES` keeps the public interface minimal.
+- [ ] **Drop legacy `driver` dep** (`CMakeLists.txt:45`) — redundant umbrella in IDF v5+ alongside the new `esp_driver_*` components.
 
 ### 🟢 MEDIUM — Features & Polish
 - [ ] **ESP-NOW mesh relay** — multi-hop range extension (4d effort)
