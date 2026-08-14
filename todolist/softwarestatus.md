@@ -23,12 +23,16 @@ Scope: all 80+ source files (excluding build artifacts)
 - [ ] **Dual-core pinning** — Core 0 (WiFi TX) / Core 1 (BLE+UI)
 - [x] **BLE 5.0 LR gate verified** (`ble_tx.c:246`) — `CONFIG_BT_BLE_50_EXTEND_ADV_EN` is the correct Bluedroid Kconfig symbol in IDF v5/v6, already gated by `SOC_BLE_50_SUPPORTED` (compiles only on S3/C6). Remaining: check return codes of `esp_ble_gap_ext_adv_*` calls at runtime
 
+> Tracked in GitHub issue [#28](https://github.com/VOLTEKOVER/ESP_DRONE_REMOTE_ID/issues/28)
+
 ### 🟠 PRIORITY REFACTORS — 5 suggestions verified 2026-08-14
 - [ ] **Copy `g_config` to a local struct at the start of the `rid_task` loop** — HIGH value, low cost. Real data race today: `rid_task` reads `g_config` without lock (`esp_remote_id.c:308-338`, `:490-497`, `:528-530`, `:557-565`, `:614`) while `esp_rid_set_config()` writes it under `g_lock`. Only `protocol`/`options` are currently copied locally (`:425-428`).
 - [ ] **Return checks on `xTaskCreate` / `esp_task_wdt_add`** — low cost, robustness. Missing at `esp_remote_id.c:175` (rid_mavlink_tx_task), `:664` (rid_task), `cli.c:393` (cli_task), and `esp_task_wdt_add(NULL)` at `esp_remote_id.c:417`.
 - [ ] **Parser → producer isolation (queue per parser + single-thread consumer)** — medium value, high cost. Parsers are polled synchronously from `rid_task` (`esp_remote_id.c:441-447`) and each `*_get()` reads the same UART inline (`mavlink_parser.c:93`, nmea/msp alike) → byte loss risk during WiFi/BLE TX in the same task. Cheap alternative first: larger UART RX buffer or interrupt-driven driver.
 - [ ] **Fuzz harness for nmea/msp/mavlink parsers** — host libFuzzer. Blocked on parser refactor (separate byte-ingest from `uart_read_bytes` to make them host-testable). Would have caught the `decode_fix2` `-Warray-bounds` issue.
 - [ ] **Configurable timeouts via web (`config.html`)** — low value. GPS stale is hardcoded 10 s (`esp_remote_id.c:603`), parser-internal 5 s, operator-location 30 s, identity 10 s, OTA idle stall `OTA_MAX_IDLE_STALLS` (`rid_ota.c:24`). Only session auth timeout is web-configurable today.
+
+> Tracked in GitHub issue [#26](https://github.com/VOLTEKOVER/ESP_DRONE_REMOTE_ID/issues/26)
 
 ### 🔴 CONCURRENCY AUDIT — verified against code 2026-08-14
 - [ ] **Fix AUTO-mode UART starvation (urgent)** — `protocol_detect_auto()` (`protocol_detect.c:42-69`) consumes up to 256 B from the same UART with a 50 ms blocking read on **every** `rid_task` loop, before the active parser reads → parser starved, framing broken in AUTO mode. Fix: lock the protocol after the first detection, or peek without consuming (`uart_get_buffered_data_len`), or detect only once at boot.
@@ -37,11 +41,15 @@ Scope: all 80+ source files (excluding build artifacts)
 - [ ] **`rid_mavlink_tx` shares the same UART as the parsers** (`esp_remote_id.c:174`) — TX and parsing contend on one port when enabled together; document or gate the combination.
 - [ ] **Stale MAVLink operator location** — `mavlink_parser_get_operator_location` (`esp_remote_id.c:517`) is used even when the active protocol is NMEA/MSP; its 30 s freshness window can feed stale data. Gate it on `proto == RID_PROTOCOL_MAVLINK`.
 
+> Tracked in GitHub issue [#24](https://github.com/VOLTEKOVER/ESP_DRONE_REMOTE_ID/issues/24)
+
 ### 🟡 CONFIG PERSISTENCE — `esp_remote_id.h` verified 2026-08-14
 - [ ] **NVS save/load gaps** (`nvs_storage.c`) — fields settable via web/CLI but never persisted, lost on reboot: `protocol`, `uart_port`, `tx_pin`, `rx_pin`, `ws2812_gpio`, `ws2812_brightness`, `lighting_pins/patterns/phase_offsets`, `dronecan_rx/tx_gpio`, `dronecan_bitrate`, `mavlink_usb_enable`, `ota_trigger_gpio`, `auth_private_key`, `start_delay_ms` (absent from `nvs_storage_save/load`). E.g. CLI `protocol` and `config set start_delay_ms` revert after reboot.
 - [ ] **Auth lifecycle** — `rid_auth_init()` runs only at boot (`esp_remote_id.c:180`) and `auth_private_key` is not persisted → auth pages silently stop after reboot; a key change via web applies only after a reboot. Re-init on config change, or persist key (or document one-time provisioning).
 - [ ] **`wifi_ssid`/`wifi_password` capped at `ESP_RID_MAX_STR_LEN` (20)** — WiFi spec allows 32/63 chars. Widen the field (NVS layout impact) or enforce the 20-char limit in the UI.
 - [ ] **`operator_lat`/`operator_lon` precision** — stored as `float` in NVS (`nvs_storage.c:118-119`) while the struct fields are `double` (~1 m error at mid latitudes). Use a f64 blob or accept.
+
+> Tracked in GitHub issue [#25](https://github.com/VOLTEKOVER/ESP_DRONE_REMOTE_ID/issues/25)
 
 ### 🟢 ARCHITECTURE — portability & dependency mgmt 2026-08-14
 - [ ] **Split parsers: pure `process_bytes()` vs UART transport** — the key step for hardware independence. `nmea_parser_get()`/`msp_parser_get()`/`mavlink_parser_get()` read UART directly (`nmea_parser.c:118`, `msp_parser.c:104`, `mavlink_parser.c:93`). Split into a host-testable byte-ingest function (no ESP-IDF includes) + a thin transport port. Unblocks 3 existing items: fuzz harness, queue producer, host unit tests.
@@ -53,6 +61,8 @@ Scope: all 80+ source files (excluding build artifacts)
 - [ ] **Use `PRIV_REQUIRES` for internal-only deps** (`CMakeLists.txt:30-48`) — mbedtls, cjson, nvs_flash, app_update, `esp_driver_*` are not part of the public API; moving them to `PRIV_REQUIRES` keeps the public interface minimal.
 - [ ] **Drop legacy `driver` dep** (`CMakeLists.txt:45`) — redundant umbrella in IDF v5+ alongside the new `esp_driver_*` components.
 
+> Tracked in GitHub issue [#27](https://github.com/VOLTEKOVER/ESP_DRONE_REMOTE_ID/issues/27)
+
 ### 🟢 MEDIUM — Features & Polish
 - [ ] **ESP-NOW mesh relay** — multi-hop range extension (4d effort)
 - [ ] **LoRa backup SX1262** — 10+ km emergency link (6d)
@@ -61,8 +71,10 @@ Scope: all 80+ source files (excluding build artifacts)
 - [ ] **Kalman covariance export** — diagnostic API
 - [ ] **Stats tracking** — TX failures, parse errors, signatures
 
+> Tracked in GitHub issue [#29](https://github.com/VOLTEKOVER/ESP_DRONE_REMOTE_ID/issues/29)
+
 ### ✅ DONE — Recently Completed
-- **Fix campaign C–K** (static audit) — armed/C, MSP gate/G, auth wiring+D, MAVLink TX/E, BLE4 adv/F, baud/H, UART+webserver/I, takeoff height/J, `AltitudeBaro`+state/K; see `dataflow_verification.md`
+- **Fix campaign A–P** (static audit) — see `dataflow.md` §9; remaining open issues in §10
 - **OTA upload timeout** — `rid_ota.c` `OTA_MAX_IDLE_STALLS=12` aborts stalled uploads (~60 s idle)
 - **Absolute GPS timeout** — `gps_valid` cleared at 10 s without fresh parser data, independent of Kalman (`esp_remote_id.c`)
 - **Differential factory reset** — `nvs_storage_reset_preserve_keys()` preserves provisioned public keys (device stays locked); used by OTA factory-reset form and `esp_rid_factory_reset`

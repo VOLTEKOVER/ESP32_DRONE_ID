@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="ESP DRONE REMOTEID [BETA] — Technical guide: protocols, installation, OTA, security, antenna, analyzer tool. ASTM F3411-22a Open DroneID.">
+<meta name="description" content="ESP DRONE REMOTEID [BETA] — Technical guide: protocols, installation, OTA, security, antenna. ASTM F3411-22a Open DroneID.">
 <meta property="og:title" content="ESP DRONE REMOTEID [BETA] — Technical Guide">
-<meta property="og:description" content="Technical guide for ESP DRONE REMOTEID — protocols, installation, OTA, security, eFuse lock, analyzer.">
+<meta property="og:description" content="Technical guide for ESP DRONE REMOTEID — protocols, installation, OTA, security, eFuse lock.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://VOLTEKOVER.github.io/ESP_DRONE_REMOTEID/">
 <meta name="twitter:card" content="summary_large_image">
@@ -74,7 +74,7 @@
 <header class="navbar navbar-expand-lg sticky-top bg-body-tertiary">
 <div class="container">
 <a href="#" class="navbar-brand brand p-0 me-3" aria-label="ESP DRONE REMOTEID home">
-<img class="logo-img" src="images/logo%20con%20scritta.svg" alt="ESP DRONE REMOTEID">
+<img class="logo-img" src="images/logo_with_text.svg" alt="ESP DRONE REMOTEID">
 </a>
 <button id="hamburger" class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
 <div class="collapse navbar-collapse" id="mainNav">
@@ -82,7 +82,6 @@
 <a class="nav-link" href="index.html#build">Install</a>
 <a class="nav-link" href="index.html#guide">Quick Start</a>
 <a class="nav-link" href="#guide">Technical Guide</a>
-<a class="nav-link" href="#guide-analyzer">Analyzer</a>
 <a class="nav-link" href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID" aria-label="GitHub repository">
 <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8"/></svg>
 </a>
@@ -100,7 +99,7 @@
 <img class="logo-hero mx-auto d-block mb-3" src="images/logo.svg" alt="ESP DRONE REMOTEID">
 <h1>ESP DRONE REMOTEID <span style="font-size:.5em;color:#c62828;font-weight:700">[BETA]</span></h1>
 <p>Universal ASTM F3411-22a Open DroneID transmitter &mdash; WiFi Beacon &middot; BLE 4.0/5.0 &middot; MAVLink &middot; MSP &middot; NMEA &middot; Security hardened</p>
-<div class="alert alert-warning text-start" role="alert" style="max-width:640px;margin:0 auto 1rem">&#x26a0; BETA &mdash; v1.0.0-beta &middot; All 21 ESPsquawk fork fixes ported, security hardening complete, FC hardware testing in progress</div>
+<div class="alert alert-warning text-start" role="alert" style="max-width:640px;margin:0 auto 1rem">&#x26a0; BETA &mdash; v1.0.0-beta. Security-hardened build with 3 ESP32 targets; flight controller hardware testing in progress. See the release bar below for details.</div>
 <div class="gh-btns d-flex justify-content-center gap-2 mt-3">
   <a class="github-button" href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID" data-show-count="true" data-size="large" aria-label="Star VOLTEKOVER/ESP_DRONE_REMOTEID on GitHub">Star</a>
   <a class="github-button" href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/fork" data-show-count="true" data-size="large" aria-label="Fork VOLTEKOVER/ESP_DRONE_REMOTEID on GitHub">Fork</a>
@@ -154,51 +153,54 @@
 <input type="text" id="guide-search" class="form-control" placeholder="Search guide sections..." oninput="filterGuide(this.value)" aria-label="Search guide sections">
 </div>
 
-<!-- 3. PROTOCOLS -->
+<!-- 1. PROTOCOLS -->
 <div class="guide-section accordion-item" id="guide-protocols">
 <h3 class="accordion-header">
 <button class="gs-header accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#guide-protocols-body" aria-expanded="false" aria-controls="guide-protocols-body">
-<span class="gs-title">3. Protocol Reference</span>
+<span class="gs-title">1. Protocol Reference</span>
 <span class="arrow">&#x25bc;</span>
 </button>
 </h3>
 <div class="accordion-collapse collapse" id="guide-protocols-body">
 <div class="accordion-body gs-body">
 <h4>Protocol Auto-Detection</h4>
-<p>On boot, the ESP DRONE REMOTEID listens to the UART for 50 ms and identifies the protocol by looking for specific headers. The detection logic runs in this priority order:</p>
+<p>The ESP DRONE REMOTEID identifies the UART protocol by looking for specific headers. In auto mode (the default, <code>protocol = 255</code>) detection runs continuously and is re-evaluated on every loop iteration, reading up to 50 ms of UART data per pass. The headers are checked in this order:</p>
 
 <div class="guide-diagram">
 <pre class="mermaid">
 flowchart TD
   Start["Boot / Reset"]
-  Listen["Listen UART 50 ms"]
+  Listen["Read UART up to 50 ms"]
 
+  MSP{"$M&lt; ?<br/>MSP v1 header"}
+  NMEA{"$G or $N prefix?<br/>NMEA 0183"}
   MAVLink{"0xFE or 0xFD?<br/>MAVLink v1/v2"}
-  MSP{"$M&lt; or $M&gt;?<br/>MSP v1 header"}
-  NMEA{"$G prefix?<br/>NMEA 0183"}
+  Fallback["Fallback: NMEA"]
 
-  MAV_OK["✅ MAVLink<br/>Store: protocol=1"]
-  MSP_OK["✅ MSP<br/>Store: protocol=2"]
-  NMEA_OK["✅ NMEA<br/>Store: protocol=3"]
+  MSP_OK["✅ MSP"]
+  NMEA_OK["✅ NMEA"]
+  MAV_OK["✅ MAVLink"]
 
   Main["Run main loop"]
 
   Start --> Listen
-  Listen --> MAVLink
-  MAVLink -->|Yes| MAV_OK
-  MAVLink -->|No| MSP
+  Listen -->|no data| Main
+  Listen --> MSP
   MSP -->|Yes| MSP_OK
   MSP -->|No| NMEA
   NMEA -->|Yes| NMEA_OK
-  NMEA -->|No| Main
+  NMEA -->|No| MAVLink
+  MAVLink -->|Yes| MAV_OK
+  MAVLink -->|No| Fallback
+  Fallback --> Main
   MAV_OK --> Main
   MSP_OK --> Main
   NMEA_OK --> Main
 </pre>
-<div class="diag-cap">Protocol auto-detection priority order. The first matching protocol is selected and stored until reboot.</div>
+<div class="diag-cap">Protocol auto-detection priority order in auto mode: MSP, then NMEA, then MAVLink. NMEA is the fallback when a frame is present but no header matches. When no data arrives, the protocol shows as unknown until the next cycle.</div>
 </div>
 
-<p>Once detected, the protocol is stored and used until the next reboot. You can force re-detection by resetting the ESP32.</p>
+<p>In auto mode the detection result is applied immediately and re-evaluated every loop, so it is not stored between cycles. When a fixed protocol is configured (<code>protocol</code> = 1, 2 or 3), the matching parser is used directly without detection.</p>
 
 <h4>MAVLink (ArduPilot)</h4>
 <p>The firmware parses the following MAVLink v1/v2 messages (dialect: <code>ardupilotmega</code>):</p>
@@ -209,16 +211,19 @@ flowchart TD
 <tr><td><code>GPS_RAW_INT</code></td><td>24</td><td>Latitude, longitude, altitude (MSL), ground speed, satellites, fix type</td><td>~5 Hz</td></tr>
 <tr><td><code>VFR_HUD</code></td><td>74</td><td>Ground speed, heading, altitude (baro), climb rate</td><td>~5 Hz</td></tr>
 <tr><td><code>ATTITUDE</code></td><td>30</td><td>Roll, pitch, yaw (heading)</td><td>~10 Hz</td></tr>
-<tr><td><code>AHRS2</code></td><td>234</td><td>Secondary heading (ArduPilot), used as fallback</td><td>~5 Hz</td></tr>
+<tr><td><code>AHRS2</code></td><td>178</td><td>Secondary heading (ArduPilot), used as fallback</td><td>~5 Hz</td></tr>
 <tr><td><code>HEARTBEAT</code></td><td>0</td><td>System ID, vehicle type (for auto-detection)</td><td>1 Hz</td></tr>
-<tr><td><code>SYS_STATUS</code></td><td>1</td><td>Battery voltage, error flags</td><td>~1 Hz</td></tr>
 <tr><td><code>OPEN_DRONE_ID_LOCATION</code></td><td>12915</td><td>Pre-encoded ODID location (lat/lon/alt/alt_baro/vel/heading)</td><td>~1 Hz</td></tr>
 <tr><td><code>OPEN_DRONE_ID_BASIC_ID</code></td><td>12900</td><td>UAS ID, ID type, UA type (overrides config identity)</td><td>~1 Hz</td></tr>
 <tr><td><code>OPEN_DRONE_ID_OPERATOR_ID</code></td><td>12905</td><td>Operator ID from ground station</td><td>~1 Hz</td></tr>
+<tr><td><code>OPEN_DRONE_ID_SELF_ID</code></td><td>12902</td><td>Self-ID text description from ground station</td><td>~1 Hz</td></tr>
+<tr><td><code>OPEN_DRONE_ID_AUTHENTICATION</code></td><td>12903</td><td>Authentication pages from ground station</td><td>~1 Hz</td></tr>
 <tr><td><code>OPEN_DRONE_ID_SYSTEM</code></td><td>12904</td><td>Operator location (GPS fallback when FC has no fix)</td><td>~1 Hz</td></tr>
+<tr><td><code>OPEN_DRONE_ID_MESSAGE_PACK</code></td><td>12919</td><td>Packed ODID messages (multiple ODID messages in one MAVLink packet)</td><td>~1 Hz</td></tr>
 </table>
 </div>
 <p>The MAVLink parser handles both v1 (0xFE start byte) and v2 (0xFD start byte) protocols. The system ID from the first HEARTBEAT message is used if <code>mavlink_sysid = 0</code> (auto-detect). ODID messages override the config identity for compatibility with ArduPilot's native Remote ID support.</p>
+<p>By default the firmware only <b>listens</b> on the UART. If the <b>MAVLink arm status</b> or <b>MAVLink operator location loopback</b> option (or <b>MAVLink over USB</b>) is enabled, a bidirectional link is started that sends a MAVLink HEARTBEAT (<code>MAV_TYPE_ODID</code>) every 1 s and republishes the ODID SYSTEM message every 6 s.</p>
 
 <h5>MAVLink Configuration Tips</h5>
 <ul>
@@ -234,6 +239,7 @@ flowchart TD
 <tr><th>Message</th><th>ID</th><th>Data Used</th><th>Notes</th></tr>
 <tr><td><code>MSP_RAW_GPS</code></td><td>106</td><td>Latitude, longitude, altitude, speed, ground course, satellites, fix type</td><td>Primary GPS data source</td></tr>
 <tr><td><code>MSP_ATTITUDE</code></td><td>108</td><td>Roll, pitch, yaw (heading in degrees)</td><td>Heading for ODID message</td></tr>
+<tr><td><code>MSP_STATUS</code></td><td>101</td><td>Armed state (bit 0 of flags)</td><td>Used by the "force arm" option</td></tr>
 </table>
 </div>
 <p>The MSP parser expects the standard MSP v1 framing: <code>$M&lt;</code> header, size byte, command byte, data payload, checksum. It does not require sending any request to the FC &mdash; it passively listens to the FC's MSP response stream (typically from the FC's telemetry output).</p>
@@ -256,7 +262,7 @@ flowchart TD
 <tr><td><code>$GPVTG</code></td><td>Course Over Ground and Ground Speed</td><td>Ground speed (km/h &rarr; m/s), course over ground (true)</td></tr>
 </table>
 </div>
-<p>The NMEA parser handles both <code>$GP</code> (GPS) and <code>$GN</code> (GNSS) prefixes. It uses the AIVDM checksum validation and silently discards malformed sentences.</p>
+<p>The NMEA parser handles both <code>$GP</code> (GPS) and <code>$GN</code> (GNSS) prefixes. It does not validate the checksum field (the part after the <code>*</code>): sentences are parsed line by line and malformed or unrecognized sentences are silently discarded.</p>
 
 <h5>NMEA Configuration Tips</h5>
 <ul>
@@ -269,11 +275,11 @@ flowchart TD
 </div>
 </div>
 
-<!-- 4. INSTALLATION -->
+<!-- 2. INSTALLATION -->
 <div class="guide-section accordion-item" id="guide-installation">
 <h3 class="accordion-header">
 <button class="gs-header accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#guide-installation-body" aria-expanded="false" aria-controls="guide-installation-body">
-<span class="gs-title">4. Installation Methods</span>
+<span class="gs-title">2. Installation Methods</span>
 <span class="arrow">&#x25bc;</span>
 </button>
 </h3>
@@ -284,7 +290,7 @@ flowchart TD
 <ol>
 <li>Connect the ESP32 to your computer via USB.</li>
 <li>Install the CP2102 or CH340 driver if prompted (Windows usually auto-installs).</li>
-<li>Click the <b>install</b> button in the left column of this page.</li>
+<li>Click the <b>install</b> button on the Quick Start page (<code>index.html</code>) &mdash; use the "Go to Quick Start" button in the left column of this page.</li>
 <li>A browser dialog will appear showing available serial ports. Select your ESP32 (usually labeled <code>CP2102 USB to UART Bridge</code> or <code>CH340</code>).</li>
 <li>Click <b>Connect</b>. The firmware will download and flash automatically.</li>
 <li>Wait for the progress bar to complete and the "Done" message.</li>
@@ -350,15 +356,15 @@ docker run --rm -v $(pwd):/out -v $(pwd):/project -w /project \
 <h4>First Boot &amp; Verification</h4>
 <p>After flashing successfully, the firmware boots in one of two modes:</p>
 <ul>
-<li><b>Demo mode (default for first boot):</b> Simulates a drone flying a circular patrol over Rome (Colosseum, 200m radius). No flight controller needed. You can configure, view live telemetry, and test OTA immediately.</li>
-<li><b>FC mode:</b> Connect to a flight controller via UART for real GPS data.</li>
+<li><b>FC mode (default):</b> Connect to a flight controller via UART for real GPS data.</li>
+<li><b>Demo mode (optional):</b> Enabled via the <b>Options</b> bit 3 (or the <code>demo</code> CLI command). Simulates a drone flying a circular patrol over Rome (Colosseum, ~300 m radius) at ~6 m/s, altitude 50&plusmn;20 m. No flight controller needed. You can configure, view live telemetry, and test OTA immediately.</li>
 </ul>
 
-<p>To toggle demo mode, use the config UI or set <code>options</code> bit 0.</p>
+<p>To toggle demo mode, use the config UI, the <code>demo</code> CLI command, or set <code>options</code> bit 3 (<code>RID_OPT_DEMO_MODE</code>).</p>
 
 <ol>
 <li><b>Power the ESP32</b> via USB or connect to your flight controller's BEC.</li>
-<li><b>Wait 10-15 seconds</b> for the ESP32 to boot. The RGB LED (if configured) shows status: red = no fix, green = fix OK, blink on TX.</li>
+<li><b>Wait 10-15 seconds</b> for the ESP32 to boot. The RGB LED (if configured) shows status: amber = no fix, green = fix OK, white flash on each transmission.</li>
 <li><b>Scan for WiFi</b> on your phone or laptop. You should see a network named <b>ESP-RID</b> (or your custom SSID).</li>
 <li><b>Connect to ESP-RID</b> (no password by default).</li>
 <li><b>Open a browser</b> and navigate to <code>http://192.168.4.1</code>. The configuration page should load.</li>
@@ -367,13 +373,18 @@ docker run --rm -v $(pwd):/out -v $(pwd):/project -w /project \
 </ol>
 
 <h5>LED Behavior</h5>
+<p>The status LED is an RGB LED driven via PWM on up to three configurable GPIOs (default: not configured / off). It shows one of 7 states plus a white flash on every transmission:</p>
 <div class="table-responsive">
 <table>
-<tr><th>LED State</th><th>Intended Meaning</th></tr>
-<tr><td>Solid on (briefly at boot)</td><td>ESP32 initializing</td></tr>
-<tr><td>Slow blink (~1 Hz)</td><td>GPS fix acquired, broadcasting Remote ID</td></tr>
-<tr><td>Fast blink (~5 Hz)</td><td>No GPS fix, waiting for data</td></tr>
-<tr><td>Off</td><td>LED not connected or GPIO2 not configured</td></tr>
+<tr><th>State</th><th>Color / Pattern</th><th>Meaning</th></tr>
+<tr><td>BOOT</td><td>Blue pulse</td><td>ESP32 initializing</td></tr>
+<tr><td>NO_GPS</td><td>Amber blink ~1 Hz</td><td>No GPS fix, waiting for data</td></tr>
+<tr><td>GPS_OK</td><td>Green solid</td><td>GPS fix acquired, broadcasting Remote ID</td></tr>
+<tr><td>DEMO</td><td>Purple pulse</td><td>Demo mode active</td></tr>
+<tr><td>LOCKED</td><td>Red double-blink</td><td>Lock level &ge; 1 active</td></tr>
+<tr><td>OTA</td><td>Rainbow cycle</td><td>OTA update in progress</td></tr>
+<tr><td>ERROR</td><td>Red blink ~4 Hz</td><td>Firmware/configuration error</td></tr>
+<tr><td>TX flash</td><td>White ~80 ms</td><td>Transmission in progress (overrides all states)</td></tr>
 </table>
 </div>
 
@@ -401,36 +412,30 @@ docker run --rm -v $(pwd):/out -v $(pwd):/project -w /project \
 </div>
 </div>
 
-<!-- 5. CONFIGURATION -->
+<!-- 3. CONFIGURATION -->
 <div class="guide-section accordion-item" id="guide-config">
 <h3 class="accordion-header">
 <button class="gs-header accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#guide-config-body" aria-expanded="false" aria-controls="guide-config-body">
-<span class="gs-title">5. Configuration Reference</span>
+<span class="gs-title">3. Configuration Reference</span>
 <span class="arrow">&#x25bc;</span>
 </button>
 </h3>
 <div class="accordion-collapse collapse" id="guide-config-body">
 <div class="accordion-body gs-body">
-<h4>Accessing the Web UI</h4>
-<ol>
-<li>Connect to the WiFi network <code>ESP-RID</code> (password: none by default).</li>
-<li>Open a browser and navigate to <code>http://192.168.4.1</code>.</li>
-<li>The web configuration page loads automatically.</li>
-</ol>
-<p>All settings can be also accessed via the REST API (see section below).</p>
+<p>Connecting to the web UI is described in <a href="#guide-webui">Web Interface Guide &rarr; Accessing the Web UI</a>. All settings can also be accessed via the REST API (see below).</p>
 
 <h4>Parameter Reference (48 Parameters)</h4>
 <div class="table-responsive">
 <table>
 <tr><th>#</th><th>Parameter</th><th>JSON Key</th><th>Type</th><th>Range</th><th>Default</th><th>Description</th></tr>
-<tr><td>1</td><td>UAS ID</td><td><code>uas_id</code></td><td>string</td><td>1-20 chars</td><td>""</td><td>Serial number or CAA registration. Example: <code>RID-12345678</code></td></tr>
+<tr><td>1</td><td>UAS ID</td><td><code>uas_id</code></td><td>string</td><td>1-20 chars</td><td>"ESP32-RID-001"</td><td>Serial number or CAA registration. On first boot, placeholders are replaced with a MAC-derived ID. Example: <code>RID-12345678</code></td></tr>
 <tr><td>2</td><td>ID Type</td><td><code>id_type</code></td><td>uint8</td><td>1-4</td><td>1</td><td>1=Serial, 2=CAA, 3=UTM UUID, 4=Session ID</td></tr>
-<tr><td>3</td><td>UA Type</td><td><code>ua_type</code></td><td>uint8</td><td>0-15</td><td>2</td><td>0=None, 1=Aeroplane, 2=Multirotor, 3=Gyroplane, 4=Hybrid, ... 15=Other</td></tr>
-<tr><td>4</td><td>Operator ID</td><td><code>operator_id</code></td><td>string</td><td>1-20 chars</td><td>""</td><td>Operator registration number (e.g., <code>OP-MARIO-12345</code>)</td></tr>
+<tr><td>3</td><td>UA Type</td><td><code>ua_type</code></td><td>uint8</td><td>0-15</td><td>1</td><td>0=None, 1=Aeroplane, 2=Multirotor, 3=Gyroplane, 4=Hybrid, ... 15=Other</td></tr>
+<tr><td>4</td><td>Operator ID</td><td><code>operator_id</code></td><td>string</td><td>1-20 chars</td><td>"OP-UNKNOWN"</td><td>Operator registration number. On first boot, placeholders are replaced with a MAC-derived ID (e.g., <code>OP-MARIO-12345</code>)</td></tr>
 <tr><td>5</td><td>UAS ID 2</td><td><code>uas_id_2</code></td><td>string</td><td>0-20 chars</td><td>""</td><td>Secondary Basic ID (optional)</td></tr>
 <tr><td>6</td><td>ID Type 2</td><td><code>id_type_2</code></td><td>uint8</td><td>0-4</td><td>0</td><td>0=None, 1=Serial, 2=CAA, 3=UTM, 4=Session</td></tr>
 <tr><td>7</td><td>UA Type 2</td><td><code>ua_type_2</code></td><td>uint8</td><td>0-15</td><td>0</td><td>Secondary aircraft type</td></tr>
-<tr><td>8</td><td>Tx Modes</td><td><code>tx_modes</code></td><td>bitmask</td><td>0-15</td><td>13</td><td>Bitmask: 1=WiFi BCN, 2=WiFi NAN, 4=BLE4, 8=BLE5</td></tr>
+<tr><td>8</td><td>Tx Modes</td><td><code>tx_modes</code></td><td>bitmask</td><td>0-15</td><td>1</td><td>Bitmask: 1=WiFi BCN, 2=WiFi NAN, 4=BLE4, 8=BLE5</td></tr>
 <tr><td>9</td><td>WiFi Channel</td><td><code>wifi_channel</code></td><td>uint8</td><td>1-13</td><td>6</td><td>2.4 GHz channel for WiFi Beacon broadcasts</td></tr>
 <tr><td>10</td><td>WiFi Power</td><td><code>wifi_power_dbm</code></td><td>float</td><td>2-20 dBm</td><td>20</td><td>WiFi transmit power (dBm)</td></tr>
 <tr><td>11</td><td>WiFi Beacon Rate</td><td><code>wifi_bcn_rate_hz</code></td><td>float</td><td>0-5 Hz</td><td>1.0</td><td>WiFi Beacon packets per second. 1 Hz = one packet per second</td></tr>
@@ -444,7 +449,7 @@ docker run --rm -v $(pwd):/out -v $(pwd):/project -w /project \
 <tr><td>19</td><td>Web Server</td><td><code>webserver_en</code></td><td>bool</td><td>0/1</td><td>1</td><td>Enable the web configuration server</td></tr>
 <tr><td>20</td><td>Baud Rate</td><td><code>baud_rate</code></td><td>uint32</td><td>9600-921600</td><td>57600</td><td>UART baud rate (must match FC)</td></tr>
 <tr><td>21</td><td>MAVLink SysID</td><td><code>mavlink_sysid</code></td><td>uint8</td><td>0-254</td><td>0</td><td>MAVLink system ID filter. 0 = auto-detect</td></tr>
-<tr><td>22</td><td>Broadcast without GPS</td><td><code>bcast_powerup</code></td><td>bool</td><td>0/1</td><td>1</td><td>Send ID messages even without GPS fix</td></tr>
+<tr><td>22</td><td>Broadcast without GPS</td><td><code>bcast_powerup</code></td><td>bool</td><td>0/1</td><td>1</td><td>Intended to send ID messages without a GPS fix &mdash; currently has no practical effect, as transmissions only run when fresh GPS data (fix type &ge; 2) is available</td></tr>
 <tr><td>23</td><td>Lock Level</td><td><code>lock_level</code></td><td>int8</td><td>0-2</td><td>0</td><td>0=Normal, 1=Signed cmds, 2=eFuse permanent</td></tr>
 <tr><td>24</td><td>Options</td><td><code>options</code></td><td>bitmask</td><td>0-511</td><td>0</td><td>Bit 0=Force ARM, 1=No save BasicID, 2=Print MAVLink RID, 3=Demo mode, 4=Kalman filter, 5=Ed25519 auth, 6=MAVLink arm status, 7=MAVLink op loc loop, 8=Identity ready gate</td></tr>
 <tr><td>25</td><td>Public Keys</td><td><code>public_key_1-5</code></td><td>string</td><td>0-256 chars</td><td>""</td><td>Up to 5 public keys (PEM or base64) for command authentication</td></tr>
@@ -461,9 +466,9 @@ docker run --rm -v $(pwd):/out -v $(pwd):/project -w /project \
 <tr><td>36</td><td>LED Blue GPIO</td><td><code>led_b_gpio</code></td><td>int8</td><td>-1 / GPIO</td><td>-1</td><td>RGB LED blue channel GPIO (-1 = disabled)</td></tr>
 <tr><td>37</td><td>WS2812 GPIO</td><td><code>ws2812_gpio</code></td><td>int8</td><td>-1 / GPIO</td><td>-1</td><td>WS2812 addressable RGB LED GPIO (-1 = disabled)</td></tr>
 <tr><td>38</td><td>WS2812 Brightness</td><td><code>ws2812_brightness</code></td><td>uint8</td><td>0-100</td><td>16</td><td>WS2812 brightness percentage</td></tr>
-<tr><td>39</td><td>Lighting Pin 1-5</td><td><code>lighting_pin_1-5</code></td><td>int8</td><td>-1 / GPIO</td><td>-1</td><td>GPIO for external lighting output channel (-1 = disabled)</td></tr>
-<tr><td>40</td><td>Lighting Pattern 1-5</td><td><code>lighting_pattern_1-5</code></td><td>uint8</td><td>0-5</td><td>0</td><td>0=OFF, 1=SOLID, 2=BLINK_SLOW, 3=BLINK_FAST, 4=ARMED, 5=GPS_FLASH</td></tr>
-<tr><td>41</td><td>Lighting Phase 1-5</td><td><code>lighting_phase_1-5</code></td><td>int16</td><td>any</td><td>0</td><td>Per-channel phase offset in milliseconds</td></tr>
+<tr><td>39</td><td>Lighting Pin 0-4</td><td><code>lighting_pin_0-4</code></td><td>int8</td><td>-1 / GPIO</td><td>-1</td><td>GPIO for external lighting output channel (-1 = disabled)</td></tr>
+<tr><td>40</td><td>Lighting Pattern 0-4</td><td><code>lighting_pattern_0-4</code></td><td>uint8</td><td>0-5</td><td>0</td><td>0=OFF, 1=SOLID, 2=BLINK_SLOW, 3=BLINK_FAST, 4=ARMED, 5=GPS_FLASH</td></tr>
+<tr><td>41</td><td>Lighting Phase 0-4</td><td><code>lighting_phase_0-4</code></td><td>int16</td><td>any</td><td>0</td><td>Per-channel phase offset in milliseconds</td></tr>
 <tr><td>42</td><td>DroneCAN RX GPIO</td><td><code>dronecan_rx_gpio</code></td><td>int8</td><td>-1 / GPIO</td><td>-1</td><td>DroneCAN CAN bus RX GPIO (-1 = disabled)</td></tr>
 <tr><td>43</td><td>DroneCAN TX GPIO</td><td><code>dronecan_tx_gpio</code></td><td>int8</td><td>-1 / GPIO</td><td>-1</td><td>DroneCAN CAN bus TX GPIO (-1 = disabled)</td></tr>
 <tr><td>44</td><td>DroneCAN Bitrate</td><td><code>dronecan_bitrate</code></td><td>uint32</td><td>any</td><td>1000000</td><td>DroneCAN CAN bus bitrate in bps</td></tr>
@@ -484,6 +489,8 @@ docker run --rm -v $(pwd):/out -v $(pwd):/project -w /project \
 <tr><td><code>/api/config</code></td><td>POST</td><td>Set configuration. Send JSON body with parameters to update</td></tr>
 <tr><td><code>/api/status</code></td><td>GET</td><td>Get live telemetry status as JSON (protocol, GPS, counters)</td></tr>
 <tr><td><code>/api/reset</code></td><td>POST</td><td>Factory reset all settings to defaults, then reboot</td></tr>
+<tr><td><code>/api/logs</code></td><td>GET</td><td>Get recent firmware log lines (used by the Console tab)</td></tr>
+<tr><td><code>/api/command</code></td><td>POST</td><td>Send an interactive console command to the firmware</td></tr>
 <tr><td><code>/ota</code></td><td>POST</td><td>Upload firmware binary for OTA update</td></tr>
 </table>
 </div>
@@ -497,16 +504,16 @@ docker run --rm -v $(pwd):/out -v $(pwd):/project -w /project \
   -d '{"uas_id":"RID-12345678","ua_type":2,"baud_rate":115200}'</pre>
 
 <h4>NVS Persistence</h4>
-<p>All configuration parameters are stored in the ESP32's Non-Volatile Storage (NVS) flash memory under the namespace <code>esp_rid</code>. Settings persist across power cycles, reboots, and OTA updates. A factory reset erases the <code>esp_rid</code> namespace and restores defaults.</p>
+<p>A subset of configuration parameters is stored in the ESP32's Non-Volatile Storage (NVS) flash memory under the namespace <code>esp_rid</code> and persists across power cycles, reboots, and OTA updates. The full key layout is in <a href="#guide-techref">Technical Reference &rarr; NVS Key Layout</a>. Parameters that are not persisted (protocol, UART port and TX/RX pins, WS2812, GPIO lighting, DroneCAN, MAVLink USB, OTA trigger GPIO, auth private key, startup delay) are runtime-only and reset to defaults on reboot. A factory reset erases the <code>esp_rid</code> namespace and restores defaults.</p>
 </div>
 </div>
 </div>
 
-<!-- 6. BUILDING -->
+<!-- 4. BUILDING -->
 <div class="guide-section accordion-item" id="guide-building">
 <h3 class="accordion-header">
 <button class="gs-header accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#guide-building-body" aria-expanded="false" aria-controls="guide-building-body">
-<span class="gs-title">6. Building from Source</span>
+<span class="gs-title">4. Building from Source</span>
 <span class="arrow">&#x25bc;</span>
 </button>
 </h3>
@@ -539,6 +546,7 @@ cd $HOME/esp/v6.0.1/esp-idf
 <h4>Clone and Build</h4>
 <pre>git clone https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID.git
 cd ESP_DRONE_REMOTEID
+cd ESP32_DRONE_REMOTE_ID_Firmware
 
 # Set environment (Windows)
 C:\esp\v6.0.1\esp-idf\export.ps1
@@ -559,75 +567,75 @@ idf.py -p COM3 monitor</pre>
 
 <h4>Project Structure</h4>
 <pre>ESP_DRONE_REMOTEID/
-&#x251c;&#x2500;&#x2500; CMakeLists.txt                  # IDF top-level build file
-&#x251c;&#x2500;&#x2500; main/                          # Application entry point
-&#x2502;   &#x2514;&#x2500;&#x2500; main.c                     # Init, demo mode, splash
-&#x251c;&#x2500;&#x2500; components/esp_remote_id/      # Core component
-&#x2502;   &#x251c;&#x2500;&#x2500; include/                   # 24 header files
-&#x2502;   &#x2502;   &#x2514;&#x2500;&#x2500; esp_remote_id.h        # Public API + structs
-&#x2502;   &#x251c;&#x2500;&#x2500; src/                        # 28 source files
-&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; esp_remote_id.c       # Orchestrator (rate limiting, task loop)
-&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; nvs_storage.c         # Config persistence (17 keys, 48 params)
-&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; web_config.c          # HTTP server + REST API + OTA + eFuse lock
-&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; protocol_detect.c     # Auto-detect: MAVLink/MSP/NMEA + cache
-&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; mavlink_parser.c      # MAVLink + MESSAGE_PACK + ODID messages
-&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; msp_parser.c          # MSP v1 (RAW_GPS, ATTITUDE)
-&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; nmea_parser.c         # NMEA 0183 (GGA, RMC, VTG) comma parser
-&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; mav2odid.c            # Intel MAVLink-to-ODID conversion
-&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; rid_patrol.c          # Demo GPS patrol simulation
-&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; rid_auth.c            # Ed25519 signing (ASTM F3411-22a)
-&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; rid_kalman.c          # 1D&#xd7;3 Kalman filter (lat/lon/alt)
-&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; rid_ota.c             # OTA update server (SHA-256 + Ed25519)
-&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; rid_security.c        # Shared verification (SHA-256, Ed25519, hex)
-&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; rid_dronecan.c        # DroneCAN CAN bus (TWAI decode)
-&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; rid_lighting.c        # GPIO lighting (5-ch pattern)
-&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; rid_mavlink_usb.c     # MAVLink over USB serial
-&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; rid_mavlink_tx.c      # MAVLink telemetry TX
-&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; rid_security.c        # Signature verification (cJSON)
-&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; opendroneid.c         # Intel ODID encode/decode (1477 lines)
-&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; wifi.c               # IEEE 802.11 frame builder (Intel lib)
-&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; wifi_tx.c            # WiFi Beacon + NAN transmitter + mutex
-&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; ble_tx.c             # BLE 4.0 legacy + BLE 5.0 LR Coded PHY
-&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; led_status.c          # RGB LED (3 configurable GPIOs)
-&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; led_ws2812.c          # WS2812 addressable RGB (RMT driver)
-&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; cli.c                 # UART CLI REPL (char-by-char input)
-&#x2502;   &#x2502;   &#x2514;&#x2500;&#x2500; uart_mirror.c         # UART debug mirror
-&#x2502;   &#x251c;&#x2500;&#x2500; mavlink/                   # MAVLink v2 C dialects (ardupilotmega)
-&#x2502;   &#x2514;&#x2500;&#x2500; webui/config.html          # Embedded web UI (~1520 lines)
+&#x251c;&#x2500;&#x2500; ESP32_DRONE_REMOTE_ID_Firmware/   # ESP-IDF firmware project
+&#x2502;   &#x251c;&#x2500;&#x2500; CMakeLists.txt                # IDF top-level build file
+&#x2502;   &#x251c;&#x2500;&#x2500; partitions.csv               # Default partition table (factory + ota_0)
+&#x2502;   &#x251c;&#x2500;&#x2500; partitions_2mb.csv           # Alternate 2 MB partition table
+&#x2502;   &#x251c;&#x2500;&#x2500; sdkconfig.defaults           # Default sdkconfig options
+&#x2502;   &#x251c;&#x2500;&#x2500; main/
+&#x2502;   &#x2502;   &#x2514;&#x2500;&#x2500; main.c                 # App entry: PSA Crypto init, eFuse MAC fallback, task start
+&#x2502;   &#x2514;&#x2500;&#x2500; components/esp_remote_id/    # Core component
+&#x2502;       &#x251c;&#x2500;&#x2500; include/                 # 24 header files
+&#x2502;       &#x2502;   &#x2514;&#x2500;&#x2500; esp_remote_id.h      # Public API + structs
+&#x2502;       &#x251c;&#x2500;&#x2500; src/                     # 24 source files
+&#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; esp_remote_id.c     # Orchestrator (rate limiting, task loop)
+&#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; nvs_storage.c       # Config persistence (36 keys)
+&#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; web_config.c        # HTTP server + REST API + OTA + eFuse lock
+&#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; protocol_detect.c   # Auto-detect: MSP/NMEA/MAVLink
+&#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; mavlink_parser.c    # MAVLink + MESSAGE_PACK + ODID messages
+&#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; msp_parser.c        # MSP v1 (RAW_GPS, ATTITUDE, STATUS)
+&#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; nmea_parser.c       # NMEA 0183 (GGA, RMC, VTG) comma parser
+&#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; mav2odid.c          # Intel MAVLink-to-ODID conversion
+&#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; rid_patrol.c        # Demo GPS patrol simulation
+&#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; rid_auth.c          # Ed25519 signing (ASTM F3411-22a)
+&#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; rid_kalman.c        # 1D&#xd7;3 Kalman filter (lat/lon/alt)
+&#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; rid_ota.c           # OTA update server (SHA-256 + Ed25519)
+&#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; rid_security.c      # Shared verification (SHA-256, Ed25519, hex)
+&#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; rid_dronecan.c      # DroneCAN CAN bus (TWAI decode)
+&#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; rid_lighting.c      # GPIO lighting (5-ch pattern)
+&#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; rid_mavlink_usb.c   # MAVLink over USB serial
+&#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; rid_mavlink_tx.c    # MAVLink telemetry TX (heartbeat + op-loc)
+&#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; opendroneid.c       # Intel ODID encode/decode (1378 lines)
+&#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; wifi.c             # IEEE 802.11 frame builder (Intel lib)
+&#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; wifi_tx.c          # WiFi Beacon + NAN transmitter + mutex
+&#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; ble_tx.c           # BLE 4.0 legacy + BLE 5.0 LR Coded PHY
+&#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; led_status.c        # RGB LED (3 configurable GPIOs)
+&#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; led_ws2812.c        # WS2812 addressable RGB (RMT driver)
+&#x2502;       &#x2502;   &#x2514;&#x2500;&#x2500; cli.c               # UART CLI REPL (char-by-char input)
+&#x2502;       &#x251c;&#x2500;&#x2500; mavlink/                 # MAVLink v2 C dialects (ardupilotmega)
+&#x2502;       &#x2514;&#x2500;&#x2500; webui/config.html          # Embedded web UI (~790 lines)
 &#x251c;&#x2500;&#x2500; RID_Hub/                         # Ground station (Electron)
 &#x2502;   &#x251c;&#x2500;&#x2500; main.js                    # Electron main process (IPC)
+&#x2502;   &#x251c;&#x2500;&#x2500; preload.js                 # Context bridge for the renderer
+&#x2502;   &#x251c;&#x2500;&#x2500; index.html                 # Renderer entry (plain JS/CSS, no framework)
+&#x2502;   &#x251c;&#x2500;&#x2500; package.json               # Dependencies / scripts
+&#x2502;   &#x251c;&#x2500;&#x2500; RID_Hub.bat                # Windows launcher
 &#x2502;   &#x251c;&#x2500;&#x2500; src/
 &#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; decoder.js               # ASTM F3411-22a decoder
 &#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; tracker.js               # Device tracking + CSV/KML
 &#x2502;   &#x2502;   &#x2514;&#x2500;&#x2500; capture.js               # WiFi/BLE/Serial capture
-&#x2502;   &#x2514;&#x2500;&#x2500; renderer/src/
-&#x2502;       &#x2514;&#x2500;&#x2500; App.tsx                    # React 19 + Ant Design 6
-&#x251c;&#x2500;&#x2500; ESP_DRONE_REMOTEID_Analyzer/ # Python WiFi beacon analyzer
-&#x2502;   &#x251c;&#x2500;&#x2500; capture.py               # Scapy-based WiFi capture
-&#x2502;   &#x251c;&#x2500;&#x2500; decoder.py               # Pure Python ODID decoder (510 lines)
-&#x2502;   &#x251c;&#x2500;&#x2500; server.py               # WebSocket broadcast server
-&#x2502;   &#x251c;&#x2500;&#x2500; rid_cli.py               # Headless CLI tool
-&#x2502;   &#x251c;&#x2500;&#x2500; gui.py                  # pywebview desktop window
-&#x2502;   &#x251c;&#x2500;&#x2500; web/                    # Analyzer web UI (HTML/JS/CSS)
-&#x2502;   &#x2514;&#x2500;&#x2500; requirements.txt
+&#x2502;   &#x251c;&#x2500;&#x2500; renderer/
+&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; app.js                   # Renderer UI logic
+&#x2502;   &#x2502;   &#x2514;&#x2500;&#x2500; style.css
+&#x2502;   &#x2514;&#x2500;&#x2500; images/                    # Logos
 &#x251c;&#x2500;&#x2500; docs/                          # GitHub Pages site
 &#x2502;   &#x251c;&#x2500;&#x2500; index.html                 # Wiki + WebSerial installer
-&#x2502;   &#x251c;&#x2500;&#x2500; guide.html                 # Technical guide (sections 1-16)
-&#x2502;   &#x251c;&#x2500;&#x2500; config(demo).html # Standalone config demo (Bootstrap 5)
+&#x2502;   &#x251c;&#x2500;&#x2500; guide.html                 # Technical guide (sections 1-13)
+&#x2502;   &#x251c;&#x2500;&#x2500; config(demo).html          # Standalone config demo (Bootstrap 5)
 &#x2502;   &#x251c;&#x2500;&#x2500; bootstrap-theme.css         # Shared styles (Bootstrap theme)
 &#x2502;   &#x251c;&#x2500;&#x2500; manifest.json              # WebSerial manifest (3 targets)
 &#x2502;   &#x2514;&#x2500;&#x2500; images/                    # Logo + dashboard + FC icons
 &#x251c;&#x2500;&#x2500; .github/workflows/            # CI/CD (build.yml + release.yml)
-&#x251c;&#x2500;&#x2500; todolist/softwarestatus.md     # Per-file analysis</pre>
+&#x2514;&#x2500;&#x2500; todolist/softwarestatus.md     # Per-file analysis</pre>
 </div>
 </div>
 </div>
 
-<!-- 7. WEB UI -->
+<!-- 5. WEB UI -->
 <div class="guide-section accordion-item" id="guide-webui">
 <h3 class="accordion-header">
 <button class="gs-header accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#guide-webui-body" aria-expanded="false" aria-controls="guide-webui-body">
-<span class="gs-title">7. Web Interface Guide</span>
+<span class="gs-title">5. Web Interface Guide</span>
 <span class="arrow">&#x25bc;</span>
 </button>
 </h3>
@@ -716,7 +724,7 @@ idf.py -p COM3 monitor</pre>
 </ul>
 
 <h5>Operator Position</h5>
-<p>Fallback operator latitude, longitude, and altitude used when GPS data is unavailable or broadcast is enabled without GPS fix.</p>
+<p>Fallback operator latitude, longitude, and altitude used for the ODID System message when no operator location is available (e.g., no MAVLink operator-location loopback).</p>
 
 <h5>Status</h5>
 <p>Real-time telemetry dashboard showing:</p>
@@ -738,17 +746,17 @@ idf.py -p COM3 monitor</pre>
 </div>
 </div>
 
-<!-- 8. OTA -->
+<!-- 6. OTA -->
 <div class="guide-section accordion-item" id="guide-ota">
 <h3 class="accordion-header">
 <button class="gs-header accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#guide-ota-body" aria-expanded="false" aria-controls="guide-ota-body">
-<span class="gs-title">8. OTA Updates</span>
+<span class="gs-title">6. OTA Updates</span>
 <span class="arrow">&#x25bc;</span>
 </button>
 </h3>
 <div class="accordion-collapse collapse" id="guide-ota-body">
 <div class="accordion-body gs-body">
-<div class="callout"><strong>&#x1f4a1; Status:</strong> OTA is implemented with client-side SHA-256 verification (Web Crypto API) and server-side Ed25519 signature verification (lock level &ge; 1). The web UI computes a SHA-256 hash of the firmware binary before upload and sends it via the <code>X-Expected-SHA256</code> header. The <code>rid_security.c</code> module handles all cryptographic verification. Dual-OTA partition scheme (factory + ota_0) ensures safe rollback.</div>
+<div class="callout"><strong>&#x1f4a1; Status:</strong> OTA is implemented with client-side SHA-256 verification (Web Crypto API) and server-side Ed25519 signature verification (lock level &ge; 1). The web UI computes a SHA-256 hash of the firmware binary before upload and sends it via the <code>X-Expected-SHA256</code> header. The <code>rid_security.c</code> module handles all cryptographic verification. The partition scheme is factory + a single OTA slot (<code>ota_0</code>); a failed update rolls back to the factory image.</div>
 
 <h4>Over-the-Air Firmware Update</h4>
 <p>The ESP DRONE REMOTEID supports updating firmware wirelessly through the web interface. No USB cable is needed once the initial firmware is flashed. The upload process includes cryptographic verification to prevent corrupt or malicious firmware.</p>
@@ -762,7 +770,7 @@ idf.py -p COM3 monitor</pre>
 
 <h4>Step-by-Step</h4>
 <ol>
-<li>Build the firmware (see section 6) or download a pre-built <code>.bin</code> from the project's releases.</li>
+<li>Build the firmware (see <a href="#guide-building">section 4 &rarr; Building from Source</a>) or download a pre-built <code>.bin</code> from the project's releases.</li>
 <li>Open the Web UI at <code>http://192.168.4.1</code>.</li>
 <li>Scroll to the <b>Firmware Update</b> section.</li>
 <li>Click <b>Select .bin file</b> and choose your firmware binary.</li>
@@ -781,7 +789,7 @@ idf.py -p COM3 monitor</pre>
 </ol>
 
 <h4>How It Works</h4>
-<p>The OTA mechanism uses ESP-IDF's built-in OTA API with a dual-partition scheme:</p>
+<p>The OTA mechanism uses ESP-IDF's built-in OTA API with a factory + single OTA partition scheme:</p>
 
 <div class="guide-diagram">
 <pre class="mermaid">
@@ -790,35 +798,35 @@ flowchart LR
 
   Server["ESP32 Web Server<br/>SHA-256 verify<br/>Ed25519 verify (L1+)<br/>Writes to OTA partition<br/>Sets boot partition<br/>esp_restart()"]
 
-  subgraph Flash["Flash Memory — Dual-OTA Scheme"]
+  subgraph Flash["Flash Memory — Factory + OTA Scheme"]
     direction TB
     Boot["Bootloader"]
-    OTA0["OTA_0 (active)"]
-    OTA1["OTA_1 (new)"]
+    Factory["factory (running)"]
+    OTA_0["ota_0 (new)"]
     NVS["NVS / Config"]
   end
 
-  Rollback["Rollback:<br/>boot from OTA_0"]
+  Rollback["Rollback:<br/>boot from factory"]
 
   Browser -->|Upload + hash| Server
-  Server -->|Write firmware| OTA1
-  OTA1 -.->|On failure| Rollback
+  Server -->|Write firmware| OTA_0
+  OTA_0 -.->|On failure| Rollback
 </pre>
-<div class="diag-cap">OTA update flow: browser computes SHA-256 → sent as X-Expected-SHA256 header → server verifies hash + optional Ed25519 signature → writes to inactive partition → reboots. Failed updates roll back automatically.</div>
+<div class="diag-cap">OTA update flow: browser computes SHA-256 → sent as X-Expected-SHA256 header → server verifies hash + optional Ed25519 signature → writes to the ota_0 partition → reboots. Failed updates roll back to the factory image.</div>
 </div>
 
 <ol>
 <li>The web server receives the firmware binary in an HTTP POST to <code>/ota</code>.</li>
 <li>It verifies the SHA-256 hash of the received data against the <code>X-Expected-SHA256</code> header using the <code>rid_security.c</code> module.</li>
 <li>If lock level &ge; 1, it also verifies the Ed25519 signature against configured public keys.</li>
-<li>On success, it writes the binary to the OTA partition (the inactive slot in a dual-OTA partition scheme).</li>
+<li>On success, it writes the binary to the <code>ota_0</code> OTA partition.</li>
 <li>It sets the OTA partition as the boot partition and calls <code>esp_restart()</code>.</li>
-<li>The ESP32 boots from the new firmware. If the update fails, it falls back to the previous firmware.</li>
+<li>The ESP32 boots from the new firmware. If the update fails, the bootloader falls back to the factory image.</li>
 </ol>
 
 <h4>Safety</h4>
 <ul>
-<li>The ESP32 has two OTA partitions and one factory partition. If an OTA update fails, the device will fall back to the previous firmware.</li>
+<li>The default partition table has one factory partition and one OTA partition (<code>ota_0</code>). If an OTA update fails, the device falls back to the factory firmware.</li>
 <li>SHA-256 verification prevents corrupt or incomplete firmware from being applied.</li>
 <li>Ed25519 signature verification (lock level &ge; 1) prevents unauthorized firmware changes.</li>
 <li>Always use a firmware built for your specific ESP32 target. Flashing an ESP32-S3 binary to an ESP32 will fail.</li>
@@ -842,11 +850,11 @@ flowchart LR
 </div>
 </div>
 
-<!-- 9. SECURITY -->
+<!-- 7. SECURITY -->
 <div class="guide-section accordion-item" id="guide-security">
 <h3 class="accordion-header">
 <button class="gs-header accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#guide-security-body" aria-expanded="false" aria-controls="guide-security-body">
-<span class="gs-title">9. Security</span>
+<span class="gs-title">7. Security</span>
 <span class="arrow">&#x25bc;</span>
 </button>
 </h3>
@@ -907,118 +915,11 @@ cat public.pem</pre>
 </div>
 </div>
 
-<!-- 10. ANALYZER -->
-<div class="guide-section accordion-item" id="guide-analyzer">
-<h3 class="accordion-header">
-<button class="gs-header accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#guide-analyzer-body" aria-expanded="false" aria-controls="guide-analyzer-body">
-<span class="gs-title">10. Analyzer Tool</span>
-<span class="arrow">&#x25bc;</span>
-</button>
-</h3>
-<div class="accordion-collapse collapse" id="guide-analyzer-body">
-<div class="accordion-body gs-body">
-<div class="callout"><strong>&#x1f4a1; Status:</strong> The Analyzer is a standalone desktop application for capturing, decoding, and analyzing ASTM F3411-22a Remote ID messages. Version 2.0.0-dev adds session recording, track trails, CSV/KML export, and a full pywebview GUI. Requires a WiFi adapter with monitor mode support.</div>
-
-<h4>Overview</h4>
-<p>The ESP DRONE REMOTEID Analyzer captures WiFi Beacon Remote ID messages broadcast by drones and decodes them in real time. It provides a rich desktop GUI with a live map, device tracking, session recording, and statistical analysis.</p>
-
-<h4>Features</h4>
-<ul>
-<li><b>Real-time capture:</b> Decodes ASTM F3411-22a WiFi Beacon messages (WiFi NaN, WiFi Aware, Beacon frames)</li>
-<li><b>Live map:</b> Devices plotted on an interactive map with trail polylines showing flight paths (500-point history per device)</li>
-<li><b>Session recording:</b> Record sessions to JSON and replay them later</li>
-<li><b>Export:</b> Download CSV or KML of captured devices</li>
-<li><b>Multi-channel hopping:</b> Automatically hop across WiFi channels to detect more devices</li>
-<li><b>PCAP capture:</b> Write raw packets to PCAP files for offline analysis in Wireshark</li>
-<li><b>Filtering:</b> Filter by UA type, RSSI quality (good/warn/bad), or active status</li>
-<li><b>Statistics:</b> Drone count over time chart, UA type distribution, top RSSI leaderboard</li>
-<li><b>Desktop notifications:</b> Alerts for new devices when the window is in the background</li>
-<li><b>Detail panel:</b> Click any device to see full details, RSSI history, and message timeline</li>
-</ul>
-
-<h4>Installation</h4>
-<ol>
-<li>Clone the repository: <code>git clone https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID.git</code></li>
-<li>Navigate to the analyzer directory: <code>cd ESP_DRONE_REMOTEID/ESP_DRONE_REMOTEID_Analyzer</code></li>
-<li>Create a virtual environment and install dependencies:
-<pre>python -m venv .venv
-source .venv/bin/activate   # Linux/Mac
-.venv\Scripts\activate       # Windows
-pip install -r requirements.txt</pre></li>
-<li>Run the application: <code>python -m analyzerex</code></li>
-</ol>
-
-<h5>Windows Requirements</h5>
-<p>On Windows, WiFi capture requires <a href="https://npcap.com/">NPcap</a> installed with "802.11 Wireless Adapter" (monitor mode) support enabled during installation. The application will detect and use the first compatible wireless interface automatically.</p>
-
-<h5>Linux Requirements</h5>
-<p>On Linux, the WiFi interface must be set to monitor mode before launching the analyzer:</p>
-<pre>sudo ip link set wlan0 down
-sudo iw dev wlan0 set type monitor
-sudo ip link set wlan0 up</pre>
-<p>Replace <code>wlan0</code> with your wireless interface name (<code>iw dev</code> to list). Root privileges may be needed for packet capture.</p>
-
-<h4>Usage Guide</h4>
-<h5>Devices Tab (Default)</h5>
-<p>Shows a table of all detected Remote ID devices. Each row shows the MAC address, UA type (Drone, Remote ID, Controller, etc.), RSSI, last seen time, and message count. Click any row to open the detail panel on the right side.</p>
-
-<h5>Map Tab</h5>
-<p>Plots device locations on an interactive OpenStreetMap. Each device is shown with a colored marker and a trail polyline showing its flight path over the last 500 reported positions. Click a marker to open the detail panel.</p>
-
-<h5>Timeline Tab</h5>
-<p>Shows a real-time scrolling log of all decoded messages. Each entry includes timestamp, MAC, and decoded payload fields. Useful for low-level debugging.</p>
-
-<h5>Statistics Tab</h5>
-<p>Displays aggregate statistics:
-<ul>
-<li><b>UA Type Distribution:</b> Grid of metric cards showing counts per UA type</li>
-<li><b>Drone Count Over Time:</b> Scrolling line chart of active devices</li>
-<li><b>Top RSSI:</b> Sorted list of devices by strongest signal</li>
-</ul>
-</p>
-
-<h5>Recording Controls</h5>
-<p>In the toolbar, click <b>Record</b> to start a session recording. All incoming messages will be saved to a JSON file. Click <b>Stop</b> to end recording. Use the <b>Replay</b> dropdown to load a previous session for offline analysis.</p>
-
-<h5>Filters</h5>
-<p>The toolbar provides three filters:
-<ul>
-<li><b>Search:</b> Filter by UA type name (e.g., "drone", "remote")</li>
-<li><b>RSSI:</b> Show only Good (&gt;-70 dBm), Warn (-70 to -80 dBm), or Bad (&lt;-80 dBm) signals</li>
-<li><b>Active:</b> Show only devices seen in the last 30 seconds</li>
-</ul>
-</p>
-
-<h4>Architecture</h4>
-<p>The Analyzer uses a three-layer architecture:</p>
-<ul>
-<li><b>capture.py</b> &mdash; Packet capture layer using Scapy. Handles WiFi interface management, channel hopping, PCAP writing, and raw packet parsing.</li>
-<li><b>server.py</b> &mdash; Application logic and WebSocket server. Decodes ASTM messages, maintains device state with track history, manages session recording/playback, and handles CSV/KML export.</li>
-<li><b>gui.py</b> &mdash; Desktop GUI via pywebview. Loads a local <code>web/index.html</code> file in a native WebView window. Communicates with server.py over WebSocket. No HTTP server is required &mdash; it loads from <code>file://</code> for security.</li>
-</ul>
-
-<h4>Command-Line Options</h4>
-<div class="table-responsive">
-<table>
-<tr><th>Flag</th><th>Description</th></tr>
-<tr><td><code>--interface</code></td><td>WiFi interface name for capture (auto-detected if omitted)</td></tr>
-<tr><td><code>--channel</code></td><td>Fixed WiFi channel to listen on (default: random hop)</td></tr>
-<tr><td><code>--channels</code></td><td>Comma-separated list of channels to hop (e.g., <code>1,6,11</code>)</td></tr>
-<tr><td><code>--hop-interval</code></td><td>Channel hop interval in seconds (default: 2.0)</td></tr>
-<tr><td><code>--no-gui</code></td><td>Run in headless mode (no GUI, log to console)</td></tr>
-<tr><td><code>--port</code></td><td>WebSocket server port (default: 8765, only in headless mode)</td></tr>
-<tr><td><code>--replay</code></td><td>Replay a recorded session file instead of live capture</td></tr>
-</table>
-</div>
-</div>
-</div>
-</div>
-
-<!-- 11. ANTENNA -->
+<!-- 8. ANTENNA -->
 <div class="guide-section accordion-item" id="guide-antenna">
 <h3 class="accordion-header">
 <button class="gs-header accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#guide-antenna-body" aria-expanded="false" aria-controls="guide-antenna-body">
-<span class="gs-title">11. Antenna Guide</span>
+<span class="gs-title">8. Antenna Guide</span>
 <span class="arrow">&#x25bc;</span>
 </button>
 </h3>
@@ -1071,11 +972,11 @@ sudo ip link set wlan0 up</pre>
 </div>
 </div>
 
-<!-- 12. ESP32 VARIANTS -->
+<!-- 9. ESP32 VARIANTS -->
 <div class="guide-section accordion-item" id="guide-variants">
 <h3 class="accordion-header">
 <button class="gs-header accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#guide-variants-body" aria-expanded="false" aria-controls="guide-variants-body">
-<span class="gs-title">12. ESP32 Variants</span>
+<span class="gs-title">9. ESP32 Variants</span>
 <span class="arrow">&#x25bc;</span>
 </button>
 </h3>
@@ -1126,10 +1027,9 @@ sudo ip link set wlan0 up</pre>
 <tr><td>MAVLink USB Transport</td><td class="n">&#x2717;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
 <tr><td>Kalman Position Filter</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
 <tr><td>Ed25519 Auth Pages</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
-<tr><td>Analyzer Support</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
 </table>
 </div>
-<p><span class="tag tag-green">&#x2713; Supported</span> <span class="tag tag-red">&#x2717; Not supported</span> <span class="tag" style="background:#fff8e1;color:#e65100">Partial — limited or experimental</span></p>
+<p><span class="tag tag-green">&#x2713; Supported</span> <span class="tag tag-red">&#x2717; Not supported</span></p>
 
 <h4>Which One to Choose?</h4>
 <ul>
@@ -1168,7 +1068,8 @@ sudo ip link set wlan0 up</pre>
 <div class="table-responsive">
 <table>
 <tr><th>Function</th><th>ESP32</th><th>ESP32-S3</th><th>ESP32-C6</th></tr>
-<tr><td>UART RX (default)</td><td>GPIO16</td><td>GPIO18</td><td>GPIO7</td></tr>
+<tr><td>UART TX (default)</td><td>GPIO17</td><td>GPIO17</td><td>GPIO17</td></tr>
+<tr><td>UART RX (default)</td><td>GPIO18</td><td>GPIO18</td><td>GPIO18</td></tr>
 <tr><td>Alt UART RX</td><td>4,26</td><td>4,5</td><td>0,1</td></tr>
 <tr><td>RGB LED R/G/B</td><td colspan="3">Configurable via web UI (any GPIO, default -1)</td></tr>
 <tr><td>WS2812 LED</td><td colspan="3">Configurable via web UI (any GPIO, default -1)</td></tr>
@@ -1183,11 +1084,11 @@ sudo ip link set wlan0 up</pre>
 </div>
 </div>
 
-<!-- 13. TROUBLESHOOTING -->
+<!-- 10. TROUBLESHOOTING -->
 <div class="guide-section accordion-item" id="guide-troubleshooting">
 <h3 class="accordion-header">
 <button class="gs-header accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#guide-troubleshooting-body" aria-expanded="false" aria-controls="guide-troubleshooting-body">
-<span class="gs-title">13. Troubleshooting</span>
+<span class="gs-title">10. Troubleshooting</span>
 <span class="arrow">&#x25bc;</span>
 </button>
 </h3>
@@ -1215,7 +1116,7 @@ sudo ip link set wlan0 up</pre>
 
 <h4>No Remote ID Signal Detected</h4>
 <ul>
-<li><b>GPS fix is required</b> (unless "Broadcast without GPS" is enabled). Check the Status page.</li>
+<li><b>GPS fix is required</b> for transmissions in the current build &mdash; the "Broadcast without GPS" option currently has no practical effect. Check the Status page.</li>
 <li>Verify that transmission modes are enabled in the Web UI (WiFi Beacon, BLE).</li>
 <li>If using a phone as a receiver, use a dedicated ODID app (e.g., Drone Scanner, OpenDroneID Viewer).</li>
 <li>WiFi Beacon requires the phone to be in range and scanning. Some phones do not passively scan WiFi beacons.</li>
@@ -1239,13 +1140,13 @@ sudo ip link set wlan0 up</pre>
 <tr><td><code>undefined reference to 'odid_wifi_...'</code></td><td>The opendroneid library is not linked. Check components/esp_remote_id/CMakeLists.txt for the REQUIRES directive.</td></tr>
 <tr><td><code>Python venv not found</code></td><td>Run <code>install.ps1</code> (Windows) or <code>install.sh</code> (Linux/Mac) in the ESP-IDF directory.</td></tr>
 <tr><td><code>No such file or directory: '.../python.exe'</code></td><td>Run <code>export.ps1</code> (Windows) or <code>export.sh</code> (Linux/Mac) to set up the Python environment.</td></tr>
-<tr><td><code>Failed to connect to ESP32: ...</code></td><td>Hold GPIO0 while connecting, check USB driver, reduce baud rate to 115200.</td></tr>
 </table>
 </div>
 
 <h4>Protocol Detection Fails</h4>
+<p>See the per-protocol configuration tips in <a href="#guide-protocols">Protocol Reference</a> (MAVLink, MSP, NMEA). In summary:</p>
 <ul>
-<li><b>MAVLink:</b> Ensure the FC is configured for MAVLink on the serial port. Verify baud rate matches. Try MAVLink v1 if v2 fails.</li>
+<li><b>MAVLink:</b> Ensure the FC is configured for MAVLink on the serial port and the baud rate matches. Try MAVLink v1 if v2 fails.</li>
 <li><b>MSP:</b> Enable MSP on the FC's serial port in the configurator. Betaflight may need <code>serialrx_provider = MSP</code>.</li>
 <li><b>NMEA:</b> GPS modules typically output at 9600 or 115200 baud. Try both. Use a serial terminal to verify the GPS is sending NMEA sentences.</li>
 </ul>
@@ -1258,157 +1159,103 @@ sudo ip link set wlan0 up</pre>
 </ul>
 
 <h4>OTA Update Fails</h4>
-<ul>
-<li>Keep the ESP32 powered via USB during OTA (battery power may drop during the erase/write cycle).</li>
-<li>Ensure the firmware <code>.bin</code> is built for the correct ESP32 target.</li>
-<li>The OTA partition must be at least as large as the firmware binary. Default partition table supports ~1.5 MB firmware.</li>
-<li>"SHA-256 mismatch" — re-select the firmware file and try again. The file may have been corrupted during download.</li>
-<li>"Signature verification failed" — lock level &ge; 1 is active. Lower lock level to 0 for unsigned OTA, or provide a valid Ed25519 signature.</li>
-</ul>
+<p>See <a href="#guide-ota">OTA Updates &rarr; Troubleshooting OTA</a>. Common causes: wrong firmware target, a corrupted <code>.bin</code>, or an active lock level &ge; 1 (Ed25519 signature required).</p>
 </div>
 </div>
 </div>
 
-<!-- 14. TECHNICAL REFERENCE -->
+<!-- 11. TECHNICAL REFERENCE -->
 <div class="guide-section accordion-item" id="guide-techref">
 <h3 class="accordion-header">
 <button class="gs-header accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#guide-techref-body" aria-expanded="false" aria-controls="guide-techref-body">
-<span class="gs-title">14. Technical Reference</span>
+<span class="gs-title">11. Technical Reference</span>
 <span class="arrow">&#x25bc;</span>
 </button>
 </h3>
 <div class="accordion-collapse collapse" id="guide-techref-body">
 <div class="accordion-body gs-body">
 <h4>NVS Key Layout</h4>
-<p>All configuration is stored in NVS namespace <code>esp_rid</code>:</p>
+<p>Configuration is stored in the NVS namespace <code>esp_rid</code> as <b>36 flat keys</b> (no nested structs). Every key is persisted across reboots and OTA updates unless the namespace is erased (factory reset):</p>
 <div class="table-responsive">
 <table>
 <tr><th>NVS Key</th><th>Type</th><th>Parameter</th></tr>
-<tr><td><code>cfg_ver</code></td><td>uint8</td><td>Configuration version (for migration)</td></tr>
+<tr><td colspan="3"><i>Strings</i></td></tr>
 <tr><td><code>uas_id</code></td><td>string</td><td>UAS ID (max 20 chars)</td></tr>
-<tr><td><code>id_type</code></td><td>uint8</td><td>ID type</td></tr>
-<tr><td><code>ua_type</code></td><td>uint8</td><td>UA type</td></tr>
 <tr><td><code>op_id</code></td><td>string</td><td>Operator ID</td></tr>
+<tr><td><code>self_id</code></td><td>string</td><td>Self-ID text (max 23 chars)</td></tr>
 <tr><td><code>uas_id2</code></td><td>string</td><td>Secondary UAS ID</td></tr>
-<tr><td><code>id_type2</code></td><td>uint8</td><td>Secondary ID type</td></tr>
+<tr><td><code>wifi_ssid</code></td><td>string</td><td>WiFi AP SSID</td></tr>
+<tr><td><code>wifi_pass</code></td><td>string</td><td>WiFi AP password</td></tr>
+<tr><td><code>pubkey1</code>...<code>pubkey5</code></td><td>string</td><td>Ed25519 public keys (auth)</td></tr>
+<tr><td colspan="3"><i>uint8</i></td></tr>
+<tr><td><code>ua_type</code></td><td>uint8</td><td>UA type</td></tr>
+<tr><td><code>id_type</code></td><td>uint8</td><td>ID type</td></tr>
 <tr><td><code>ua_type2</code></td><td>uint8</td><td>Secondary UA type</td></tr>
-<tr><td><code>tx_modes</code></td><td>uint8</td><td>Transmission mode bitmask</td></tr>
+<tr><td><code>id_type2</code></td><td>uint8</td><td>Secondary ID type</td></tr>
 <tr><td><code>wifi_ch</code></td><td>uint8</td><td>WiFi channel</td></tr>
+<tr><td><code>websrv_en</code></td><td>uint8</td><td>Web server enabled (0/1)</td></tr>
+<tr><td><code>mav_sysid</code></td><td>uint8</td><td>MAVLink system ID</td></tr>
+<tr><td><code>bcast_pwr</code></td><td>uint8</td><td>Broadcast on power-up (0/1)</td></tr>
+<tr><td><code>tx_modes</code></td><td>uint8</td><td>Transmission mode bitmask</td></tr>
+<tr><td colspan="3"><i>uint32</i></td></tr>
+<tr><td><code>options</code></td><td>uint32</td><td>Options bitmask</td></tr>
+<tr><td><code>baud</code></td><td>uint32</td><td>UART baud rate</td></tr>
+<tr><td colspan="3"><i>int8</i></td></tr>
+<tr><td><code>lock_lvl</code></td><td>int8</td><td>Lock level (0-2)</td></tr>
+<tr><td><code>led_r</code></td><td>int8</td><td>RGB LED R GPIO (-1 = disabled)</td></tr>
+<tr><td><code>led_g</code></td><td>int8</td><td>RGB LED G GPIO (-1 = disabled)</td></tr>
+<tr><td><code>led_b</code></td><td>int8</td><td>RGB LED B GPIO (-1 = disabled)</td></tr>
+<tr><td colspan="3"><i>float (stored as blob)</i></td></tr>
 <tr><td><code>wifi_pwr</code></td><td>float</td><td>WiFi TX power (dBm)</td></tr>
-<tr><td><code>rates</code></td><td>struct</td><td>Four rate values (wifi_bcn, wifi_nan, ble4, ble5) + two power values (ble4, ble5)</td></tr>
-<tr><td><code>wifi_ap</code></td><td>struct</td><td>SSID + password</td></tr>
-<tr><td><code>serial</code></td><td>struct</td><td>Baud rate + MAVLink sysid + bcast_powerup + webserver_en + UART port + TX/RX pins</td></tr>
-<tr><td><code>operator</code></td><td>struct</td><td>Operator lat/lon/alt + self_id_text</td></tr>
-<tr><td><code>leds</code></td><td>struct</td><td>RGB LED R/G/B GPIOs + WS2812 GPIO + WS2812 brightness</td></tr>
-<tr><td><code>lighting</code></td><td>struct</td><td>5 lighting pins + 5 patterns + 5 phase offsets</td></tr>
-<tr><td><code>dronecan</code></td><td>struct</td><td>DroneCAN RX/TX GPIOs + bitrate</td></tr>
-<tr><td><code>system</code></td><td>struct</td><td>Lock level + options + protocol + MAVLink USB + OTA trigger GPIO + startup delay</td></tr>
-<tr><td><code>key_1</code>...<code>key_5</code></td><td>string</td><td>Public keys</td></tr>
-<tr><td><code>auth_key</code></td><td>string</td><td>Ed25519 private key (PEM)</td></tr>
+<tr><td><code>wifi_bcn</code></td><td>float</td><td>WiFi Beacon rate (Hz)</td></tr>
+<tr><td><code>wifi_nan</code></td><td>float</td><td>WiFi NaN rate (Hz)</td></tr>
+<tr><td><code>bt4_rate</code></td><td>float</td><td>BLE 4.0 rate (Hz)</td></tr>
+<tr><td><code>bt4_pwr</code></td><td>float</td><td>BLE 4.0 TX power (dBm)</td></tr>
+<tr><td><code>bt5_rate</code></td><td>float</td><td>BLE 5.0 rate (Hz)</td></tr>
+<tr><td><code>bt5_pwr</code></td><td>float</td><td>BLE 5.0 TX power (dBm)</td></tr>
+<tr><td><code>op_lat</code></td><td>float</td><td>Operator latitude</td></tr>
+<tr><td><code>op_lon</code></td><td>float</td><td>Operator longitude</td></tr>
+<tr><td><code>op_alt</code></td><td>float</td><td>Operator altitude (m)</td></tr>
 </table>
 </div>
+<p>Runtime-only settings that are <b>not</b> persisted: protocol, UART port and TX/RX pins, WS2812 GPIO/brightness, lighting pins/patterns/phase offsets, DroneCAN RX/TX/bitrate, MAVLink USB, OTA trigger GPIO, auth private key, startup delay.</p>
 
 <h4>Status JSON Schema</h4>
 <pre>{
-  "protocol":       int,    // 0=Unknown, 1=MAVLink, 2=MSP, 3=NMEA, 4=None
-  "gps_valid":      bool,   // true if GPS has valid fix
-  "lat":            float,  // decimal degrees
-  "lon":            float,  // decimal degrees
-  "alt":            float,  // meters MSL
-  "speed":          float,  // m/s
-  "heading":        int,    // degrees (0-360)
-  "satellites":     int,    // number of satellites
-  "fix_type":       int,    // 0=None, 2=2D, 3=3D
-  "tx_total":       int,    // total transmissions since boot
-  "tx_wifi_bcn":    int,    // WiFi beacon packets sent
-  "tx_wifi_nan":    int,    // WiFi NAN packets sent
-  "tx_ble4":        int,    // BLE 4.0 packets sent
-  "tx_ble5":        int,    // BLE 5.0 packets sent
-  "armed":          bool,   // MAVLink arm status
-  "kalman_active":  bool,   // Kalman filter active
-  "identity_ready": bool,   // Identity fully configured
-  "uptime_ms":      int     // milliseconds since boot
+  "fw_version":       string, // firmware version
+  "protocol":         int,    // 0=Unknown, 1=MAVLink, 2=MSP, 3=NMEA, 4=None
+  "gps_valid":        bool,   // true if GPS has valid fix
+  "lat":              float,  // decimal degrees
+  "lon":              float,  // decimal degrees
+  "alt":              float,  // meters MSL
+  "speed":            float,  // m/s
+  "heading":          int,    // degrees (0-360)
+  "satellites":       int,    // number of satellites
+  "fix_type":         int,    // 0=None, 2=2D, 3=3D
+  "tx_total":         int,    // total transmissions since boot
+  "tx_wifi_bcn":      int,    // WiFi Beacon packets sent
+  "tx_wifi_nan":      int,    // WiFi NaN packets sent
+  "tx_ble4":          int,    // BLE 4.0 packets sent
+  "tx_ble5":          int,    // BLE 5.0 packets sent
+  "takeoff_captured": bool,   // takeoff position captured
+  "takeoff_lat":      float,  // takeoff latitude
+  "takeoff_lon":      float,  // takeoff longitude
+  "takeoff_alt":      float,  // takeoff altitude (m)
+  "uptime_ms":        int     // ms since the last GPS update
 }</pre>
-
-<h4>Config JSON Schema</h4>
-<pre>{
-  "uas_id":              string,
-  "id_type":             int,     // 1-4
-  "ua_type":             int,     // 0-15
-  "operator_id":         string,
-  "uas_id_2":            string,
-  "id_type_2":           int,     // 0-4
-  "ua_type_2":           int,     // 0-15
-  "tx_modes":            int,     // bitmask
-  "wifi_channel":        int,     // 1-13
-  "wifi_power_dbm":      float,   // 2-20
-  "wifi_bcn_rate_hz":    float,   // 0-5
-  "wifi_nan_rate_hz":    float,   // 0-5
-  "ble4_rate_hz":        float,   // 0-5
-  "ble4_power_dbm":      float,   // -27-18
-  "ble5_rate_hz":        float,   // 0-5
-  "ble5_power_dbm":      float,   // -27-18
-  "wifi_ssid":           string,
-  "wifi_password":       string,
-  "webserver_en":        int,     // 0/1
-  "baud_rate":           int,     // 9600-921600
-  "mavlink_sysid":       int,     // 0-254
-  "bcast_powerup":       int,     // 0/1
-  "lock_level":          int,     // 0-2
-  "options":             int,     // bitmask
-  "public_key_1":        string,
-  "public_key_2":        string,
-  "public_key_3":        string,
-  "public_key_4":        string,
-  "public_key_5":        string,
-  "protocol":            int,     // 255=auto
-  "uart_port":           int,     // 0-2
-  "tx_pin":              int,     // GPIO
-  "rx_pin":              int,     // GPIO
-  "operator_lat":        float,   // -90-90
-  "operator_lon":        float,   // -180-180
-  "operator_alt":        float,   // meters
-  "self_id_text":        string,
-  "led_r_gpio":          int,     // -1=disabled
-  "led_g_gpio":          int,     // -1=disabled
-  "led_b_gpio":          int,     // -1=disabled
-  "ws2812_gpio":         int,     // -1=disabled
-  "ws2812_brightness":   int,     // 0-100
-  "lighting_pin_1":      int,     // -1=disabled
-  "lighting_pin_2":      int,     // -1=disabled
-  "lighting_pin_3":      int,     // -1=disabled
-  "lighting_pin_4":      int,     // -1=disabled
-  "lighting_pin_5":      int,     // -1=disabled
-  "lighting_pattern_1":  int,     // 0-5
-  "lighting_pattern_2":  int,     // 0-5
-  "lighting_pattern_3":  int,     // 0-5
-  "lighting_pattern_4":  int,     // 0-5
-  "lighting_pattern_5":  int,     // 0-5
-  "lighting_phase_1":    int,     // ms
-  "lighting_phase_2":    int,     // ms
-  "lighting_phase_3":    int,     // ms
-  "lighting_phase_4":    int,     // ms
-  "lighting_phase_5":    int,     // ms
-  "dronecan_rx_gpio":    int,     // -1=disabled
-  "dronecan_tx_gpio":    int,     // -1=disabled
-  "dronecan_bitrate":    int,     // bps
-  "mavlink_usb_enable":  int,     // 0/1
-  "ota_trigger_gpio":    int,     // -1=disabled
-  "auth_private_key":    string,
-  "start_delay_ms":      int      // 0-30000
-}</pre>
+<p>The complete configuration payload (all parameters, including runtime-only ones) is described in <a href="#guide-config">Configuration Reference &rarr; Parameters</a>.</p>
 
 <h4>ODID Message Structure</h4>
-<p>Each transmission (WiFi Beacon or BLE advertisement) contains an ASTM F3411-22a message pack with up to 3 ODID messages. The messages are packed into a single payload payload:</p>
+<p>Each transmission (WiFi Beacon or BLE advertisement) contains an ASTM F3411-22a message pack with up to 3 ODID messages. Each ODID message is 25 bytes and starts with a 1-byte message type header (Basic ID = 0x0, Location/Vector = 0x1, System = 0x2, Operator ID = 0x5, Self-ID = 0x6, etc.) followed by a 1-byte protocol version and a 23-byte payload. The messages are packed into a single payload:</p>
 
 <div class="guide-diagram">
 <pre class="mermaid">
 flowchart TB
   subgraph Pack["ASTM F3411-22a Message Pack (single transmission)"]
     direction LR
-    Basic["Basic ID (Type 0)<br/>UAS ID (serial/CAA)<br/>ID type, UA type<br/>20 bytes"]
-    Loc["Location/Vector (Type 1)<br/>Lat, Lon, Alt, Speed<br/>Heading, Timestamp<br/>15 bytes"]
-    Sys["System (Type 2)<br/>Operator ID<br/>Area count / radius<br/>10 bytes"]
+    Basic["Basic ID (0x0)<br/>UAS ID (serial/CAA)<br/>ID type, UA type<br/>25 bytes"]
+    Loc["Location/Vector (0x1)<br/>Lat, Lon, Alt, Speed<br/>Heading, Timestamp<br/>25 bytes"]
+    Sys["System (0x2)<br/>Operator location<br/>Area count / radius<br/>25 bytes"]
   end
 
   Pack --> Transport["Transport Layer"]
@@ -1432,11 +1279,11 @@ flowchart TB
 </div>
 </div>
 
-<!-- 15. REGULATORY -->
+<!-- 12. REGULATORY -->
 <div class="guide-section accordion-item" id="guide-regulatory">
 <h3 class="accordion-header">
 <button class="gs-header accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#guide-regulatory-body" aria-expanded="false" aria-controls="guide-regulatory-body">
-<span class="gs-title">15. Regulatory Information</span>
+<span class="gs-title">12. Regulatory Information</span>
 <span class="arrow">&#x25bc;</span>
 </button>
 </h3>
@@ -1520,7 +1367,7 @@ flowchart TB
 <tr><th>Protocol</th><th>Status</th><th>Notes</th></tr>
 <tr><td>WiFi Beacon</td><td><span class="tag tag-green">Stable</span></td><td>IEEE 802.11 beacon frames with OUI-based IE (FA:0B:BC). Enabled by default. Verified in demo mode.</td></tr>
 <tr><td>WiFi NAN</td><td><span class="tag tag-blue">Implemented</span></td><td>Neighborhood Area Networking frames. UI checkbox + counters functional. Awaiting receiver testing.</td></tr>
-<tr><td>BLE 4.0</td><td><span class="tag tag-green">Stable</span></td><td>Legacy BLE advertising (SCAN_IND). All ESP32 variants. Enabled by default.</td></tr>
+<tr><td>BLE 4.0</td><td><span class="tag tag-green">Stable</span></td><td>Legacy BLE advertising (SCAN_IND). All ESP32 variants. Disabled by default &mdash; enable it in Tx Modes.</td></tr>
 <tr><td>BLE 5.0 LR (Coded PHY)</td><td><span class="tag tag-blue">Implemented</span></td><td>Requires S3/C6. Disabled by default. Awaiting hardware testing with Android/iOS.</td></tr>
 <tr><td>MAVLink (input)</td><td><span class="tag tag-blue">Implemented</span></td><td>v1/v2 parsers + ODID messages (ardupilotmega dialect). AHRS2 heading. Awaiting FC hardware.</td></tr>
 <tr><td>MSP (input)</td><td><span class="tag tag-blue">Implemented</span></td><td>MSP v1 (RAW_GPS, ATTITUDE). Awaiting Betaflight/iNAV hardware testing.</td></tr>
@@ -1531,11 +1378,11 @@ flowchart TB
 </div>
 </div>
 
-<!-- 16. CONTRIBUTING -->
+<!-- 13. CONTRIBUTING -->
 <div class="guide-section accordion-item" id="guide-contributing">
 <h3 class="accordion-header">
 <button class="gs-header accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#guide-contributing-body" aria-expanded="false" aria-controls="guide-contributing-body">
-<span class="gs-title">16. Contributing</span>
+<span class="gs-title">13. Contributing</span>
 <span class="arrow">&#x25bc;</span>
 </button>
 </h3>
@@ -1571,11 +1418,10 @@ git push -u origin my-feature-branch</pre>
 <h4>Adding a New Protocol</h4>
 <p>To add support for a new protocol:</p>
 <ol>
-<li>Create a new parser file in <code>components/esp_remote_id/src/</code></li>
-<li>Implement the parser function matching the signature <code>bool parse_xxx(uint8_t byte, rid_gps_t *gps)</code></li>
-<li>Register the parser in <code>protocol_parser.c</code> auto-detection sequence</li>
-<li>Add a new enum value to <code>rid_protocol_t</code> in <code>esp_remote_id.h</code></li>
-<li>Update the status string array in <code>web_config.c</code></li>
+<li>Create a new parser file in <code>components/esp_remote_id/src/</code> and its header in <code>include/</code></li>
+<li>Implement the standard parser interface: <code>void xxx_parser_init(uint8_t uart_port)</code> + <code>bool xxx_parser_get(rid_gps_data_t *gps)</code> (see <code>nmea_parser.c</code>, <code>msp_parser.c</code>, <code>mavlink_parser.c</code>)</li>
+<li>Add the protocol to <code>rid_protocol_t</code> in <code>esp_remote_id.h</code> and to the <code>proto_name</code> array in <code>esp_remote_id.c</code></li>
+<li>Register the new protocol in the auto-detection sequence in <code>protocol_detect.c</code></li>
 <li>Test with your hardware and submit a PR</li>
 </ol>
 
@@ -1616,8 +1462,6 @@ GitHub
 </a>
 <span class="sep text-secondary opacity-50 mx-2">|</span>
 <a href="index.html" class="text-secondary">Quick Start</a>
-<span class="sep text-secondary opacity-50 mx-2">|</span>
-<a href="#guide-analyzer" class="text-secondary">Analyzer</a>
 <span class="sep text-secondary opacity-50 mx-2">|</span>
 <a href="config(demo).html" class="text-secondary">Configurator Live Demo</a>
 <span class="sep text-secondary opacity-50 mx-2">|</span>
