@@ -36,7 +36,7 @@ Inside `esp_rid_init()` (`esp_remote_id.c:133-224`):
 | 10 | `nmea/msp/mavlink_parser_init` + `mavlink_parser_set_sysid_filter` | `esp_remote_id.c:158-161` | all three share UART1 |
 | 11 | `esp_netif_init()` | `esp_remote_id.c:163` | |
 | 12 | `wifi_tx_init` (event loop, AP, power, MAC) | `esp_remote_id.c:165`, `wifi_tx.c:66-124` | |
-| 13 | `ble_tx_init` (BT controller + Bluedroid) | `esp_remote_id.c:166`, `ble_tx.c:195-212` | |
+| 13 | `ble_tx_init` (BT controller + Bluedroid) | `esp_remote_id.c:166`, `ble_tx.c:124-141` | |
 | 14 | `ble_tx_set_power(9)` | `esp_remote_id.c:169` | |
 | 15 | if `options & (bit6\|bit7)` or `mavlink_usb_enable` → `rid_mavlink_tx_init` + create task | `esp_remote_id.c:172-176` | |
 | 16 | if `options & AUTH_ED25519` → `rid_auth_init(auth_private_key)`; `g_state.auth_enabled = rid_auth_enabled()` | `esp_remote_id.c:179-182` | key only parsed here, at boot |
@@ -160,11 +160,11 @@ Period 100 ms (`vTaskDelay` at `:659`), WDT reset at `:660`. `g_running` toggled
 - `populate_uas_data` (`:167-246`): BasicID[0..1], Location, System(operator), SelfID, OperatorID, Auth (MAVLink-relayed pages first, else local Ed25519 sign; pages skipped if pack would overflow).
 
 ### 6.8 BLE TX — `ble_tx.c`
-- Init (`:195-212`): BT controller (release classic), enable BLE, Bluedroid init+enable.
-- `ble_tx_transmit_legacy` (`:214-261`): one 25 B ODID message per 31 B Service-Data adv (UUID 0xFFFA, app code 0x0D, counter), messages **rotated** per cycle. On S3/C6 (`CONFIG_BT_BLE_50_EXTEND_ADV_EN`): ext-adv **instance 2**, `LEGACY_NONCONN`, 1M PHY; on ESP32 classic: `config_adv_data_raw` + `start_advertising`, `ADV_TYPE_SCAN_IND`.
-- `ble_tx_transmit_lr` (`:263-315`): full pack (≤254 B) on **instance 0** (1M, legacy-compatible) + **instance 1** (Coded PHY). Only if ext-adv enabled.
-- `ble_tx_set_power` (`:317-328`): clamps to [-12..9] dBm, level = `(dbm+12)/3`.
-- Note: `esp_ble_gap_*` return values are **ignored**; the function returns `true` regardless.
+- Init (`:124-141`): BT controller (release classic), enable BLE, Bluedroid init+enable.
+- `ble_tx_transmit_legacy` (`:143-187`): one 25 B ODID message per 31 B Service-Data adv (UUID 0xFFFA, app code 0x0D, counter), messages **rotated** per cycle. On S3/C6 (`CONFIG_BT_BLE_50_EXTEND_ADV_EN`): ext-adv **instance 2**, `LEGACY_NONCONN`, 1M PHY; on ESP32 classic: `config_adv_data_raw` + `start_advertising`, `ADV_TYPE_SCAN_IND`.
+- `ble_tx_transmit_lr` (`:189-235`): full pack (≤254 B) on **instance 0** (1M, legacy-compatible) + **instance 1** (Coded PHY). Only if ext-adv enabled.
+- `ble_tx_set_power` (`:237-248`): clamps to [-12..9] dBm, level = `(dbm+12)/3`.
+- `ext_adv_instance` helper (`:100-120`): `set_params` + `config_data` + `start` with **return checks** — any failure logs an error and the TX returns `false`. (Classic-ESP32 `config_adv_data_raw`/`start_advertising` calls at `:179-180` still unchecked.)
 
 ### 6.9 Web server — `web_config.c`
 - Init (`:727-755`): `log_init` installs a `vprintf` hook feeding a 64×240 B log ring; httpd on port 80 (max 16 handlers, LRU purge) + 10 handlers.
@@ -254,7 +254,7 @@ Debug: find which gate blocks — that is usually the answer.
 | GPS stale after 10 s | §5 Q + parser freshness (MAVLink 5 s) | parser buffer overflow? baud/pins? |
 | MSP configured but no GPS | §6.3 **suspected framing off-by-one** | compare against real captured `$M<` frames |
 | MAVLink configured but no data | `sysid_filter` (`mavlink_parser.c:48-51,100`) | set 0 = any sysid; freshness 5 s |
-| BLE4 nothing received | legacy 31 B rotation (`ble_tx.c:118-192`) | `ble4_count` increments? power; ext-adv instance 2 |
+| BLE4 nothing received | legacy 31 B rotation (`ble_tx.c:143-187`) | `ble4_count` increments? power; ext-adv instance 2 |
 | BLE5 nothing received | ext adv only compiled on S3/C6 (`CONFIG_BT_BLE_50_EXTEND_ADV_EN`) | target support; `ble5_count` |
 | Web UI unreachable | `webserver_en=0` or eFuse lock | boot log; AP SSID visible? |
 | Config reverts after reboot | §6.12 NVS gaps | `nvs_storage_save/load` missing fields |

@@ -95,6 +95,30 @@ static bool build_legacy_adv(rid_gps_data_t *gps, rid_identity_t *identity, uint
     *len = 31;
     return true;
 }
+
+#if defined(CONFIG_BT_BLE_50_EXTEND_ADV_EN)
+static bool ext_adv_instance(uint8_t inst, esp_ble_gap_ext_adv_params_t *params,
+                             uint8_t *data, uint16_t len)
+{
+    esp_err_t ret = esp_ble_gap_ext_adv_set_params(inst, params);
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "ext_adv_set_params(%u) failed: %s", inst, esp_err_to_name(ret));
+        return false;
+    }
+    ret = esp_ble_gap_config_ext_adv_data_raw(inst, len, data);
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "ext_adv_config_data(%u) failed: %s", inst, esp_err_to_name(ret));
+        return false;
+    }
+    esp_ble_gap_ext_adv_t adv = { .instance = inst, .duration = 0, .max_events = 0 };
+    ret = esp_ble_gap_ext_adv_start(1, &adv);
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "ext_adv_start(%u) failed: %s", inst, esp_err_to_name(ret));
+        return false;
+    }
+    return true;
+}
+#endif /* CONFIG_BT_BLE_50_EXTEND_ADV_EN */
 #endif
 
 void ble_tx_init(void)
@@ -139,10 +163,7 @@ bool ble_tx_transmit_legacy(rid_gps_data_t *gps, rid_identity_t *identity)
         .secondary_phy = ESP_BLE_GAP_PHY_1M,
         .scan_req_notif = false,
     };
-    esp_ble_gap_ext_adv_set_params(2, &ext_params);
-    esp_ble_gap_config_ext_adv_data_raw(2, len, g_adv_data);
-    esp_ble_gap_ext_adv_t adv = { .instance = 2, .duration = 0, .max_events = 0 };
-    esp_ble_gap_ext_adv_start(1, &adv);
+    if (!ext_adv_instance(2, &ext_params, g_adv_data, len)) return false;
 #else
     esp_ble_adv_params_t adv_params = {
         .adv_int_min = 0x100,
@@ -189,10 +210,7 @@ bool ble_tx_transmit_lr(rid_gps_data_t *gps, rid_identity_t *identity)
             .secondary_phy = ESP_BLE_GAP_PHY_1M,
             .scan_req_notif = false,
         };
-        esp_ble_gap_ext_adv_set_params(0, &ext_params_legacy);
-        esp_ble_gap_config_ext_adv_data_raw(0, pack_len, pack_buf);
-        esp_ble_gap_ext_adv_t adv_legacy = { .instance = 0, .duration = 0, .max_events = 0 };
-        esp_ble_gap_ext_adv_start(1, &adv_legacy);
+        if (!ext_adv_instance(0, &ext_params_legacy, pack_buf, (uint16_t)pack_len)) return false;
     }
 
     /* Instance 1: long-range (Coded PHY, 200+ m range) */
@@ -207,10 +225,7 @@ bool ble_tx_transmit_lr(rid_gps_data_t *gps, rid_identity_t *identity)
             .secondary_phy = ESP_BLE_GAP_PHY_CODED,
             .scan_req_notif = false,
         };
-        esp_ble_gap_ext_adv_set_params(1, &ext_params_lr);
-        esp_ble_gap_config_ext_adv_data_raw(1, pack_len, pack_buf);
-        esp_ble_gap_ext_adv_t adv_lr = { .instance = 1, .duration = 0, .max_events = 0 };
-        esp_ble_gap_ext_adv_start(1, &adv_lr);
+        if (!ext_adv_instance(1, &ext_params_lr, pack_buf, (uint16_t)pack_len)) return false;
     }
 
     return true;
