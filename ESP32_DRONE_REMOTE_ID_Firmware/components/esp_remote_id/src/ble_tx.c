@@ -9,7 +9,7 @@
 #endif
 #include "ble_tx.h"
 #include "opendroneid.h"
-#include "rid_auth.h"
+#include "odid_common.h"
 
 #define TAG "BLE_TX"
 
@@ -19,101 +19,6 @@ static bool g_initialized = false;
 #if defined(CONFIG_BT_BLUEDROID_ENABLED) && defined(SOC_BT_SUPPORTED)
 static ODID_UAS_Data g_uas_data;
 static uint8_t g_adv_data[254];
-
-static ODID_Horizontal_accuracy_t ble_horiz_acc(uint8_t fix_type, uint8_t satellites)
-{
-    if (fix_type >= 4 && satellites >= 15) return ODID_HOR_ACC_1_METER;
-    if (fix_type >= 4 && satellites >= 10) return ODID_HOR_ACC_3_METER;
-    if (fix_type >= 3) return ODID_HOR_ACC_10_METER;
-    return ODID_HOR_ACC_30_METER;
-}
-
-static ODID_Vertical_accuracy_t ble_vert_acc(uint8_t fix_type, uint8_t satellites)
-{
-    if (fix_type >= 4 && satellites >= 15) return ODID_VER_ACC_3_METER;
-    if (fix_type >= 4 && satellites >= 10) return ODID_VER_ACC_10_METER;
-    if (fix_type >= 3) return ODID_VER_ACC_25_METER;
-    return ODID_VER_ACC_45_METER;
-}
-
-static void prepare_uas_data(rid_gps_data_t *gps, rid_identity_t *identity)
-{
-    memset(&g_uas_data, 0, sizeof(g_uas_data));
-
-    g_uas_data.BasicIDValid[0] = 1;
-    g_uas_data.BasicID[0].IDType = (ODID_idtype_t)identity->id_type;
-    g_uas_data.BasicID[0].UAType = (ODID_uatype_t)identity->ua_type;
-    strncpy((char *)g_uas_data.BasicID[0].UASID, identity->uas_id, ODID_ID_SIZE);
-
-    if (identity->uas_id_2[0] != '\0') {
-        g_uas_data.BasicIDValid[1] = 1;
-        g_uas_data.BasicID[1].IDType = (ODID_idtype_t)identity->id_type_2;
-        g_uas_data.BasicID[1].UAType = (ODID_uatype_t)identity->ua_type_2;
-        strncpy((char *)g_uas_data.BasicID[1].UASID, identity->uas_id_2, ODID_ID_SIZE);
-    }
-
-    g_uas_data.LocationValid = 1;
-    g_uas_data.Location.Latitude = gps->latitude;
-    g_uas_data.Location.Longitude = gps->longitude;
-    g_uas_data.Location.AltitudeGeo = gps->altitude_msl;
-    g_uas_data.Location.Height = gps->altitude_relative;
-    g_uas_data.Location.AltitudeBaro = gps->altitude_baro;
-    g_uas_data.Location.SpeedHorizontal = gps->speed;
-    g_uas_data.Location.SpeedVertical = gps->speed_vertical;
-    g_uas_data.Location.Direction = gps->heading;
-    g_uas_data.Location.HorizAccuracy = ble_horiz_acc(gps->fix_type, gps->satellites);
-    g_uas_data.Location.VertAccuracy = ble_vert_acc(gps->fix_type, gps->satellites);
-
-    if (identity->self_id_text[0] != '\0') {
-        g_uas_data.SelfIDValid = 1;
-        g_uas_data.SelfID.DescType = identity->has_self_id
-                                         ? (ODID_desctype_t)identity->self_id_desc_type
-                                         : ODID_DESC_TYPE_TEXT;
-        strncpy((char *)g_uas_data.SelfID.Desc, identity->self_id_text, ODID_STR_SIZE);
-    }
-
-    g_uas_data.SystemValid = 1;
-    g_uas_data.System.OperatorLatitude = gps->operator_lat;
-    g_uas_data.System.OperatorLongitude = gps->operator_lon;
-    g_uas_data.System.OperatorAltitudeGeo = gps->operator_alt;
-
-    g_uas_data.OperatorIDValid = 1;
-    strncpy((char *)g_uas_data.OperatorID.OperatorId, identity->operator_id, ODID_ID_SIZE);
-
-    /* Authentication: MAVLink-relayed pages take priority, otherwise sign locally */
-    uint8_t auth_pages = 0;
-    ODID_Auth_data auth[ODID_AUTH_MAX_PAGES];
-
-    if (identity->has_ext_auth && identity->ext_auth_last_page < ODID_AUTH_MAX_PAGES) {
-        uint16_t last = identity->ext_auth_last_page;
-        uint16_t need = (uint16_t)((1u << (last + 1)) - 1);
-        if ((identity->ext_auth_pages_received & need) == need) {
-            for (uint16_t p = 0; p <= last; p++) {
-                memset(&auth[p], 0, sizeof(ODID_Auth_data));
-                auth[p].DataPage = (uint8_t)p;
-                auth[p].AuthType = (ODID_authtype_t)identity->ext_auth_type;
-                auth[p].LastPageIndex = identity->ext_auth_last_page;
-                auth[p].Length = identity->ext_auth_length;
-                memcpy(auth[p].AuthData, identity->ext_auth_pages[p],
-                       ODID_AUTH_PAGE_NONZERO_DATA_SIZE);
-            }
-            auth_pages = (uint8_t)(last + 1);
-        }
-    } else if (rid_auth_enabled()) {
-        (void)rid_auth_sign_identity(identity->uas_id, auth, &auth_pages);
-    }
-
-    if (auth_pages > 0) {
-        uint8_t fixed = 1 + (identity->uas_id_2[0] ? 1 : 0) + 1 +
-                        (identity->self_id_text[0] ? 1 : 0) + 1 + 1;
-        if (auth_pages <= ODID_PACK_MAX_MESSAGES - fixed) {
-            for (uint8_t p = 0; p < auth_pages; p++) {
-                g_uas_data.Auth[p] = auth[p];
-                g_uas_data.AuthValid[p] = 1;
-            }
-        }
-    }
-}
 
 static bool build_legacy_adv(rid_gps_data_t *gps, rid_identity_t *identity, uint8_t *buf, uint16_t buf_size, uint16_t *len)
 {
@@ -125,7 +30,7 @@ static bool build_legacy_adv(rid_gps_data_t *gps, rid_identity_t *identity, uint
     if (buf_size < 31) return false;
     memset(buf, 0, buf_size);
 
-    prepare_uas_data(gps, identity);
+    odid_common_build_uas_data(&g_uas_data, gps, identity);
 
     static uint8_t rotation = 0;
 
@@ -265,7 +170,7 @@ bool ble_tx_transmit_lr(rid_gps_data_t *gps, rid_identity_t *identity)
     if (!g_initialized || !gps || !identity) return false;
 
 #if defined(CONFIG_BT_BLUEDROID_ENABLED) && defined(SOC_BT_SUPPORTED) && defined(CONFIG_BT_BLE_50_EXTEND_ADV_EN)
-    prepare_uas_data(gps, identity);
+    odid_common_build_uas_data(&g_uas_data, gps, identity);
 
     /* Build full ODID pack — extended advertising supports up to 254 bytes */
     uint8_t pack_buf[ODID_PACK_MAX_MESSAGES * ODID_MESSAGE_SIZE + 8];

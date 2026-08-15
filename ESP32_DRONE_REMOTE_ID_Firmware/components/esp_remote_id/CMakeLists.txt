@@ -10,6 +10,7 @@ idf_component_register(
         "src/wifi.c"
         "src/wifi_tx.c"
         "src/ble_tx.c"
+        "src/odid_common.c"
         "src/web_config.c"
         "src/nvs_storage.c"
         "src/led_status.c"

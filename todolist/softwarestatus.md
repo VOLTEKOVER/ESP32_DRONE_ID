@@ -19,7 +19,7 @@ Scope: all 80+ source files (excluding build artifacts)
 - [x] **Absolute GPS timeout** (`esp_remote_id.c:586-593`) — `gps_valid` cleared at 10 s regardless of Kalman predictions + WARN log
 - [x] **CLI config set** (`cli.c`) — `config set <field> <value>` for 20+ fields
 - [x] **Differential factory reset** (`nvs_storage.c`) — new `nvs_storage_reset_preserve_keys()` keeps pubkey1..5; wired into OTA handler + `esp_rid_factory_reset`
-- [ ] **populate_uas_data dedup** (`wifi_tx.c` + `ble_tx.c`) — shared function → `odid_common.c`
+- [x] **populate_uas_data dedup** (`wifi_tx.c` + `ble_tx.c`) — shared function → `odid_common.c` (`odid_common_build_uas_data`, both transports) 2026-08-15
 - [ ] **Dual-core pinning** — Core 0 (WiFi TX) / Core 1 (BLE+UI)
 - [x] **BLE 5.0 LR gate verified** (`ble_tx.c:246`) — `CONFIG_BT_BLE_50_EXTEND_ADV_EN` is the correct Bluedroid Kconfig symbol in IDF v5/v6, already gated by `SOC_BLE_50_SUPPORTED` (compiles only on S3/C6). Remaining: check return codes of `esp_ble_gap_ext_adv_*` calls at runtime
 
@@ -140,16 +140,17 @@ Action options: remove the 2 FRDID prototypes (or vendor `frdid.c`) and drop `ri
 
 | File | Lines | Status | Notes |
 |------|-------|--------|-------|
-| `CMakeLists.txt` | 52 | ✅ OK | 24 src files, REQUIRES |
+| `CMakeLists.txt` | 55 | ✅ OK | 25 src files, REQUIRES |
 | `esp_remote_id.h` | 200 | ✅ OK | Full config+state structs |
 | `opendroneid.h` | 762 | ✅ OK | Upstream Intel ODID lib |
 | `odid_wifi.h` | 106 | ✅ OK | 802.11 packed structs |
 | `esp_remote_id.c` | 672 | ✅ OK | Absolute GPS timeout, differential reset, fix B/J/K |
 | `web_config.c` | 750 | ✅ OK | cJSON, rate limiting, signature verify, /style.css + /app.js handlers |
 | `cli.c` | 395 | ✅ OK | `config set <field> <value>` write command |
-| `wifi_tx.c` | 297 | 🟡 DEDUP | Dedup populate_uas_data with common lib |
+| `wifi_tx.c` | 198 | ✅ OK | Uses shared `odid_common_build_uas_data` |
 | `wifi.c` | 614 | ✅ OK | Intel ODID frame builder |
-| `ble_tx.c` | 303 | ✅ OK | ble_tx_set_power() respects dbm; LR gate verified |
+| `ble_tx.c` | 233 | ✅ OK | ble_tx_set_power() respects dbm; LR gate verified; shared ODID builder |
+| `odid_common.c` | 103 | ✅ OK | Shared `odid_common_build_uas_data` (WiFi + BLE pack builder) |
 | `mavlink_parser.c` | 276 | ✅ OK | MESSAGE_PACK unpack |
 | `mav2odid.c` | 636 | ✅ OK | Upstream Intel lib |
 | `opendroneid.c` | 1477 | ✅ OK | Upstream Intel lib |
@@ -258,7 +259,7 @@ Action options: remove the 2 FRDID prototypes (or vendor `frdid.c`) and drop `ri
 - [x] Absolute GPS timeout — `gps_valid` cleared at 10 s regardless of Kalman state
 - [x] `cli.c` `config set <field> <value>` write command (parity with web UI)
 - [x] Differential factory reset — `nvs_storage_reset_preserve_keys()` keeps auth keys, erases only config
-- [ ] `populate_uas_data` dedup — shared ODID pack builder between `wifi_tx.c` and `ble_tx.c`
+- [x] `populate_uas_data` dedup — shared ODID pack builder between `wifi_tx.c` and `ble_tx.c` (`odid_common_build_uas_data`) 2026-08-15
 - [ ] BLE 5.0 LR — check return codes of `esp_ble_gap_ext_adv_set_params/config/start` at runtime
 
 **Ground tools**

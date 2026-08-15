@@ -575,9 +575,9 @@ idf.py -p COM3 monitor</pre>
 &#x2502;   &#x251c;&#x2500;&#x2500; main/
 &#x2502;   &#x2502;   &#x2514;&#x2500;&#x2500; main.c                 # App entry: PSA Crypto init, eFuse MAC fallback, task start
 &#x2502;   &#x2514;&#x2500;&#x2500; components/esp_remote_id/    # Core component
-&#x2502;       &#x251c;&#x2500;&#x2500; include/                 # 24 header files
+&#x2502;       &#x251c;&#x2500;&#x2500; include/                 # 25 header files
 &#x2502;       &#x2502;   &#x2514;&#x2500;&#x2500; esp_remote_id.h      # Public API + structs
-&#x2502;       &#x251c;&#x2500;&#x2500; src/                     # 24 source files
+&#x2502;       &#x251c;&#x2500;&#x2500; src/                     # 25 source files
 &#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; esp_remote_id.c     # Orchestrator (rate limiting, task loop)
 &#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; nvs_storage.c       # Config persistence (36 keys)
 &#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; web_config.c        # HTTP server + REST API + OTA + eFuse lock
@@ -599,6 +599,7 @@ idf.py -p COM3 monitor</pre>
 &#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; wifi.c             # IEEE 802.11 frame builder (Intel lib)
 &#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; wifi_tx.c          # WiFi Beacon + NAN transmitter + mutex
 &#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; ble_tx.c           # BLE 4.0 legacy + BLE 5.0 LR Coded PHY
+&#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; odid_common.c      # Shared ODID pack builder (WiFi + BLE)
 &#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; led_status.c        # RGB LED (3 configurable GPIOs)
 &#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; led_ws2812.c        # WS2812 addressable RGB (RMT driver)
 &#x2502;       &#x2502;   &#x2514;&#x2500;&#x2500; cli.c               # UART CLI REPL (char-by-char input)
