@@ -20,6 +20,7 @@
 #include "led_status.h"
 #include "cJSON.h"
 #include "rid_security.h"
+#include "rid_output.h"
 
 #define TAG "WEB_CFG"
 #define BUF_SIZE 4096
@@ -165,6 +166,20 @@ static void apply_json(rid_config_t *cfg, const char *json)
         else cfg->protocol = RID_PROTOCOL_AUTO;
     }
 
+    item = cJSON_GetObjectItem(root, "region");
+    if (cJSON_IsNumber(item)) {
+        int r = item->valueint;
+        if (r >= (int)RID_REGION_AUTO && r <= (int)RID_REGION_NZL) cfg->region = (rid_region_t)r;
+    } else if (cJSON_IsString(item)) {
+        const char *s = item->valuestring;
+        for (int r = (int)RID_REGION_AUTO; r <= (int)RID_REGION_NZL; r++) {
+            if (strcasecmp(s, rid_output_region_name((rid_region_t)r)) == 0) {
+                cfg->region = (rid_region_t)r;
+                break;
+            }
+        }
+    }
+
     item = cJSON_GetObjectItem(root, "tx_modes");
     if (cJSON_IsNumber(item)) cfg->tx_modes = (uint8_t)item->valueint;
     item = cJSON_GetObjectItem(root, "wifi_channel");
@@ -297,7 +312,7 @@ static void config_to_json(const rid_config_t *c, char *buf, size_t sz)
     int off = 0;
     off += snprintf(buf + off, sz - off,
         "{"
-        "\"protocol\":%u,"
+        "\"protocol\":%u,\"region\":\"%s\","
         "\"uas_id\":\"%s\",\"id_type\":%u,\"ua_type\":%u,\"operator_id\":\"%s\",\"self_id_text\":\"%s\","
         "\"uas_id_2\":\"%s\",\"id_type_2\":%u,\"ua_type_2\":%u,"
         "\"tx_modes\":%u,\"wifi_channel\":%u,\"wifi_power_dbm\":%.1f,"
@@ -321,6 +336,7 @@ static void config_to_json(const rid_config_t *c, char *buf, size_t sz)
         "\"lighting_phase_0\":%d,\"lighting_phase_1\":%d,\"lighting_phase_2\":%d,\"lighting_phase_3\":%d,\"lighting_phase_4\":%d"
         "}",
         (unsigned)c->protocol,
+        rid_output_region_name(c->region),
         c->uas_id, c->id_type, c->ua_type, c->operator_id, c->self_id_text,
         c->uas_id_2, c->id_type_2, c->ua_type_2,
         c->tx_modes, c->wifi_channel, (double)c->wifi_power_dbm,
@@ -349,6 +365,7 @@ static void state_to_json(const rid_state_t *s, char *buf, size_t sz)
     snprintf(buf, sz,
         "{"
         "\"fw_version\":\"%s\",\"protocol\":%d,\"gps_valid\":%s,\"lat\":%.6f,\"lon\":%.6f,"
+        "\"standard\":\"%s\",\"standard_fallback\":%s,"
         "\"alt\":%.1f,\"speed\":%.1f,\"heading\":%d,\"satellites\":%u,\"fix_type\":%u,"
         "\"tx_total\":%lu,\"tx_wifi_bcn\":%lu,\"tx_wifi_nan\":%lu,"
         "\"tx_ble4\":%lu,\"tx_ble5\":%lu,"
@@ -358,6 +375,8 @@ static void state_to_json(const rid_state_t *s, char *buf, size_t sz)
         ESP_RID_VERSION,
         (int)s->active_protocol, s->gps_valid ? "true" : "false",
         s->gps.latitude, s->gps.longitude,
+        rid_output_standard_name(s->active_standard),
+        s->standard_fallback ? "true" : "false",
         (double)s->gps.altitude_msl, (double)s->gps.speed,
         s->gps.heading, s->gps.satellites, s->gps.fix_type,
         (unsigned long)s->transmissions_count,

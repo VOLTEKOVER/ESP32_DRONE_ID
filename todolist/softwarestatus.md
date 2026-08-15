@@ -10,13 +10,13 @@ Scope: all 80+ source files (excluding build artifacts)
 ### 🔴 CRITICAL — Security & Correctness
 - [x] **JSON parser → cJSON** (`web_config.c:102-139`) — naive `strstr()` exploited by crafted JSON
 - [x] **Message Pack submessage decode** (`mavlink_parser.c:235-247`) — switch on submsg[0] is empty
-- [x] **Task watchdog** (`esp_remote_id.c:627`) — no recovery if rid_task hangs
+- [x] **Task watchdog** (`esp_remote_id.c:431`) — no recovery if rid_task hangs
 - [x] **Rate limiting on signature** (`web_config.c:306-375`) — brute-force on eFuse sigs
 - [x] **Base64 strict padding** (`rid_security.c:12-41`) — accepts malformed base64
 - [x] **OTA timeout** (`rid_ota.c:129-157`) — abort upload after N consecutive idle socket timeouts (`OTA_MAX_IDLE_STALLS=12`, ~60 s)
 
 ### 🟡 HIGH — Quality & Robustness
-- [x] **Absolute GPS timeout** (`esp_remote_id.c:586-593`) — `gps_valid` cleared at 10 s regardless of Kalman predictions + WARN log
+- [x] **Absolute GPS timeout** (`esp_remote_id.c:619-626`) — `gps_valid` cleared at 10 s regardless of Kalman predictions + WARN log
 - [x] **CLI config set** (`cli.c`) — `config set <field> <value>` for 20+ fields
 - [x] **Differential factory reset** (`nvs_storage.c`) — new `nvs_storage_reset_preserve_keys()` keeps pubkey1..5; wired into OTA handler + `esp_rid_factory_reset`
 - [x] **populate_uas_data dedup** (`wifi_tx.c` + `ble_tx.c`) — shared function → `odid_common.c` (`odid_common_build_uas_data`, both transports) 2026-08-15
@@ -26,26 +26,26 @@ Scope: all 80+ source files (excluding build artifacts)
 > Tracked in GitHub issue [#28](https://github.com/VOLTEKOVER/ESP_DRONE_REMOTE_ID/issues/28)
 
 ### 🟠 PRIORITY REFACTORS — 5 suggestions verified 2026-08-14
-- [ ] **Copy `g_config` to a local struct at the start of the `rid_task` loop** — HIGH value, low cost. Real data race today: `rid_task` reads `g_config` without lock (`esp_remote_id.c:308-338`, `:490-497`, `:528-530`, `:557-565`, `:614`) while `esp_rid_set_config()` writes it under `g_lock`. Only `protocol`/`options` are currently copied locally (`:425-428`).
-- [x] **Return checks on `xTaskCreate` / `esp_task_wdt_add`** — all 4 sites now check `pdPASS`/`ESP_OK` and log errors on failure (`esp_remote_id.c:175`, `:420`, `:670`, `cli.c:393`) 2026-08-15
-- [ ] **Parser → producer isolation (queue per parser + single-thread consumer)** — medium value, high cost. Parsers are polled synchronously from `rid_task` (`esp_remote_id.c:441-447`) and each `*_get()` reads the same UART inline (`mavlink_parser.c:93`, nmea/msp alike) → byte loss risk during WiFi/BLE TX in the same task. Cheap alternative first: larger UART RX buffer or interrupt-driven driver.
+- [ ] **Copy `g_config` to a local struct at the start of the `rid_task` loop** — HIGH value, low cost. Real data race today: `rid_task` reads `g_config` without lock (`esp_remote_id.c:316-346`, `:507-514`, `:545-547`, `:559`) while `esp_rid_set_config()` writes it under `g_lock`. Only `protocol`/`options` are currently copied locally (`:442-445`).
+- [x] **Return checks on `xTaskCreate` / `esp_task_wdt_add`** — all 4 sites now check `pdPASS`/`ESP_OK` and log errors on failure (`esp_remote_id.c:184`, `:432`, `:683`, `cli.c:415`) 2026-08-15
+- [ ] **Parser → producer isolation (queue per parser + single-thread consumer)** — medium value, high cost. Parsers are polled synchronously from `rid_task` (`esp_remote_id.c:456-468`) and each `*_get()` reads the same UART inline (`mavlink_parser.c:93`, nmea/msp alike) → byte loss risk during WiFi/BLE TX in the same task. Cheap alternative first: larger UART RX buffer or interrupt-driven driver.
 - [ ] **Fuzz harness for nmea/msp/mavlink parsers** — host libFuzzer. Blocked on parser refactor (separate byte-ingest from `uart_read_bytes` to make them host-testable). Would have caught the `decode_fix2` `-Warray-bounds` issue.
-- [ ] **Configurable timeouts via web (`config.html`)** — low value. GPS stale is hardcoded 10 s (`esp_remote_id.c:603`), parser-internal 5 s, operator-location 30 s, identity 10 s, OTA idle stall `OTA_MAX_IDLE_STALLS` (`rid_ota.c:24`). Only session auth timeout is web-configurable today.
+- [ ] **Configurable timeouts via web (`config.html`)** — low value. GPS stale is hardcoded 10 s (`esp_remote_id.c:622`), parser-internal 5 s, operator-location 30 s, identity 10 s, OTA idle stall `OTA_MAX_IDLE_STALLS` (`rid_ota.c:24`). Only session auth timeout is web-configurable today.
 
 > Tracked in GitHub issue [#26](https://github.com/VOLTEKOVER/ESP_DRONE_REMOTE_ID/issues/26)
 
 ### 🔴 CONCURRENCY AUDIT — verified against code 2026-08-14
 - [ ] **Fix AUTO-mode UART starvation (urgent)** — `protocol_detect_auto()` (`protocol_detect.c:42-69`) consumes up to 256 B from the same UART with a 50 ms blocking read on **every** `rid_task` loop, before the active parser reads → parser starved, framing broken in AUTO mode. Fix: lock the protocol after the first detection, or peek without consuming (`uart_get_buffered_data_len`), or detect only once at boot.
-- [ ] **Data race on `g_state`** — written under `g_lock` (`esp_remote_id.c:466-533`) but read/written unlocked at `:435`, `:456`, `:588-597`, `:600-641`, and passed by reference to the TX paths (`:310-334`) while cli/web read it under lock. Fix: snapshot `gps`/`identity` under lock and pass copies to `wifi_tx_*`/`ble_tx_*`.
-- [ ] **Replace `portMAX_DELAY` with timed waits** — `esp_remote_id.c:425`, `:466`, `:550` block forever on `g_lock`; a stuck holder (NVS write / httpd) hangs `rid_task` until WDT. Use `pdMS_TO_TICKS()` + log on timeout.
-- [ ] **`rid_mavlink_tx` shares the same UART as the parsers** (`esp_remote_id.c:174`) — TX and parsing contend on one port when enabled together; document or gate the combination.
-- [ ] **Stale MAVLink operator location** — `mavlink_parser_get_operator_location` (`esp_remote_id.c:517`) is used even when the active protocol is NMEA/MSP; its 30 s freshness window can feed stale data. Gate it on `proto == RID_PROTOCOL_MAVLINK`.
+- [ ] **Data race on `g_state`** — written under `g_lock` (`esp_remote_id.c:483-548`) but read/written unlocked at `:452`, `:458`, `:595-617`, `:619-653`, and passed by reference to the TX paths (`:316-345`) while cli/web read it under lock. Fix: snapshot `gps`/`identity` under lock and pass copies to `wifi_tx_*`/`ble_tx_*`.
+- [ ] **Replace `portMAX_DELAY` with timed waits** — `esp_remote_id.c:442`, `:483`, `:569` block forever on `g_lock`; a stuck holder (NVS write / httpd) hangs `rid_task` until WDT. Use `pdMS_TO_TICKS()` + log on timeout.
+- [ ] **`rid_mavlink_tx` shares the same UART as the parsers** (`esp_remote_id.c:184`) — TX and parsing contend on one port when enabled together; document or gate the combination.
+- [ ] **Stale MAVLink operator location** — `mavlink_parser_get_operator_location` (`esp_remote_id.c:534`) is used even when the active protocol is NMEA/MSP; its 30 s freshness window can feed stale data. Gate it on `proto == RID_PROTOCOL_MAVLINK`.
 
 > Tracked in GitHub issue [#24](https://github.com/VOLTEKOVER/ESP_DRONE_REMOTE_ID/issues/24)
 
 ### 🟡 CONFIG PERSISTENCE — `esp_remote_id.h` verified 2026-08-14
 - [ ] **NVS save/load gaps** (`nvs_storage.c`) — fields settable via web/CLI but never persisted, lost on reboot: `protocol`, `uart_port`, `tx_pin`, `rx_pin`, `ws2812_gpio`, `ws2812_brightness`, `lighting_pins/patterns/phase_offsets`, `dronecan_rx/tx_gpio`, `dronecan_bitrate`, `mavlink_usb_enable`, `ota_trigger_gpio`, `auth_private_key`, `start_delay_ms` (absent from `nvs_storage_save/load`). E.g. CLI `protocol` and `config set start_delay_ms` revert after reboot.
-- [ ] **Auth lifecycle** — `rid_auth_init()` runs only at boot (`esp_remote_id.c:180`) and `auth_private_key` is not persisted → auth pages silently stop after reboot; a key change via web applies only after a reboot. Re-init on config change, or persist key (or document one-time provisioning).
+- [ ] **Auth lifecycle** — `rid_auth_init()` runs only at boot (`esp_remote_id.c:191`) and `auth_private_key` is not persisted → auth pages silently stop after reboot; a key change via web applies only after a reboot. Re-init on config change, or persist key (or document one-time provisioning).
 - [ ] **`wifi_ssid`/`wifi_password` capped at `ESP_RID_MAX_STR_LEN` (20)** — WiFi spec allows 32/63 chars. Widen the field (NVS layout impact) or enforce the 20-char limit in the UI.
 - [ ] **`operator_lat`/`operator_lon` precision** — stored as `float` in NVS (`nvs_storage.c:118-119`) while the struct fields are `double` (~1 m error at mid latitudes). Use a f64 blob or accept.
 
@@ -72,10 +72,10 @@ Scope: all 80+ source files (excluding build artifacts)
 - [ ] **Stats tracking** — TX failures, parse errors, signatures
 - [ ] **Universal worldwide firmware (product requirement)** — one firmware image that works in every country, all selectable from the **same web UI**:
   - **Input**: all flight-controller protocols — MSP, NMEA, MAVLink, DroneCAN/TWAI, USB MAVLink, and any future one (today all are already auto-detected/polled in `rid_task`).
-  - **Output**: all Remote ID standards for every region — ASTM F3411-22a (WiFi Beacon + NAN, BLE 4.0 legacy + BLE 5.0 LR) is already emitted; missing are the national non-ASTM formats (e.g. China GB 42590-2023, US FRDID for FRIAs, Japan, …) that need their own encoders.
+  - **Output**: hourglass hub `rid_output.c/h` binds the neutral GPS+identity data to one **exclusive** broadcast standard selected by `region`; ASTM F3411-22a (WiFi Beacon + NAN, BLE 4.0 legacy + BLE 5.0 LR) is emitted today, the national non-ASTM formats (e.g. China GB 42590-2023, US FRDID for FRIAs, …) plug in as encoders behind the same `rid_output_build_uas()` call.
   - **Config**: every input/output option exposed via the same `/api/config` + NVS + CLI + web UI, no per-region firmware build.
-  - This item is the umbrella requirement; see *Region-aware transmission* below for the concrete implementation steps.
-- [ ] **Region-aware transmission** — today the region select in the web UI (Compliance tab) is cosmetic only: it redraws a checklist and never touches the firmware. The firmware always sends ASTM F3411-22a (BasicID, Location, System, OperatorID, SelfID if set, Auth if enabled) on WiFi Beacon/NAN + BLE 4.0/5.0, regardless of nation. To make it real: add a `region` field to `rid_config_t` (NVS + `/api/config` + CLI), and have it gate what is broadcast (e.g. OperatorID only for EU/EUR, hide second BasicID where not allowed) and select the encoding standard. Caveat: non-ASTM national formats (e.g. China GB 42590-2023) and FRDID (US FRIAs) need separate encoders — `frdid_build`/`frdid_wifi_build_beacon_frame` are declared but never implemented.
+  - This item is the umbrella requirement; the region plumbing + hub are done (see *Region-aware transmission*), only the non-ASTM encoders remain.
+- [x] **Region-aware transmission** — real `region` field in `rid_config_t` (NVS `region` key + `/api/config` string/number + CLI `config set region`), bound to the new hourglass output hub `rid_output.c/h`: exclusive standard dispatch per region and per-region message gating (OperatorID/SelfID/second BasicID suppressed for CHN whose GB 42590 encoder is pending; OperatorID required for readiness only in EUR/FAA/CAN/AUS). All transports (`wifi_tx.c`/`ble_tx.c`) now build via `rid_output_build_uas()`. `/api/status` exposes `standard` + `standard_fallback`; web UI region select now saves to firmware and the Compliance tab shows the active standard + fallback warning. Remaining: non-ASTM encoders. 2026-08-15
 
 > Tracked in GitHub issue [#29](https://github.com/VOLTEKOVER/ESP_DRONE_REMOTE_ID/issues/29)
 
@@ -89,6 +89,7 @@ Scope: all 80+ source files (excluding build artifacts)
 - **Web UI split** — `config.html` + `style.css` (2374L) + `app.js` (1352L); `EMBED_FILES` + 2 new handlers `/style.css` `/app.js` in `web_config.c`
 - **Bootstrap 5.3.3 vendored inline** in app.js (works offline) + heap overflow fix in `handle_get_logs` (clamp off)
 - **Compliance Checklist** — 9 regions (auto/EUR/FAA/JPN/SGP/KOR/CHN/CAN/AUS/BRA/NZL), per-region `reqMap`, operator ID only for EUR
+- **Hourglass output hub + real region selection** — `rid_output.c/h` (exclusive standard dispatch per region, per-region message gating); `region` persisted (NVS/API/CLI/UI); `/api/status` exposes `standard`/`standard_fallback`; all transports build via `rid_output_build_uas()`
 - **Tooltip system** — `data-tip` on all buttons (63 real / 66 demo), glassmorphism CSS, keyboard/focus accessible
 - **Encoding repair** — fixed UTF-8 mojibake across webui + docs (theme icon ☀️/☾, em-dash, UAV favicon 🛸, BOM)
 - **Password hashing** — `rid_sec_pwd` now SHA-256 (pure-JS, works over http) instead of base64; auto-migrates legacy base64 on login
@@ -146,24 +147,26 @@ Action options: remove the 2 FRDID prototypes (or vendor `frdid.c`) and drop `ri
 
 | File | Lines | Status | Notes |
 |------|-------|--------|-------|
-| `CMakeLists.txt` | 55 | ✅ OK | 25 src files, REQUIRES |
-| `esp_remote_id.h` | 200 | ✅ OK | Full config+state structs |
+| `CMakeLists.txt` | 56 | ✅ OK | 26 src files, REQUIRES |
+| `esp_remote_id.h` | 242 | ✅ OK | Full config+state structs; `rid_region_t`/`rid_standard_t`, `region`, `active_standard`/`standard_fallback` |
 | `opendroneid.h` | 762 | ✅ OK | Upstream Intel ODID lib |
 | `odid_wifi.h` | 106 | ✅ OK | 802.11 packed structs |
-| `esp_remote_id.c` | 672 | ✅ OK | Absolute GPS timeout, differential reset, fix B/J/K |
-| `web_config.c` | 750 | ✅ OK | cJSON, rate limiting, signature verify, /style.css + /app.js handlers |
-| `cli.c` | 395 | ✅ OK | `config set <field> <value>` write command |
-| `wifi_tx.c` | 198 | ✅ OK | Uses shared `odid_common_build_uas_data` |
+| `esp_remote_id.c` | 696 | ✅ OK | Absolute GPS timeout, differential reset, region-aware readiness gate, fix B/J/K |
+| `web_config.c` | 774 | ✅ OK | cJSON, rate limiting, signature verify, region parse/emit, `standard`/`standard_fallback` in status, /style.css + /app.js handlers |
+| `cli.c` | 421 | ✅ OK | `config set <field> <value>` write command incl. `region` |
+| `wifi_tx.c` | 200 | ✅ OK | Uses shared `rid_output_build_uas` |
 | `wifi.c` | 614 | ✅ OK | Intel ODID frame builder |
-| `ble_tx.c` | 248 | ✅ OK | ble_tx_set_power() respects dbm; LR gate verified; ext_adv return checks; shared ODID builder |
-| `odid_common.c` | 103 | ✅ OK | Shared `odid_common_build_uas_data` (WiFi + BLE pack builder) |
+| `ble_tx.c` | 253 | ✅ OK | ble_tx_set_power() respects dbm; LR gate verified; ext_adv return checks; shared `rid_output_build_uas` |
+| `odid_common.c` | 105 | ✅ OK | Shared pack builder; `OperatorIDValid` only when operator_id non-empty |
+| `rid_output.c` | 101 | ✅ OK | Hourglass output hub: exclusive standard dispatch, per-region gating, fallback warning |
+| `rid_output.h` | 51 | ✅ OK | Public hub API + `rid_region_rules_t` |
 | `mavlink_parser.c` | 276 | ✅ OK | MESSAGE_PACK unpack |
 | `mav2odid.c` | 636 | ✅ OK | Upstream Intel lib |
 | `opendroneid.c` | 1477 | ✅ OK | Upstream Intel lib |
 | `nmea_parser.c` | 136 | ✅ OK | GGA+RMC parser |
 | `msp_parser.c` | 126 | ✅ OK | MSP v1 parser |
 | `protocol_detect.c` | 75 | ✅ OK | Auto-detect UART protocol |
-| `nvs_storage.c` | 218 | ✅ OK | Config persistence + `reset_preserve_keys` |
+| `nvs_storage.c` | 223 | ✅ OK | Config persistence + `reset_preserve_keys` + `region` key |
 | `led_status.c` | 211 | ✅ OK | 7-state RGB via LEDC|
 | `led_ws2812.c` | 110 | ✅ OK | RMT-driven addressable LED|
 | `rid_kalman.c` | 146 | ✅ OK | 1D×3 filter|
@@ -180,9 +183,9 @@ Action options: remove the 2 FRDID prototypes (or vendor `frdid.c`) and drop `ri
 
 | File | Lines | Status | Notes |
 |------|-------|--------|-------|
-| `config.html` | 862 | ✅ OK | Markup-only (no inline JS/CSS except theme restore) |
+| `config.html` | 863 | ✅ OK | Markup-only (no inline JS/CSS except theme restore); real region select + `#std-status` |
 | `style.css` | 2374 | ✅ OK | Full styling incl. tooltip system |
-| `app.js` | 1352 | ✅ OK | All logic incl. vendored Bootstrap 5.3.3, SHA-256 |
+| `app.js` | 1374 | ✅ OK | All logic incl. vendored Bootstrap 5.3.3, SHA-256, `onRegionChange` partial save, active-standard banner |
 
 ### `mavlink/` — Auto-generated v2 dialect headers
 - **Active**: ardupilotmega, common, minimal, protocol, types

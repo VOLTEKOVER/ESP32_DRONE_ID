@@ -10,6 +10,7 @@
 #include "ble_tx.h"
 #include "opendroneid.h"
 #include "odid_common.h"
+#include "rid_output.h"
 
 #define TAG "BLE_TX"
 
@@ -20,7 +21,9 @@ static bool g_initialized = false;
 static ODID_UAS_Data g_uas_data;
 static uint8_t g_adv_data[254];
 
-static bool build_legacy_adv(rid_gps_data_t *gps, rid_identity_t *identity, uint8_t *buf, uint16_t buf_size, uint16_t *len)
+static bool build_legacy_adv(rid_gps_data_t *gps, rid_identity_t *identity,
+                             const rid_config_t *cfg, uint8_t *buf, uint16_t buf_size,
+                             uint16_t *len)
 {
     /* Legacy BLE advertising data is limited to 31 bytes, so exactly one
      * 25-byte ODID message fits per advertisement, sent as a Service Data
@@ -30,7 +33,7 @@ static bool build_legacy_adv(rid_gps_data_t *gps, rid_identity_t *identity, uint
     if (buf_size < 31) return false;
     memset(buf, 0, buf_size);
 
-    odid_common_build_uas_data(&g_uas_data, gps, identity);
+    if (!rid_output_build_uas(&g_uas_data, gps, identity, cfg)) return false;
 
     static uint8_t rotation = 0;
 
@@ -140,13 +143,14 @@ void ble_tx_init(void)
 #endif
 }
 
-bool ble_tx_transmit_legacy(rid_gps_data_t *gps, rid_identity_t *identity)
+bool ble_tx_transmit_legacy(rid_gps_data_t *gps, rid_identity_t *identity,
+                            const rid_config_t *cfg)
 {
     if (!g_initialized || !gps || !identity) return false;
 
 #if defined(CONFIG_BT_BLUEDROID_ENABLED) && defined(SOC_BT_SUPPORTED)
     uint16_t len;
-    if (!build_legacy_adv(gps, identity, g_adv_data, sizeof(g_adv_data), &len)) return false;
+    if (!build_legacy_adv(gps, identity, cfg, g_adv_data, sizeof(g_adv_data), &len)) return false;
 
 #if defined(CONFIG_BT_BLE_50_EXTEND_ADV_EN)
     /* esp32s3/esp32c6: the legacy GAP advertising API is not linked in
@@ -186,12 +190,13 @@ bool ble_tx_transmit_legacy(rid_gps_data_t *gps, rid_identity_t *identity)
 #endif
 }
 
-bool ble_tx_transmit_lr(rid_gps_data_t *gps, rid_identity_t *identity)
+bool ble_tx_transmit_lr(rid_gps_data_t *gps, rid_identity_t *identity,
+                        const rid_config_t *cfg)
 {
     if (!g_initialized || !gps || !identity) return false;
 
 #if defined(CONFIG_BT_BLUEDROID_ENABLED) && defined(SOC_BT_SUPPORTED) && defined(CONFIG_BT_BLE_50_EXTEND_ADV_EN)
-    odid_common_build_uas_data(&g_uas_data, gps, identity);
+    if (!rid_output_build_uas(&g_uas_data, gps, identity, cfg)) return false;
 
     /* Build full ODID pack — extended advertising supports up to 254 bytes */
     uint8_t pack_buf[ODID_PACK_MAX_MESSAGES * ODID_MESSAGE_SIZE + 8];

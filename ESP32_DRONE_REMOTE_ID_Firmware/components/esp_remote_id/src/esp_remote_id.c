@@ -27,6 +27,7 @@
 #include "rid_lighting.h"
 #include "rid_dronecan.h"
 #include "rid_mavlink_usb.h"
+#include "rid_output.h"
 #include "esp_task_wdt.h"
 
 #define TAG "ESP_RID"
@@ -52,6 +53,8 @@ static void default_config(rid_config_t *cfg)
     cfg->baud_rate = 57600;
     cfg->tx_pin = 17;
     cfg->rx_pin = 18;
+
+    cfg->region = RID_REGION_AUTO;
 
     cfg->ua_type = 1;
     cfg->id_type = 1;
@@ -114,12 +117,14 @@ static void default_config(rid_config_t *cfg)
         cfg->public_keys[i][0] = '\0';
 }
 
-static bool identity_is_sane(const rid_identity_t *id)
+static bool identity_is_sane(const rid_identity_t *id, const rid_region_rules_t *rules)
 {
-    if (id->uas_id[0] == '\0') return false;
+    if (rules->require_uas_id && id->uas_id[0] == '\0') return false;
     if (strstr((const char *)id->uas_id, "ESP32-RID-") == (const char *)id->uas_id) return false;
-    if (strstr((const char *)id->operator_id, "OP-UNKNOWN") != NULL) return false;
-    if (id->operator_id[0] == '\0') return false;
+    if (rules->require_operator_id) {
+        if (strstr((const char *)id->operator_id, "OP-UNKNOWN") != NULL) return false;
+        if (id->operator_id[0] == '\0') return false;
+    }
     return true;
 }
 
@@ -137,6 +142,10 @@ void esp_rid_init(void)
     nvs_storage_init();
     default_config(&g_config);
     nvs_storage_load(&g_config);
+
+    /* Bind the active broadcast standard to the configured region */
+    g_state.active_standard = rid_output_active_standard(&g_config);
+    g_state.standard_fallback = !rid_output_has_encoder(g_state.active_standard);
 
     /* Check OTA mode (reads ota_trigger_gpio from config) */
     rid_ota_check_and_run(&g_config);
@@ -232,6 +241,8 @@ void esp_rid_set_config(const rid_config_t *config)
         uint32_t old_baud = g_config.baud_rate;
         memcpy(&g_config, config, sizeof(rid_config_t));
         nvs_storage_save(&g_config);
+        g_state.active_standard = rid_output_active_standard(&g_config);
+        g_state.standard_fallback = !rid_output_has_encoder(g_state.active_standard);
         if (g_config.baud_rate != old_baud && g_config.baud_rate > 0) {
             protocol_detect_reinit(g_config.uart_port, g_config.tx_pin, g_config.rx_pin, g_config.baud_rate);
         }
@@ -310,7 +321,7 @@ static bool update_transmissions(void)
 
     if ((g_config.tx_modes & RID_TRANSMIT_WIFI_BCN) &&
         rate_allowed(&last_tx_wifi_bcn, g_config.wifi_bcn_rate_hz)) {
-        wifi_tx_transmit(&g_state.gps, &g_state.identity);
+        wifi_tx_transmit(&g_state.gps, &g_state.identity, &g_config);
         g_state.wifi_bcn_count++;
         g_state.transmissions_count++;
         tx = true;
@@ -318,7 +329,7 @@ static bool update_transmissions(void)
 
     if ((g_config.tx_modes & RID_TRANSMIT_WIFI_NAN) &&
         rate_allowed(&last_tx_wifi_nan, g_config.wifi_nan_rate_hz)) {
-        wifi_tx_transmit_nan(&g_state.gps, &g_state.identity, g_nan_counter++);
+        wifi_tx_transmit_nan(&g_state.gps, &g_state.identity, g_nan_counter++, &g_config);
         g_state.wifi_nan_count++;
         g_state.transmissions_count++;
         tx = true;
@@ -326,7 +337,7 @@ static bool update_transmissions(void)
 
     if ((g_config.tx_modes & RID_TRANSMIT_BLE4) &&
         rate_allowed(&last_tx_ble4, g_config.ble4_rate_hz)) {
-        ble_tx_transmit_legacy(&g_state.gps, &g_state.identity);
+        ble_tx_transmit_legacy(&g_state.gps, &g_state.identity, &g_config);
         g_state.ble4_count++;
         g_state.transmissions_count++;
         tx = true;
@@ -334,7 +345,7 @@ static bool update_transmissions(void)
 
     if ((g_config.tx_modes & RID_TRANSMIT_BLE5) &&
         rate_allowed(&last_tx_ble5, g_config.ble5_rate_hz)) {
-        ble_tx_transmit_lr(&g_state.gps, &g_state.identity);
+        ble_tx_transmit_lr(&g_state.gps, &g_state.identity, &g_config);
         g_state.ble5_count++;
         g_state.transmissions_count++;
         tx = true;
@@ -544,10 +555,12 @@ static void rid_task(void *arg)
                 }
 
                 /* Identity readiness gate */
-                if ((cfg_opts & RID_OPT_IDENTITY_READY_GATE) &&
-                    identity_is_sane(&g_state.identity) &&
-                    position_is_sane(&g_state.gps)) {
-                    g_state.identity_ready = true;
+                if ((cfg_opts & RID_OPT_IDENTITY_READY_GATE)) {
+                    rid_region_rules_t rules = rid_output_region_rules(g_config.region);
+                    if (identity_is_sane(&g_state.identity, &rules) &&
+                        position_is_sane(&g_state.gps)) {
+                        g_state.identity_ready = true;
+                    }
                 } else if (!(cfg_opts & RID_OPT_IDENTITY_READY_GATE)) {
                     g_state.identity_ready = true;
                 }

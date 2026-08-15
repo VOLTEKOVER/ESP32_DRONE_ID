@@ -53,6 +53,29 @@ typedef enum {
     RID_TRANSMIT_BLE5     = (1 << 3),
 } rid_transmit_mode_t;
 
+/* Operational region. Selects the (exclusive) broadcast standard and the
+ * message gating rules via the rid_output hub. */
+typedef enum {
+    RID_REGION_AUTO = 0,
+    RID_REGION_EUR,   /* Europe (EASA/EEA) */
+    RID_REGION_FAA,   /* USA (FAA Part 89) */
+    RID_REGION_JPN,   /* Japan (MLIT) */
+    RID_REGION_SGP,   /* Singapore (CAAS) */
+    RID_REGION_KOR,   /* South Korea (KASA) */
+    RID_REGION_CHN,   /* China (GB 42590) */
+    RID_REGION_CAN,   /* Canada (Transport Canada) */
+    RID_REGION_AUS,   /* Australia (CASA) */
+    RID_REGION_BRA,   /* Brazil (ANAC) */
+    RID_REGION_NZL,   /* New Zealand (CAA NZ) */
+} rid_region_t;
+
+/* Remote ID broadcast standards. Only one is active at a time. */
+typedef enum {
+    RID_STANDARD_ASTM = 0,   /* ASTM F3411-22a (OpenDroneID) */
+    RID_STANDARD_CHN_GB,     /* China GB 42590-2023 */
+    RID_STANDARD_FRDID,      /* US FAA FRDID */
+} rid_standard_t;
+
 typedef struct {
     double latitude;
     double longitude;
@@ -97,6 +120,8 @@ typedef struct {
     uint32_t baud_rate;
     uint8_t tx_pin;
     uint8_t rx_pin;
+
+    rid_region_t region;
 
     uint8_t ua_type;
     uint8_t id_type;
@@ -193,6 +218,11 @@ typedef struct {
 
     /* Auth status */
     bool auth_enabled;
+
+    /* Active broadcast standard (exclusive, derived from cfg->region) */
+    rid_standard_t active_standard;
+    /* True when the active standard has no encoder yet and ASTM is used */
+    bool standard_fallback;
 
     /* Takeoff location (captured once at first 3D fix, per ASTM F3411) */
     double takeoff_lat;

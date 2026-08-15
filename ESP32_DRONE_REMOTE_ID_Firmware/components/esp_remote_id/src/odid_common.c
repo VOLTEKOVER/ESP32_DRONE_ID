@@ -64,8 +64,10 @@ void odid_common_build_uas_data(ODID_UAS_Data *d, const rid_gps_data_t *gps,
         strncpy((char *)d->SelfID.Desc, identity->self_id_text, ODID_STR_SIZE);
     }
 
-    d->OperatorIDValid = 1;
-    strncpy((char *)d->OperatorID.OperatorId, identity->operator_id, ODID_ID_SIZE);
+    if (identity->operator_id[0] != '\0') {
+        d->OperatorIDValid = 1;
+        strncpy((char *)d->OperatorID.OperatorId, identity->operator_id, ODID_ID_SIZE);
+    }
 
     /* Authentication: MAVLink-relayed pages take priority, otherwise sign locally */
     uint8_t auth_pages = 0;

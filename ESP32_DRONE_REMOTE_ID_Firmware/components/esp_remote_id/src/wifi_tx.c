@@ -14,6 +14,7 @@
 #include "opendroneid.h"
 #include "odid_common.h"
 #include "odid_wifi.h"
+#include "rid_output.h"
 #include "esp_remote_id.h"
 
 #define TAG "WIFI_TX"
@@ -146,11 +147,11 @@ void wifi_tx_reconfigure_ap(const rid_config_t *cfg)
     ESP_LOGI(TAG, "AP reconfigured: SSID=%s CH=%d", g_ssid, g_channel);
 }
 
-bool wifi_tx_transmit(rid_gps_data_t *gps, rid_identity_t *identity)
+bool wifi_tx_transmit(rid_gps_data_t *gps, rid_identity_t *identity, const rid_config_t *cfg)
 {
     if (!g_initialized || !gps || !identity) return false;
 
-    odid_common_build_uas_data(&g_uas_data, gps, identity);
+    if (!rid_output_build_uas(&g_uas_data, gps, identity, cfg)) return false;
 
     static uint8_t buffer[1024];
     uint8_t counter = g_message_counter++;
@@ -174,11 +175,12 @@ bool wifi_tx_transmit(rid_gps_data_t *gps, rid_identity_t *identity)
     return false;
 }
 
-bool wifi_tx_transmit_nan(rid_gps_data_t *gps, rid_identity_t *identity, uint8_t counter)
+bool wifi_tx_transmit_nan(rid_gps_data_t *gps, rid_identity_t *identity, uint8_t counter,
+                          const rid_config_t *cfg)
 {
     if (!g_initialized || !gps || !identity) return false;
 
-    odid_common_build_uas_data(&g_uas_data, gps, identity);
+    if (!rid_output_build_uas(&g_uas_data, gps, identity, cfg)) return false;
 
     static uint8_t buffer[1024];
     int length = odid_wifi_build_message_pack_nan_action_frame(

@@ -388,6 +388,8 @@ $('tx_ble5').checked=!!(c.tx_modes&8)
   document.querySelectorAll('input,select').forEach(function(el){el.style.opacity=''})
   applyDeviceConstraints();
   onTxModeChange();
+  var rg=$('compliance-region');if(rg)rg.value=(c.region||'auto').toLowerCase();
+  updateCompliance();
   hideLoading();
 }).catch(function(){
   document.querySelectorAll('input,select').forEach(function(el){el.style.opacity=''})
@@ -397,6 +399,7 @@ $('tx_ble5').checked=!!(c.tx_modes&8)
 
 function collectForm(){return{
 protocol:parseInt($('protocol').value),
+region:$('compliance-region')?$('compliance-region').value:'auto',
 uas_id:$('uas_id').value,
 id_type:parseInt($('id_type').value),
 ua_type:parseInt($('ua_type').value),
@@ -990,9 +993,28 @@ function toggleConsole(){
 }
 
 /* ---------- Compliance Checklist ---------- */
+function onRegionChange(el){
+  var v=el.value;
+  fetch('/api/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({region:v})})
+  .then(function(r){if(!r.ok)return r.json().then(function(e){throw new Error(e.error||'HTTP '+r.status)});return r.json()})
+  .then(function(){showMsg('Region set to '+v.toUpperCase());updateCompliance()})
+  .catch(function(e){showMsg('Error saving region: '+e.message,1)});
+}
+
 function updateCompliance(){
   var region=$('compliance-region').value;
   var rk=region==='auto'?'EUR':region;
+  var stdNames={EUR:'ASTM F3411-22a',FAA:'ASTM F3411-22a',JPN:'ASTM F3411-22a',SGP:'ASTM F3411-22a',KOR:'ASTM F3411-22a',CHN:'China GB 42590',CAN:'ASTM F3411-22a',AUS:'ASTM F3411-22a',BRA:'ASTM F3411-22a',NZL:'ASTM F3411-22a'};
+  var std=stdNames[rk]||'ASTM F3411-22a';
+  var stdInfo=$('std-status');
+  if(stdInfo){
+    var sh='<div style="padding:8px 12px;border-radius:6px;margin-bottom:12px;font-size:.78em;background:var(--hover)">';
+    sh+='<b>Active standard:</b> '+std;
+    if(std!=='ASTM F3411-22a'){sh+='<br><span style="color:#f57f17">&#x26a0; Encoder not implemented yet - broadcasting ASTM F3411-22a fallback. EU-specific messages (Operator ID, Self-ID, second Basic ID) are suppressed.</span>'}
+    else{sh+='<br><span>Broadcast in this standard over all enabled transports.</span>'}
+    sh+='</div>';
+    stdInfo.innerHTML=sh;
+  }
   var reqMap={
     EUR:['uas_id','ua_type','op_id','tx','gps','broadcast'],
     FAA:['uas_id','ua_type','tx','gps','broadcast'],

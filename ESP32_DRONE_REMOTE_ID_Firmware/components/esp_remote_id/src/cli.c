@@ -12,6 +12,7 @@
 #include "cli.h"
 #include "esp_remote_id.h"
 #include "protocol_detect.h"
+#include "rid_output.h"
 
 #define TAG "CLI"
 #define CLI_STACK_SIZE 4096
@@ -100,6 +101,10 @@ static int cmd_status(int argc, char **argv)
     printf("  Heap      : %lu KB / %lu KB\n", (unsigned long)(heap_free / 1024), (unsigned long)(heap_total / 1024));
     printf("  Uptime    : %02lu:%02lu:%02lu\n", (unsigned long)(sec / 3600), (unsigned long)((sec % 3600) / 60), (unsigned long)(sec % 60));
     printf("  Kalman    : %s\n", (cfg.options & RID_OPT_KALMAN_FILTER) ? "ON" : "OFF");
+    printf("  Standard  : %s  (region %s)%s\n",
+           rid_output_standard_name(state.active_standard),
+           rid_output_region_name(cfg.region),
+           state.standard_fallback ? " - encoder not implemented, ASTM fallback" : "");
     printf("  Lock lvl  : %d\n\n", cfg.lock_level);
     return 0;
 }
@@ -148,6 +153,20 @@ static int cmd_config(int argc, char **argv)
         else if (strcasecmp(f, "operator_lon") == 0) cfg.operator_lon = strtod(v, NULL);
         else if (strcasecmp(f, "operator_alt") == 0) cfg.operator_alt = (float)strtod(v, NULL);
         else if (strcasecmp(f, "start_delay_ms") == 0) cfg.start_delay_ms = (uint32_t)strtoul(v, NULL, 0);
+        else if (strcasecmp(f, "region") == 0) {
+            bool found = false;
+            for (int r = (int)RID_REGION_AUTO; r <= (int)RID_REGION_NZL; r++) {
+                if (strcasecmp(v, rid_output_region_name((rid_region_t)r)) == 0) {
+                    cfg.region = (rid_region_t)r;
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                printf("Unknown region: %s  (use: auto, EUR, FAA, JPN, SGP, KOR, CHN, CAN, AUS, BRA, NZL)\n", v);
+                return 1;
+            }
+        }
         else {
             printf("Unknown field: %s\n", f);
             return 1;
@@ -160,6 +179,9 @@ static int cmd_config(int argc, char **argv)
 
     printf("\n  Configuration:\n\n");
     printf("  Protocol    : %s\n", proto_name(cfg.protocol));
+    printf("  Region      : %s  (standard: %s)\n",
+           rid_output_region_name(cfg.region),
+           rid_output_standard_name(rid_output_active_standard(&cfg)));
     printf("  UART        : port=%d baud=%lu tx=%d rx=%d\n", cfg.uart_port, (unsigned long)cfg.baud_rate, cfg.tx_pin, cfg.rx_pin);
     printf("  UAS ID      : %s\n", cfg.uas_id);
     printf("  Operator ID : %s\n", cfg.operator_id);
@@ -183,7 +205,7 @@ static int cmd_config(int argc, char **argv)
     printf("                wifi_channel mavlink_sysid bcast_powerup webserver lock_level\n");
     printf("                baud_rate wifi_power_dbm wifi_bcn_rate wifi_nan_rate ble4_rate\n");
     printf("                ble4_power ble5_rate ble5_power operator_lat operator_lon\n");
-    printf("                operator_alt start_delay_ms\n\n");
+    printf("                operator_alt start_delay_ms region\n\n");
     return 0;
 }
 
