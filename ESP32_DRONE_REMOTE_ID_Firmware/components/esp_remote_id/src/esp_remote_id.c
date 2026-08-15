@@ -172,7 +172,10 @@ void esp_rid_init(void)
     if (g_config.options & (RID_OPT_MAVLINK_ARM_STATUS | RID_OPT_MAVLINK_OP_LOC_LOOP) ||
         g_config.mavlink_usb_enable) {
         rid_mavlink_tx_init(g_config.uart_port);
-        xTaskCreate(rid_mavlink_tx_task, "rid_mavlink_tx", 2048, NULL, 3, NULL);
+        BaseType_t mavlink_tx_ret = xTaskCreate(rid_mavlink_tx_task, "rid_mavlink_tx", 2048, NULL, 3, NULL);
+        if (mavlink_tx_ret != pdPASS) {
+            ESP_LOGE(TAG, "Failed to create rid_mavlink_tx task (err=%d)", (int)mavlink_tx_ret);
+        }
     }
 
     /* Authentication */
@@ -414,7 +417,10 @@ static void rid_task(void *arg)
     uint32_t log_cycle = 0;
     bool had_gps = false;
 
-    esp_task_wdt_add(NULL);
+    esp_err_t wdt_ret = esp_task_wdt_add(NULL);
+    if (wdt_ret != ESP_OK) {
+        ESP_LOGW(TAG, "esp_task_wdt_add failed: %s", esp_err_to_name(wdt_ret));
+    }
 
     while (g_running) {
         rid_gps_data_t gps_data;
@@ -661,7 +667,12 @@ void esp_rid_start(void)
 {
     if (g_running) return;
     g_running = true;
-    xTaskCreate(rid_task, "rid_task", 4096, NULL, 5, NULL);
+    BaseType_t ret = xTaskCreate(rid_task, "rid_task", 4096, NULL, 5, NULL);
+    if (ret != pdPASS) {
+        g_running = false;
+        ESP_LOGE(TAG, "Failed to create rid_task (err=%d)", (int)ret);
+        return;
+    }
     ESP_LOGI(TAG, "\xE2\x9C\x93 Remote ID started");
 }
 

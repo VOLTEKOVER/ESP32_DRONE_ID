@@ -58,14 +58,14 @@ Inside `esp_rid_init()` (`esp_remote_id.c:133-224`):
 | Task | Created | Stack | Prio | Role |
 |---|---|---|---|---|
 | `main` | IDF | — | — | boot sequence (§2), then idle |
-| `rid_task` | `esp_remote_id.c:664` | 4096 | 5 | core 100 ms loop (§5), subscribed to WDT |
+| `rid_task` | `esp_remote_id.c:670` | 4096 | 5 | core 100 ms loop (§5), subscribed to WDT |
 | `cli_task` | `cli.c:393` | 4096 | 5 | reads UART0 stdin, executes commands (§6.11) |
 | `rid_mavlink_tx` | `esp_remote_id.c:175` | 2048 | 3 | heartbeat 1 s + ODID_SYSTEM 6 s on UART1 + USB mirror (§6.16) — **only if** options bit6/bit7 or `mavlink_usb_enable` |
 | `httpd` (web) | `web_config.c:740` | IDF default (4096) | 5 | config UI + `/api/*`; one task per open socket |
 | `httpd` (OTA) | `rid_ota.c:274` | IDF default | 5 | only in OTA (GPIO) mode: `/`, `/update`, `/factory_reset`, `/rollback` |
 | WiFi / BLE / sys_evt / esp_timer / ipc / idle | IDF | IDF | — | internal stacks |
 
-Note: `xTaskCreate` / `esp_task_wdt_add` return values are **never checked** (`esp_remote_id.c:175,417,664`, `cli.c:393`) — tracked in `softwarestatus.md`.
+Note: `xTaskCreate` / `esp_task_wdt_add` return values are **now checked** (error logged on failure) at `esp_remote_id.c:175,420,670`, `cli.c:393` — tracked in `softwarestatus.md`.
 
 ---
 
@@ -83,13 +83,13 @@ Note: `xTaskCreate` / `esp_task_wdt_add` return values are **never checked** (`e
 
 ---
 
-## 5) `rid_task` main loop — every phase (`esp_remote_id.c:411-658`)
+## 5) `rid_task` main loop — every phase (`esp_remote_id.c:414-663`)
 
-Period 100 ms (`vTaskDelay` at `:653`), WDT reset at `:654`. `g_running` toggled by `esp_rid_start/stop`.
+Period 100 ms (`vTaskDelay` at `:659`), WDT reset at `:660`. `g_running` toggled by `esp_rid_start/stop`.
 
 | Phase | Lines | What happens | If it goes wrong → |
 |---|---|---|---|
-| A | 413-417 | `active_protocol=UNKNOWN`; `esp_task_wdt_add(NULL)` (return **unchecked**) | no WDT coverage |
+| A | 416-420 | `active_protocol=UNKNOWN`; `esp_task_wdt_add(NULL)` (return checked, logs on failure) | no WDT coverage if add fails |
 | B | 425-428 | brief lock: copy `protocol` + `options` to locals | |
 | C | 430-433 | AUTO → `protocol_detect_auto()` (**consumes UART bytes, blocks up to 50 ms**); else `proto = cfg_proto` | AUTO starvation/misclassification (todo) |
 | D | 435 | `g_state.active_protocol = proto` (unlocked write) | |

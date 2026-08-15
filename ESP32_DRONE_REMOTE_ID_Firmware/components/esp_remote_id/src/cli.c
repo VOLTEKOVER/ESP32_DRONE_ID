@@ -390,6 +390,10 @@ static void cli_task(void *arg)
 
 void cli_init(void)
 {
-    xTaskCreate(cli_task, "cli_task", CLI_STACK_SIZE, NULL, 5, NULL);
+    BaseType_t ret = xTaskCreate(cli_task, "cli_task", CLI_STACK_SIZE, NULL, 5, NULL);
+    if (ret != pdPASS) {
+        ESP_LOGE(TAG, "Failed to create cli_task (err=%d)", (int)ret);
+        return;
+    }
     ESP_LOGI(TAG, "CLI initialized");
 }
