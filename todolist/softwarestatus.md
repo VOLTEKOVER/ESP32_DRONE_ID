@@ -70,6 +70,12 @@ Scope: all 80+ source files (excluding build artifacts)
 - [ ] **CLI command history** — circular buffer last 10 cmds
 - [ ] **Kalman covariance export** — diagnostic API
 - [ ] **Stats tracking** — TX failures, parse errors, signatures
+- [ ] **Universal worldwide firmware (product requirement)** — one firmware image that works in every country, all selectable from the **same web UI**:
+  - **Input**: all flight-controller protocols — MSP, NMEA, MAVLink, DroneCAN/TWAI, USB MAVLink, and any future one (today all are already auto-detected/polled in `rid_task`).
+  - **Output**: all Remote ID standards for every region — ASTM F3411-22a (WiFi Beacon + NAN, BLE 4.0 legacy + BLE 5.0 LR) is already emitted; missing are the national non-ASTM formats (e.g. China GB 42590-2023, US FRDID for FRIAs, Japan, …) that need their own encoders.
+  - **Config**: every input/output option exposed via the same `/api/config` + NVS + CLI + web UI, no per-region firmware build.
+  - This item is the umbrella requirement; see *Region-aware transmission* below for the concrete implementation steps.
+- [ ] **Region-aware transmission** — today the region select in the web UI (Compliance tab) is cosmetic only: it redraws a checklist and never touches the firmware. The firmware always sends ASTM F3411-22a (BasicID, Location, System, OperatorID, SelfID if set, Auth if enabled) on WiFi Beacon/NAN + BLE 4.0/5.0, regardless of nation. To make it real: add a `region` field to `rid_config_t` (NVS + `/api/config` + CLI), and have it gate what is broadcast (e.g. OperatorID only for EU/EUR, hide second BasicID where not allowed) and select the encoding standard. Caveat: non-ASTM national formats (e.g. China GB 42590-2023) and FRDID (US FRIAs) need separate encoders — `frdid_build`/`frdid_wifi_build_beacon_frame` are declared but never implemented.
 
 > Tracked in GitHub issue [#29](https://github.com/VOLTEKOVER/ESP_DRONE_REMOTE_ID/issues/29)
 
