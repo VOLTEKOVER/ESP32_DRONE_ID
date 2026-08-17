@@ -4,12 +4,12 @@ on:
   push:
     branches: [ "main" ]
     paths:
-      - 'OmniLink-REMOTE-ID/**'
+      - 'OmniRID/**'
       - '.github/workflows/rid-rust-ci.yml'
   pull_request:
     branches: [ "main" ]
     paths:
-      - 'OmniLink-REMOTE-ID/**'
+      - 'OmniRID/**'
       - '.github/workflows/rid-rust-ci.yml'
   workflow_dispatch:
 
@@ -35,7 +35,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: OmniLink-REMOTE-ID
+        working-directory: OmniRID
 
     steps:
       - name: Checkout
@@ -50,7 +50,7 @@ jobs:
       - name: Cache Cargo
         uses: Swatinem/rust-cache@v2
         with:
-          workspaces: OmniLink-REMOTE-ID
+          workspaces: OmniRID
 
       - name: Build (--locked)
         run: cargo build --workspace --locked

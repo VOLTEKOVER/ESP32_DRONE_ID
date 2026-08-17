@@ -1,5 +1,10 @@
 # conversion.md — Processo di conversione firmware C/ESP-IDF → Rust
 
+> **⚠ LEGACY C FIRMWARE REMOVED:** The C firmware directory `ESP32_DRONE_REMOTE_ID_Firmware/`
+> has been deleted from the repository. The Rust firmware lives in `OmniRID/`
+> (renamed from `firmware-rid/`). This document is kept as the definitive reference for the
+> conversion plan, architecture decisions, and remaining work items. 312 tests passing.
+
 > Piano completo per trasformare il firmware monolitico `ESP32_DRONE_REMOTE_ID_Firmware`
 > (C, componente `esp_remote_id`) in un firmware **super-modulare in Rust**:
 > protocolli come crate indipendenti e intercambiabili (input e output), elaborazione centrale pura,
@@ -37,7 +42,7 @@ host-compilabile o no: questo decide se può restare dentro o deve uscire.
 
 **PRIMA (struttura attuale, da modificare):**
 ```
-OmniLink-REMOTE-ID/
+OmniRID/
 ├── Cargo.toml                       # workspace radice: SOLO firmware applicativo
 ├── crates/                          # WORKSPACE #1 (proprio Cargo.toml + Cargo.lock)
 │   ├── app/  rid-core/  rid-interface/  rid-app/  bsp-esp32/  bsp-sim/
@@ -51,7 +56,7 @@ OmniLink-REMOTE-ID/
 
 **DOPO (struttura target, da realizzare):**
 ```
-OmniLink-REMOTE-ID/
+OmniRID/
 ├── Cargo.toml                       # UNICO workspace, resolver = "2", members a glob
 │
 ├── firmware/                        # 📦 BOX 1 — nucleo firmware, agnostico hw e protocolli
@@ -234,10 +239,10 @@ aggiornamento path/lockfile. Rischio basso, nessun test dovrebbe cambiare risult
       lint resta pulito — eseguito, pulito
 - [x] **13.11** Aggiornare `rid-rust-ci.yml` (CI) con i nuovi path se referenzia `crates/`,
       `inputs/`, `outputs/`, `external-libs/` come working-directory o cache-key esplicite —
-      nessuna modifica necessaria: la CI usa già `OmniLink-REMOTE-ID` come working-directory e comandi
+      nessuna modifica necessaria: la CI usa già `OmniRID` come working-directory e comandi
       `--workspace` dalla radice
 - [x] **13.12** Aggiornare `dependabot.yml` se ha `directory:` puntati ai vecchi sub-workspace —
-      nessuna modifica necessaria: c'è già una entry `cargo` unica su `/OmniLink-REMOTE-ID`
+      nessuna modifica necessaria: c'è già una entry `cargo` unica su `/OmniRID`
 - [x] **13.13** Aggiornare i riferimenti a path nei doc collegati (`todolist/softwarestatus.md`,
       `todolist/processes.md`, `todolist/dataflow.md`) se citano `crates/`, `inputs/`, `outputs/`,
       `external-libs/` come sub-workspace — nessuna modifica necessaria: gli altri doc non citano
@@ -247,7 +252,7 @@ aggiornamento path/lockfile. Rischio basso, nessun test dovrebbe cambiare risult
 
 ## 14. Checklist di avanzamento — FASI ORIGINALI (invariata, riportata come da tracking esistente)
 
-- [x] Fase 0: scaffold workspace (`OmniLink-REMOTE-ID/` — Cargo.toml root, `firmware/rid-interface`,
+- [x] Fase 0: scaffold workspace (`OmniRID/` — Cargo.toml root, `firmware/rid-interface`,
       `firmware/rid-core`, `firmware/bsp-sim`) — CI GitHub Actions in Fase 6
 - [x] Fase 1: `rid-interface` (trait e tipi neutri, port 1:1 di `esp_remote_id.h`; contratto
       input/output `input.rs` con `GpsSource`/`Transmitter`/`InputSample`) + `rid-core`
@@ -264,7 +269,7 @@ aggiornamento path/lockfile. Rischio basso, nessun test dovrebbe cambiare risult
   - [x] `opendroneid-sys` — **11 test**
   - [x] `out-astm` — **26 test** — Fase 3 completa
   - [x] `bsp-sim` end-to-end con catena `out-astm` reale + roundtrip decode C
-- [ ] Fase 4: `bsp-esp32` hardware reale (WiFi/BLE/NVS/LED/USB/web/OTA) — IN CORSO:
+- [x] Fase 4: `bsp-esp32` hardware reale (WiFi/BLE/NVS/LED/USB/web/OTA) — COMPLETATA:
   - [x] riordino: logica pura spostata da `bsp-esp32` al crate agnostico **`rid-app`**
         (`firmware/rid-app`); `bsp-esp32` ora solo glue hardware in `hardware/bsp-esp32`;
         `bsp-sim` glue host in `firmware/bsp-sim` — 312 test verdi workspace + 2 caps standalone
@@ -284,14 +289,10 @@ aggiornamento path/lockfile. Rischio basso, nessun test dovrebbe cambiare risult
         casi limite extra aggiunti oggi); il modulo `security.rs` duplicato in `rid-app` è stato
         **eliminato** e `rid-app` ora ri-esporta da `rid_core::security` (e `bsp-esp32` via
         `pub use rid_app::*`) — **COMPLETO, nulla da fare**
-  - [ ] **DA FARE**: WiFi/BLE trasporto reale (`wifi.c`/`ble_tx.c` → `bsp-esp32`)
-  - [ ] **DA FARE**: NVS reale su hardware (oggi solo trait `NvsStore`, manca impl ESP32 concreta
-        collegata a `esp-idf-svc`/`esp-hal` storage)
-  - [ ] **DA FARE**: LED status/WS2812/lighting su hardware (logica pura di `led_status.c`/
-        `led_ws2812.c`/`rid_lighting.c` portata in `rid-app` — vedi sotto; manca il glue LEDC/RMT
-        su `bsp-esp32`)
-  - [ ] **DA FARE**: USB CDC reale (oggi solo `proto-usb-mavlink` parsing, manca il layer
-        seriale USB fisico sul BSP)
+  - [x] WiFi/BLE trasporto reale (`wifi.rs`, `ble.rs`) — DONE in `hardware/bsp-esp32/src/`
+  - [x] NVS reale su hardware (`nvs.rs`) — DONE in `hardware/bsp-esp32/src/`
+  - [x] LED status/WS2812/lighting su hardware (`led.rs`) — DONE in `hardware/bsp-esp32/src/`
+  - [x] USB CDC reale (`usb.rs`) — DONE in `hardware/bsp-esp32/src/`
   - [x] `rid-app::ota` — logica pura di `rid_ota.c` (`ota_update_handler`): gating lock
         (>=2 rifiutato, >=1 firma obbligatoria), SHA-256 streaming + `X-Expected-SHA256`
         (obbligatorio), verifica firma `X-Signature` (Ed25519 via `rid_core::security`, body
@@ -318,10 +319,8 @@ aggiornamento path/lockfile. Rischio basso, nessun test dovrebbe cambiare risult
         `app.js`): `include_str!` di tutti i file, content-type registry, `Asset` struct,
         `lookup(path)`, `ASSETS` slice — **7 test** (non-empty, lookup hit/miss, content-types,
         HTML structure, API refs, count)
-  - [ ] **DA FARE**: web server reale + OTA (`web_config.c`/`rid_ota.c` → glue in `bsp-esp32`):
-        la logica di validazione è in `rid-app::ota`, manca solo HTTP server + commit partizione
-        (`esp_ota_*`) + AP WiFi `RemoteID-OTA` + riavvio, tutti hardware-side
-- [ ] Fase 5: `app` + UI adattiva (`/api/capabilities`) — IN CORSO:
+  - [x] web server reale + OTA (`web.rs`, `ota.rs`) — DONE in `hardware/bsp-esp32/src/`
+- [x] Fase 5: `app` + UI adattiva (`/api/capabilities`) — COMPLETATA:
   - [x] `firmware/app` crate (`lib` no_std+alloc + `bin` std host demo): assembla BSP + input +
         output nell'hub. `controller.rs` porta il glue `esp_remote_id.c`
         (`esp_rid_init`/`esp_rid_set_config`/`esp_rid_factory_reset`): `Controller`
@@ -333,17 +332,13 @@ aggiornamento path/lockfile. Rischio basso, nessun test dovrebbe cambiare risult
         tx_modes/options/fw_version) — **4 test**; `main.rs` = demo host end-to-end
         (mock `GpsSource` + mock `Transmitter` + loop scheduler + lifecycle config) — **12 test totali**
   - [x] `rid-app::webui` — UI embedded portata (`webui/` → `include_str!`, **7 test**)
-  - [ ] **DA FARE**: HTTP server glue in `bsp-esp32` — esporre i 4 asset webui
-        (`webui::lookup` → risposta HTTP) + endpoint `/api/capabilities` (payload:
-        `Controller::capabilities_json()`) + `/api/config` GET/POST + `/api/status` +
-        `/api/reset` + OTA upload — tutti hardware-side (usa `rid-app::web_config`
-        per la logica decisionale, già portata con 15 test)
-- [ ] Fase 6: auto-update da GitHub + release binario — PARZIALE:
+  - [x] HTTP server glue in `bsp-esp32` (`web.rs`) — DONE in `hardware/bsp-esp32/src/`
+- [ ] Fase 6: auto-update da GitHub + release binario — IN CORSO:
   - [x] `rid-rust-ci.yml` — CI workspace (build/test/clippy `-D warnings` `--locked`, matrix
         ubuntu+windows)
   - [x] `opendroneid-update.yml` + `scripts/update-opendroneid.sh` — aggiornamento automatico
         settimanale + PR con parity test
-  - [x] `dependabot.yml` — entry `cargo` unica su `/OmniLink-REMOTE-ID` (già consolidata)
+  - [x] `dependabot.yml` — entry `cargo` unica su `/OmniRID` (già consolidata)
   - [ ] **DA FARE**: release binario / build matrix ESP32 nel workflow (quando `bsp-esp32` è
         completo hardware-side)
   - [ ] **DA FARE**: dipendenze git `rev = "main"` per protocolli (oggi tutto è path-dependency
@@ -362,23 +357,15 @@ in workspace unico, verifica build/test dopo il move. ✅ **COMPLETATA** (worksp
 1. ~~`verify_signed_body`~~ ✅ **COMPLETO**: già portato in `rid-core::security` (Fase 1) con
    `ed25519-dalek` + `pkcs8` (PEM/DER/`PUBLIC_KEYV1`); il modulo duplicato di `rid-app` è stato
    rimosso
-2. WiFi/BLE trasporto reale in `bsp-esp32` (oggi solo `out-astm` produce `Frame`, manca l'invio
-   fisico sul mezzo radio)
-3. NVS reale collegata a `esp-idf-svc`/`esp-hal`
-4. LED status (WS2812 + GPIO lighting) — **logica pura di `led_status.c`/`led_ws2812.c`/
-   `rid_lighting.c` portata in `rid-app`** (`led_status` 11 test, `led_ws2812` 6 test, `lighting`
-   11 test); manca il glue LEDC/RMT in `bsp-esp32` (hardware)
-5. USB CDC fisico (il parsing MAVLink-USB esiste, manca il layer seriale)
-6. Web server + OTA reali — **logica pura di `rid_ota.c` portata in `rid-app::ota`** (17 test);
-   manca l'HTTP server + commit partizione + AP WiFi in `bsp-esp32` (hardware)
-7. `firmware/app` — ✅ **COMPLETATO (Fase 5)**: `Controller` assembla BSP + input + output
-   nell'hub (port del glue `esp_remote_id.c`), payload JSON dei tre endpoint
-   (`config_json`/`status_json`/`capabilities_json`), demo host in `main.rs`; resta solo
-   esporre `/api/capabilities` dall'HTTP server del BSP (hardware)
-8. UI `/api/capabilities` adattiva — ✅ **COMPLETATO**: payload JSON esiste (`app::capabilities`),
-   UI embedded portata in `rid-app::webui` (`include_str!` di config.html/style.css/app.js,
-   7 test); resta solo il glue HTTP server in `bsp-esp32` (hardware) per servire gli asset
-   e registrare i path
+2. ~~WiFi/BLE trasporto reale~~ ✅ **COMPLETATO**: `hardware/bsp-esp32/src/wifi.rs`, `ble.rs`
+3. ~~NVS reale~~ ✅ **COMPLETATO**: `hardware/bsp-esp32/src/nvs.rs`
+4. ~~LED status (WS2812 + GPIO lighting)~~ ✅ **COMPLETATO**: `hardware/bsp-esp32/src/led.rs`
+5. ~~USB CDC fisico~~ ✅ **COMPLETATO**: `hardware/bsp-esp32/src/usb.rs`
+6. ~~Web server + OTA reali~~ ✅ **COMPLETATO**: `hardware/bsp-esp32/src/web.rs`, `ota.rs`
+7. ~~`firmware/app`~~ ✅ **COMPLETATO (Fase 5)**: `Controller` assembla BSP + input + output
+   nell'hub, payload JSON dei tre endpoint, demo host in `main.rs`
+8. ~~UI `/api/capabilities` adattiva~~ ✅ **COMPLETATO**: payload JSON + UI embedded portata in
+   `rid-app::webui` + glue HTTP in `bsp-esp32`
 9. Decisione su auto-update da GitHub (dipendenze git `rev = "main"` per i protocolli, oggi
    solo path locali) — verificare se è ancora un requisito reale o se il workspace unico con
    `cargo update` è sufficiente
@@ -387,7 +374,7 @@ in workspace unico, verifica build/test dopo il move. ✅ **COMPLETATA** (worksp
 
 ## 16. Riferimenti
 
-- `todolist/softwarestatus.md` — umbrella "Universal worldwide firmware" (#29), stato attuale C
-- `todolist/processes.md` — dettagli del firmware C attuale (base di porting)
-- `todolist/dataflow.md` — catene dei dati (guida per `NeutralState`)
+- `todolist/softwarestatus.md` — umbrella "Universal worldwide firmware" (#29), stato attuale C (legacy, C firmware deleted)
+- `todolist/processes.md` — dettagli del firmware C attuale (legacy, base di porting)
+- `todolist/dataflow.md` — catene dei dati (guida per `NeutralState`, legacy C reference)
 - `docs/guide.html` — documentazione utente (invariata: la UI non cambia concettualmente)

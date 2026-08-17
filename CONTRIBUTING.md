@@ -1,4 +1,4 @@
-# Contributing to ESP Remote ID
+# Contributing to OmniRID
 
 Thanks for your interest in contributing! This guide will help you get started.
 
@@ -6,17 +6,17 @@ Thanks for your interest in contributing! This guide will help you get started.
 
 ### Prerequisites
 
-- [ESP-IDF v6.0.1](https://docs.espressif.com/projects/esp-idf/en/v6.0.1/esp32/get-started/)
-- Git with submodules
+- Rust stable toolchain (`rustup`)
+- (Optional) `espup` for ESP32 cross-compilation
 - (Optional) Node.js 22+ for RID Hub desktop app
 
-### Building Firmware
+### Building the Workspace
 
 ```bash
-cd ESP32_DRONE_REMOTE_ID_Firmware
-idf.py set-target esp32    # or esp32s3, esp32c6
-idf.py build
-idf.py -p /dev/ttyUSB0 flash monitor
+cd OmniRID
+cargo build --workspace           # host build
+cargo test --workspace            # run all tests (312)
+cargo clippy --workspace -- -D warnings   # lint
 ```
 
 ### Building RID Hub (Desktop App)
@@ -31,17 +31,19 @@ npx electron-builder --dir   # pack without installer
 ## Project Structure
 
 ```
-ESP32_DRONE_REMOTE_ID_Firmware/
-├── components/esp_remote_id/    # Core Remote ID component
-│   ├── src/                     # Source files
-│   ├── include/                 # Public headers
-│   ├── mavlink/                 # Vendored MAVLink c_library_v2
-│   └── webui/                   # Embedded web UI (config.html)
-├── main/                        # App entry point
-└── sdkconfig.defaults           # Default Kconfig values
+OmniRID/
+├── firmware/              # Core Rust crates
+│   ├── app/               # Application logic (lib + bin)
+│   ├── rid-core/          # Kalman filter, security, TX pipeline
+│   ├── rid-app/           # Feature logic (NVS, OTA, web, LED, config)
+│   └── rid-interface/     # Transport abstraction (WiFi/BLE/USB)
+├── inputs/                # Protocol parsers (MAVLink, MSP, NMEA, DroneCAN)
+├── outputs/               # Protocol encoders (ASTM, NAN, BLE4, pack)
+├── external-libs/         # Vendored C dependencies (opendroneid-sys)
+└── hardware/bsp-esp32/    # ESP-IDF glue (standalone workspace)
 
-RID_Hub/                         # Electron desktop app
-docs/                            # GitHub Pages documentation
+RID_Hub/                   # Electron desktop app
+docs/                      # GitHub Pages documentation
 ```
 
 ## Making Changes
@@ -49,11 +51,10 @@ docs/                            # GitHub Pages documentation
 1. Fork the repository
 2. Create a feature branch: `git checkout -b feature/my-change`
 3. Make your changes
-4. Build for all 3 targets to verify no regressions:
+4. Verify no regressions:
    ```bash
-   idf.py set-target esp32 && idf.py build
-   idf.py set-target esp32s3 && idf.py build
-   idf.py set-target esp32c6 && idf.py build
+   cargo test --workspace
+   cargo clippy --workspace -- -D warnings
    ```
 5. Test on real hardware if possible
 6. Update [`todolist/softwarestatus.md`](todolist/softwarestatus.md) for file-level changes
@@ -79,10 +80,9 @@ Examples:
 
 ## Code Style
 
-- C: follow ESP-IDF coding standards
-- Keep Kconfig changes minimal — prefer web-configurable settings
-- JavaScript: keep web UI lightweight (embedded in flash)
-- Add `Wno-error` flags only when necessary (document why)
+- Rust: `cargo fmt` (edition 2024), `cargo clippy -D warnings`
+- `no_std` for firmware crates; `std` only in `bsp-esp32`
+- Keep `unsafe` out of core crates (only in hardware glue)
 - Update [`todolist/softwarestatus.md`](todolist/softwarestatus.md) with any new/changed source files
 
 ## Reporting Bugs

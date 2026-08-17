@@ -1,4 +1,4 @@
-name: Release Firmware
+name: Release RID Hub
 
 on:
   push:
@@ -8,65 +8,7 @@ on:
 permissions:
   contents: read
 
-env:
-  CCACHE_DIR: /root/.ccache
-
 jobs:
-  build:
-    name: ${{ matrix.target }}
-    runs-on: ubuntu-latest
-    container:
-      image: espressif/idf:v6.0.1
-    strategy:
-      fail-fast: false
-      matrix:
-        target:
-          - esp32
-          - esp32s3
-          - esp32c6
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          submodules: recursive
-
-      - name: ccache
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
-        with:
-          path: /root/.ccache
-          key: ccache-${{ matrix.target }}-${{ hashFiles('**/sdkconfig', '**/CMakeLists.txt', '**/*.cmake') }}
-          restore-keys: |
-            ccache-${{ matrix.target }}-
-            ccache-
-
-      - name: Set target and build
-        run: |
-          . /opt/esp/idf/export.sh > /dev/null 2>&1
-          git config --global --add safe.directory "$(pwd)" > /dev/null 2>&1
-          cd ESP32_DRONE_REMOTE_ID_Firmware
-          idf.py set-target ${{ matrix.target }}
-          echo "CONFIG_PARTITION_TABLE_CUSTOM=y" >> sdkconfig
-          echo "CONFIG_PARTITION_TABLE_CUSTOM_FILENAME=\"partitions.csv\"" >> sdkconfig
-          echo "CONFIG_PARTITION_TABLE_FILENAME=\"partitions.csv\"" >> sdkconfig
-          echo "CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y" >> sdkconfig
-          if [ "${{ matrix.target }}" != "esp32" ]; then
-            echo "CONFIG_BT_NIMBLE_ENABLED=y" >> sdkconfig
-          fi
-          export CCACHE_BASEDIR="$PWD"
-          idf.py build
-        shell: bash
-
-      - name: Upload firmware artifact
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
-        with:
-          name: firmware-${{ matrix.target }}
-          path: |
-            ESP32_DRONE_REMOTE_ID_Firmware/build/bootloader/bootloader.bin
-            ESP32_DRONE_REMOTE_ID_Firmware/build/partition_table/partition-table.bin
-            ESP32_DRONE_REMOTE_ID_Firmware/build/esp-drone-remoteid.bin
-          retention-days: 30
-
   build-ridhub-windows:
     name: RID Hub (Windows)
     runs-on: windows-latest
@@ -127,7 +69,7 @@ jobs:
 
   create-release:
     name: Create Release
-    needs: [build, build-ridhub-windows, build-ridhub-linux]
+    needs: [build-ridhub-windows, build-ridhub-linux]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -144,12 +86,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Download artifacts
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
-        with:
-          path: artifacts
-          pattern: firmware-*
-
       - name: Download RID Hub artifacts
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
         with:
@@ -163,131 +99,31 @@ jobs:
       - name: Prepare release assets
         run: |
           mkdir -p release
-          for dir in artifacts/firmware-*/; do
-            [ -d "$dir" ] || continue
-            target=$(basename "$dir" | sed 's/firmware-//')
-            mkdir -p "release/$target"
-            cp -r "$dir"* "release/$target/"
-            cd release && zip -r "firmware-$target-${{ env.VERSION }}.zip" "$target/" && cd ..
-          done
-          # Build full firmware tree for Pages deployment
-          mkdir -p release/firmware
-          for dir in artifacts/firmware-*/; do
-            [ -d "$dir" ] || continue
-            target=$(basename "$dir" | sed 's/firmware-//')
-            mkdir -p "release/firmware/$target"
-            cp -r "$dir"* "release/firmware/$target/"
-          done
-          # RID Hub desktop apps
           for dir in artifacts/ridhub-*/; do
             [ -d "$dir" ] || continue
             cp -r "$dir"* release/
           done
         shell: bash
 
-      - name: Generate manifest.json (release)
-        run: |
-          python3 -c "
-          import json, os
-
-          FAMILIES = {
-            'esp32': 'ESP32',
-            'esp32s3': 'ESP32-S3',
-            'esp32c6': 'ESP32-C6',
-          }
-          BOOT_OFFSET_0x1000 = ('esp32',)
-
-          manifest = {
-            'name': 'ESP Remote ID',
-            'version': os.environ['VERSION'],
-            'home_url': 'https://VOLTEKOVER.github.io/ESP_DRONE_REMOTEID',
-            'config_url': 'http://192.168.4.1',
-            'new_install_improv_wait_time': 0,
-            'builds': [],
-          }
-
-          fw_dir = 'release/firmware'
-          for target in sorted(os.listdir(fw_dir)):
-            parts_path = os.path.join(fw_dir, target)
-            if not os.path.isdir(parts_path):
-              continue
-            boot_bin = os.path.join(parts_path, 'bootloader.bin')
-            part_bin = os.path.join(parts_path, 'partition-table.bin')
-            app_bin = os.path.join(parts_path, 'esp-drone-remoteid.bin')
-            if not (os.path.exists(boot_bin) and os.path.exists(part_bin) and os.path.exists(app_bin)):
-              continue
-            boot_offset = 0x0
-            if target in BOOT_OFFSET_0x1000:
-              boot_offset = 0x1000
-            manifest['builds'].append({
-              'chipFamily': FAMILIES.get(target, target),
-              'parts': [
-                {'path': f'firmware/{target}/bootloader.bin', 'offset': boot_offset},
-                {'path': f'firmware/{target}/partition-table.bin', 'offset': 0x8000},
-                {'path': f'firmware/{target}/esp-drone-remoteid.bin', 'offset': 0x20000},
-              ]
-            })
-
-          with open('release/firmware/manifest.json', 'w') as f:
-            json.dump(manifest, f, indent=2)
-          "
-        shell: bash
-
-      - name: Get target list for release notes
-        id: targets
-        run: |
-          LIST=""
-          for dir in artifacts/firmware-*/; do
-            [ -d "$dir" ] || continue
-            target=$(basename "$dir" | sed 's/firmware-//')
-            [ -n "$LIST" ] && LIST="$LIST, "
-            LIST="${LIST}ESP32-${target#esp32}"
-          done
-          echo "list=$LIST" >> $GITHUB_OUTPUT
-        shell: bash
-
       - name: Generate release notes
         run: |
           VERSION=${{ env.VERSION }}
-          TARGETS="${{ steps.targets.outputs.list }}"
 
           cat > release-notes.md << EOF
-          # ESP Remote ID v${VERSION}
+          # OmniRID v${VERSION}
 
-Open DroneID transmitter for ESP32 ÔÇö ASTM F3411-22a / ASD-STAN prEN 4709-002.
+Open DroneID transmitter for ESP32 -- ASTM F3411-22a / ASD-STAN prEN 4709-002.
 
-          **Targets:** ${TARGETS}
-
-          ---
+Written in Rust. Firmware builds via \`cargo +esp build\` (see CI).
 
           ## Downloads
 
-          | File | Target |
-          |------|--------|
+          | File | Platform |
+          |------|----------|
+          | \`RID Hub Setup $VERSION.exe\` | Windows desktop app |
+          | \`RID Hub $VERSION.AppImage\` | Linux desktop app |
           EOF
 
-          for dir in artifacts/firmware-*/; do
-            [ -d "$dir" ] || continue
-            target=$(basename "$dir" | sed 's/firmware-//')
-            echo "| \`firmware-${target}-${VERSION}.zip\` | ${target} (bootloader + partition + app) |" >> release-notes.md
-          done
-
-          echo "" >> release-notes.md
-          echo "Individual \`.bin\` files are also available for each target:" >> release-notes.md
-          echo "" >> release-notes.md
-          for dir in artifacts/firmware-*/; do
-            [ -d "$dir" ] || continue
-            target=$(basename "$dir" | sed 's/firmware-//')
-            echo "| \`bootloader.bin\` | ${target} offset 0x$( [ "$target" = "esp32" ] && echo 1000 || echo 0 ) |" >> release-notes.md
-            echo "| \`partition-table.bin\` | ${target} offset 0x8000 |" >> release-notes.md
-            echo "| \`esp-drone-remoteid.bin\` | ${target} offset 0x20000 |" >> release-notes.md
-          done
-          echo "" >> release-notes.md
-          echo "| \`manifest.json\` | WebSerial installer |" >> release-notes.md
-          echo "| \`RID Hub Setup $VERSION.exe\` | Windows desktop app |" >> release-notes.md
-          echo "| \`RID Hub $VERSION.AppImage\` | Linux desktop app |" >> release-notes.md
-          echo "" >> release-notes.md
-          echo "Flash via browser at https://VOLTEKOVER.github.io/ESP_DRONE_REMOTEID/" >> release-notes.md
           echo "" >> release-notes.md
           echo "## What's Changed" >> release-notes.md
 
@@ -308,64 +144,15 @@ Open DroneID transmitter for ESP32 ÔÇö ASTM F3411-22a / ASD-STAN prEN 4709-00
       - name: Create Release
         uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228
         with:
-          name: ESP Remote ID v${{ env.VERSION }}
+          name: OmniRID v${{ env.VERSION }}
           body_path: release-notes.md
           files: |
-            release/firmware-*.zip
-            release/firmware/manifest.json
-            release/firmware/*/*.bin
             release/*.exe
             release/*.AppImage
 
       - name: Prepare Pages deploy
         run: |
-          mkdir -p docs/firmware
-          cp -r release/firmware/* docs/firmware/
           mkdir -p docs/images
-          python3 -c "
-          import json, os
-
-          FAMILIES = {
-            'esp32': 'ESP32',
-            'esp32s3': 'ESP32-S3',
-            'esp32c6': 'ESP32-C6',
-          }
-          BOOT_OFFSET_0x1000 = ('esp32',)
-
-          manifest = {
-            'name': 'ESP Remote ID',
-            'version': os.environ['VERSION'],
-            'home_url': 'https://VOLTEKOVER.github.io/ESP_DRONE_REMOTEID',
-            'config_url': 'http://192.168.4.1',
-            'new_install_improv_wait_time': 0,
-            'builds': [],
-          }
-
-          fw_dir = 'docs/firmware'
-          for target in sorted(os.listdir(fw_dir)):
-            parts_path = os.path.join(fw_dir, target)
-            if not os.path.isdir(parts_path):
-              continue
-            boot_bin = os.path.join(parts_path, 'bootloader.bin')
-            part_bin = os.path.join(parts_path, 'partition-table.bin')
-            app_bin = os.path.join(parts_path, 'esp-drone-remoteid.bin')
-            if not (os.path.exists(boot_bin) and os.path.exists(part_bin) and os.path.exists(app_bin)):
-              continue
-            boot_offset = 0x0
-            if target in BOOT_OFFSET_0x1000:
-              boot_offset = 0x1000
-            manifest['builds'].append({
-              'chipFamily': FAMILIES.get(target, target),
-              'parts': [
-                {'path': f'firmware/{target}/bootloader.bin', 'offset': boot_offset},
-                {'path': f'firmware/{target}/partition-table.bin', 'offset': 0x8000},
-                {'path': f'firmware/{target}/esp-drone-remoteid.bin', 'offset': 0x20000},
-              ]
-            })
-
-          with open('docs/manifest.json', 'w') as f:
-            json.dump(manifest, f, indent=2)
-          "
         shell: bash
 
       - name: Upload Pages artifact

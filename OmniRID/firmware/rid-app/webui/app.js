@@ -394,7 +394,7 @@ $('tx_ble5').checked=!!(c.tx_modes&8)
 }).catch(function(){
   document.querySelectorAll('input,select').forEach(function(el){el.style.opacity=''})
   hideLoading();
-  showError('Connection Failed','Cannot connect to ESP DRONE REMOTEID.<br><br>Make sure you are connected to the device WiFi network and try again.');
+  showError('Connection Failed','Cannot connect to OmniRID.<br><br>Make sure you are connected to the device WiFi network and try again.');
 })}
 
 function collectForm(){return{

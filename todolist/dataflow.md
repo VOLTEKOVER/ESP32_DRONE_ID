@@ -1,4 +1,9 @@
-# ESP DRONE REMOTEID — Data Flow & Field Verification
+# OmniRID — Data Flow & Field Verification (Legacy C Firmware)
+
+> **⚠ LEGACY C FIRMWARE:** This document documents the C firmware architecture in
+> `ESP32_DRONE_REMOTE_ID_Firmware/` (deleted). The data flow patterns have been preserved
+> in the Rust port (`OmniRID/`): same Kalman filter, same TX chain, same
+> parser→core→TX flow. File paths changed but architecture is equivalent.
 
 Last updated: 2026-08-14 (merged from `dataflow_map.md` + `dataflow_verification.md`, re-audited against current source: `components/esp_remote_id/src/*.c`, `main/main.c`).
 

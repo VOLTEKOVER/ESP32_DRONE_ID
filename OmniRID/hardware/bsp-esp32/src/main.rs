@@ -17,7 +17,7 @@ mod imp {
     /// Splash screen port of `print_splash()` from `main.c`.
     fn print_splash(mac: &[u8; 6]) {
         esp_println::println!();
-        esp_println::println!("  ESP DRONE REMOTEID -- Open DroneID Transmitter");
+        esp_println::println!("  OmniRID -- Open DroneID Transmitter");
         esp_println::println!("  WiFi AP    | ESP-RID");
         esp_println::println!("  Config URL | http://192.168.4.1");
         esp_println::println!(

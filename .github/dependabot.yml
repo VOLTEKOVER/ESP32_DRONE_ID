@@ -25,7 +25,7 @@ updates:
     open-pull-requests-limit: 2
 
   - package-ecosystem: "cargo"
-    directory: "/OmniLink-REMOTE-ID"
+    directory: "/OmniRID"
     schedule:
       interval: "weekly"
       day: "monday"

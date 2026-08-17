@@ -1,4 +1,9 @@
-# ESP DRONE REMOTEID — Software Status
+# OmniRID — Software Status (Legacy C Firmware Audit)
+
+> **⚠ LEGACY C FIRMWARE:** This document covers the C firmware `ESP32_DRONE_REMOTE_ID_Firmware/`
+> which has been **deleted from the repository**. The active Rust firmware lives in
+> `OmniRID/` (312 tests passing). The C firmware audit and fix campaign findings
+> (A–P, §9 of `dataflow.md`) remain valuable as historical reference for the Rust port.
 
 Last updated: 2026-08-14
 Scope: all 80+ source files (excluding build artifacts)
@@ -134,7 +139,11 @@ Action options: remove the 2 FRDID prototypes (or vendor `frdid.c`) and drop `ri
 
 ## 📋 File Status Summary
 
-### `ESP32_DRONE_REMOTE_ID_Firmware/`
+### `ESP32_DRONE_REMOTE_ID_Firmware/` — ⚠ DELETED (legacy C firmware, kept for historical reference)
+
+> This directory no longer exists in the repository. The equivalent Rust firmware is in
+> `OmniRID/` with 312 tests. File-level audit below is retained for the
+> porting reference.
 
 | File | Lines | Status | Notes |
 |------|-------|--------|-------|

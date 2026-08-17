@@ -3,19 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="ESP DRONE REMOTEID [BETA] — Technical guide: protocols, installation, OTA, security, antenna. ASTM F3411-22a Open DroneID.">
-<meta property="og:title" content="ESP DRONE REMOTEID [BETA] — Technical Guide">
-<meta property="og:description" content="Technical guide for ESP DRONE REMOTEID — protocols, installation, OTA, security, eFuse lock.">
+<meta name="description" content="OmniRID [BETA] — Technical guide: protocols, installation, OTA, security, antenna. ASTM F3411-22a Open DroneID. Written in Rust.">
+<meta property="og:title" content="OmniRID [BETA] — Technical Guide">
+<meta property="og:description" content="Technical guide for OmniRID — protocols, installation, OTA, security, eFuse lock. Written in Rust.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://VOLTEKOVER.github.io/ESP_DRONE_REMOTEID/">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="ESP DRONE REMOTEID [BETA]">
-<meta name="twitter:description" content="Open DroneID transmitter for ESP32 — WiFi Beacon &amp; BLE.">
+<meta name="twitter:title" content="OmniRID [BETA]">
+<meta name="twitter:description" content="Open DroneID transmitter for ESP32 — WiFi Beacon &amp; BLE. Written in Rust.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 56 56'><rect width='56' height='56' rx='12' fill='%23222'/><ellipse cx='28' cy='29' rx='2.2' ry='13' fill='%23fff'/></svg>">
-<title>ESP DRONE REMOTEID [BETA] — Technical Guide</title>
+<title>OmniRID [BETA] — Technical Guide</title>
 <script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
 <script async defer src="https://buttons.github.io/buttons.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
@@ -73,8 +73,8 @@
 <div id="reading-progress"></div>
 <header class="navbar navbar-expand-lg sticky-top bg-body-tertiary">
 <div class="container">
-<a href="#" class="navbar-brand brand p-0 me-3" aria-label="ESP DRONE REMOTEID home">
-<img class="logo-img" src="images/logo_with_text.svg" alt="ESP DRONE REMOTEID">
+<a href="#" class="navbar-brand brand p-0 me-3" aria-label="OmniRID home">
+<img class="logo-img" src="images/logo_with_text.svg" alt="OmniRID">
 </a>
 <button id="hamburger" class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
 <div class="collapse navbar-collapse" id="mainNav">
@@ -96,8 +96,8 @@
 
 <div class="container">
 <div class="hero">
-<img class="logo-hero mx-auto d-block mb-3" src="images/logo.svg" alt="ESP DRONE REMOTEID">
-<h1>ESP DRONE REMOTEID <span style="font-size:.5em;color:#c62828;font-weight:700">[BETA]</span></h1>
+<img class="logo-hero mx-auto d-block mb-3" src="images/logo.svg" alt="OmniRID">
+<h1>OmniRID <span style="font-size:.5em;color:#c62828;font-weight:700">[BETA]</span></h1>
 <p>Universal ASTM F3411-22a Open DroneID transmitter &mdash; WiFi Beacon &middot; BLE 4.0/5.0 &middot; MAVLink &middot; MSP &middot; NMEA &middot; Security hardened</p>
 <div class="alert alert-warning text-start" role="alert" style="max-width:640px;margin:0 auto 1rem">&#x26a0; BETA &mdash; v1.0.0-beta. Security-hardened build with 3 ESP32 targets; flight controller hardware testing in progress. See the release bar below for details.</div>
 <div class="gh-btns d-flex justify-content-center gap-2 mt-3">
@@ -164,7 +164,7 @@
 <div class="accordion-collapse collapse" id="guide-protocols-body">
 <div class="accordion-body gs-body">
 <h4>Protocol Auto-Detection</h4>
-<p>The ESP DRONE REMOTEID identifies the UART protocol by looking for specific headers. In auto mode (the default, <code>protocol = 255</code>) detection runs continuously and is re-evaluated on every loop iteration, reading up to 50 ms of UART data per pass. The headers are checked in this order:</p>
+<p>The OmniRID identifies the UART protocol by looking for specific headers. In auto mode (the default, <code>protocol = 255</code>) detection runs continuously and is re-evaluated on every loop iteration, reading up to 50 ms of UART data per pass. The headers are checked in this order:</p>
 
 <div class="guide-diagram">
 <pre class="mermaid">
@@ -298,33 +298,29 @@ flowchart TD
 </ol>
 <div class="callout"><strong>&#x26a0; Note:</strong> WebSerial requires HTTPS (this page is served via GitHub Pages which is HTTPS). If running locally, use <code>localhost</code> or enable HTTPS.</div>
 
-<h4>Method 2: ESP-IDF (Manual Build)</h4>
+<h4>Method 2: Cargo (Manual Build)</h4>
 <p>For developers or users who want to customize the firmware.</p>
 <h5>Prerequisites</h5>
 <ul>
-<li>ESP-IDF v6.0.1 installed at <code>C:\esp\v6.0.1\esp-idf</code> (Windows) or <code>$HOME/esp/v6.0.1/esp-idf</code> (Linux/Mac)</li>
-<li>Python 3.10+</li>
-<li>Git</li>
+<li>Rust stable toolchain (<code>rustup</code>)</li>
+<li>(Optional) <code>espup</code> for ESP32 cross-compilation</li>
 </ul>
 <h5>Build Steps</h5>
 <pre>git clone https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID.git
-cd ESP_DRONE_REMOTEID/ESP32_DRONE_REMOTE_ID_Firmware
+cd ESP_DRONE_REMOTEID/OmniRID
 
-# Set up ESP-IDF environment (Windows PowerShell)
-C:\esp\v6.0.1\esp-idf\export.ps1
+# Host build (for testing)
+cargo build --workspace
 
-# Set target
-idf.py set-target esp32        # esp32, esp32s3, esp32c6
+# Run tests (312 tests)
+cargo test --workspace
 
-# Build
-idf.py build
+# Cross-build for ESP32-C6 (requires espup)
+cargo +esp build --release --target riscv32imc-unknown-none-elf -p app
 
-# Flash
-idf.py -p COM3 flash
-
-# Monitor
-idf.py -p COM3 monitor</pre>
-<p>CI builds all 3 targets automatically on push (see <code>.github/workflows/build.yml</code>).</p>
+# Flash via esptool
+esptool.py --chip esp32c6 --port COM3 write_flash 0x0 target/riscv32imc-unknown-none-elf/release/app</pre>
+<p>CI runs host tests and ESP32-C6 cross-build on every push (see <code>.github/workflows/rid-rust-ci.yml</code> and <code>esp32-build.yml</code>).</p>
 
 <h4>Method 3: esptool.py</h4>
 <p>For users who prefer a command-line tool without the full ESP-IDF:</p>
@@ -343,15 +339,11 @@ esptool.py --chip esp32s3 --port COM3 --baud 921200 \
   0x0 bootloader.bin \
   0x8000 partition-table.bin \
   0x20000 esp-remote-id.bin</pre>
-<p>The <code>.bin</code> files are generated by <code>idf.py build</code> and can be found in the <code>build/</code> directory. Pre-built binaries are also available in this project's releases.</p>
+<p>The <code>.bin</code> files are generated by <code>cargo +esp build --release</code> and can be found in the <code>target/</code> directory. Pre-built binaries are also available in this project's releases.</p>
 
-<h4>Method 4: Docker</h4>
-<pre>docker run --rm -v $(pwd):/project -w /project \
-  espressif/idf:v6.0.1 idf.py build
-
-# Binaries are inside the container; extract with:
-docker run --rm -v $(pwd):/out -v $(pwd):/project -w /project \
-  espressif/idf:v6.0.1 cp build/*.bin /out/</pre>
+<h4>Method 4: Docker (ESP32 cross-build)</h4>
+<pre>docker run --rm -v $(pwd):/project -w /project/OmniRID \
+  esp-rs/rust:latest cargo +esp build --release --target riscv32imc-unknown-none-elf -p app</pre>
 
 <h4>First Boot &amp; Verification</h4>
 <p>After flashing successfully, the firmware boots in one of two modes:</p>
@@ -521,113 +513,81 @@ docker run --rm -v $(pwd):/out -v $(pwd):/project -w /project \
 <div class="accordion-body gs-body">
 <h4>Prerequisites</h4>
 <ul>
-<li><b>ESP-IDF v6.0.1</b> &mdash; Install from <a href="https://docs.espressif.com/projects/esp-idf/en/v6.0.1/esp32/get-started/">Espressif's documentation</a></li>
-<li><b>Python 3.10+</b> &mdash; Required by ESP-IDF</li>
+<li><b>Rust stable</b> &mdash; Install from <a href="https://rustup.rs/">rustup.rs</a></li>
 <li><b>Git</b> &mdash; For cloning the repository</li>
+<li><b>(Optional) espup</b> &mdash; For ESP32 cross-compilation (<code>cargo install espup</code>)</li>
 </ul>
 
-<h4>Installing ESP-IDF</h4>
-<h5>Windows</h5>
-<pre># Download ESP-IDF v6.0.1
-git clone -b v6.0.1 --recursive https://github.com/espressif/esp-idf.git C:\esp\v6.0.1\esp-idf
+<h4>Installing Rust</h4>
+<h5>All Platforms</h5>
+<pre># Install Rust toolchain
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
-# Run the installer (creates Python venv and downloads toolchains)
-C:\esp\v6.0.1\esp-idf\install.ps1
-
-# Set up environment (run before building each time)
-C:\esp\v6.0.1\esp-idf\export.ps1</pre>
-
-<h5>Linux / macOS</h5>
-<pre>git clone -b v6.0.1 --recursive https://github.com/espressif/esp-idf.git $HOME/esp/v6.0.1/esp-idf
-cd $HOME/esp/v6.0.1/esp-idf
-./install.sh
-. ./export.sh</pre>
+# (Optional) For ESP32 cross-compilation
+cargo install espup
+espup install</pre>
 
 <h4>Clone and Build</h4>
 <pre>git clone https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID.git
-cd ESP_DRONE_REMOTEID
-cd ESP32_DRONE_REMOTE_ID_Firmware
+cd ESP_DRONE_REMOTEID/OmniRID
 
-# Set environment (Windows)
-C:\esp\v6.0.1\esp-idf\export.ps1
+# Host build
+cargo build --workspace
 
-# Choose target
-idf.py set-target esp32       # ESP32 (original)
-idf.py set-target esp32s3     # ESP32-S3
-idf.py set-target esp32c6     # ESP32-C6
+# Run all tests (312 tests)
+cargo test --workspace
 
-# Build
-idf.py build
+# Cross-build for ESP32-C6
+cargo +esp build --release --target riscv32imc-unknown-none-elf -p app
 
-# Flash to device
-idf.py -p COM3 flash
-
-# Monitor serial output
-idf.py -p COM3 monitor</pre>
+# Flash
+esptool.py --chip esp32c6 --port COM3 write_flash 0x0 target/riscv32imc-unknown-none-elf/release/app</pre>
 
 <h4>Project Structure</h4>
 <pre>ESP_DRONE_REMOTEID/
-&#x251c;&#x2500;&#x2500; ESP32_DRONE_REMOTE_ID_Firmware/   # ESP-IDF firmware project
-&#x2502;   &#x251c;&#x2500;&#x2500; CMakeLists.txt                # IDF top-level build file
-&#x2502;   &#x251c;&#x2500;&#x2500; partitions.csv               # Default partition table (factory + ota_0)
-&#x2502;   &#x251c;&#x2500;&#x2500; partitions_2mb.csv           # Alternate 2 MB partition table
-&#x2502;   &#x251c;&#x2500;&#x2500; sdkconfig.defaults           # Default sdkconfig options
-&#x2502;   &#x251c;&#x2500;&#x2500; main/
-&#x2502;   &#x2502;   &#x2514;&#x2500;&#x2500; main.c                 # App entry: PSA Crypto init, eFuse MAC fallback, task start
-&#x2502;   &#x2514;&#x2500;&#x2500; components/esp_remote_id/    # Core component
-&#x2502;       &#x251c;&#x2500;&#x2500; include/                 # 25 header files
-&#x2502;       &#x2502;   &#x2514;&#x2500;&#x2500; esp_remote_id.h      # Public API + structs
-&#x2502;       &#x251c;&#x2500;&#x2500; src/                     # 25 source files
-&#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; esp_remote_id.c     # Orchestrator (rate limiting, task loop)
-&#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; nvs_storage.c       # Config persistence (36 keys)
-&#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; web_config.c        # HTTP server + REST API + OTA + eFuse lock
-&#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; protocol_detect.c   # Auto-detect: MSP/NMEA/MAVLink
-&#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; mavlink_parser.c    # MAVLink + MESSAGE_PACK + ODID messages
-&#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; msp_parser.c        # MSP v1 (RAW_GPS, ATTITUDE, STATUS)
-&#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; nmea_parser.c       # NMEA 0183 (GGA, RMC, VTG) comma parser
-&#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; mav2odid.c          # Intel MAVLink-to-ODID conversion
-&#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; rid_patrol.c        # Demo GPS patrol simulation
-&#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; rid_auth.c          # Ed25519 signing (ASTM F3411-22a)
-&#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; rid_kalman.c        # 1D&#xd7;3 Kalman filter (lat/lon/alt)
-&#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; rid_ota.c           # OTA update server (SHA-256 + Ed25519)
-&#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; rid_security.c      # Shared verification (SHA-256, Ed25519, hex)
-&#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; rid_dronecan.c      # DroneCAN CAN bus (TWAI decode)
-&#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; rid_lighting.c      # GPIO lighting (5-ch pattern)
-&#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; rid_mavlink_usb.c   # MAVLink over USB serial
-&#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; rid_mavlink_tx.c    # MAVLink telemetry TX (heartbeat + op-loc)
-&#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; opendroneid.c       # Intel ODID encode/decode (1378 lines)
-&#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; wifi.c             # IEEE 802.11 frame builder (Intel lib)
-&#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; wifi_tx.c          # WiFi Beacon + NAN transmitter + mutex
-&#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; ble_tx.c           # BLE 4.0 legacy + BLE 5.0 LR Coded PHY
-&#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; odid_common.c      # Shared ODID pack builder (WiFi + BLE)
-&#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; led_status.c        # RGB LED (3 configurable GPIOs)
-&#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; led_ws2812.c        # WS2812 addressable RGB (RMT driver)
-&#x2502;       &#x2502;   &#x2514;&#x2500;&#x2500; cli.c               # UART CLI REPL (char-by-char input)
-&#x2502;       &#x251c;&#x2500;&#x2500; mavlink/                 # MAVLink v2 C dialects (ardupilotmega)
-&#x2502;       &#x2514;&#x2500;&#x2500; webui/config.html          # Embedded web UI (~790 lines)
-&#x251c;&#x2500;&#x2500; RID_Hub/                         # Ground station (Electron)
-&#x2502;   &#x251c;&#x2500;&#x2500; main.js                    # Electron main process (IPC)
-&#x2502;   &#x251c;&#x2500;&#x2500; preload.js                 # Context bridge for the renderer
-&#x2502;   &#x251c;&#x2500;&#x2500; index.html                 # Renderer entry (plain JS/CSS, no framework)
-&#x2502;   &#x251c;&#x2500;&#x2500; package.json               # Dependencies / scripts
-&#x2502;   &#x251c;&#x2500;&#x2500; RID_Hub.bat                # Windows launcher
+&#x251c;&#x2500;&#x2500; OmniRID/                  # Rust firmware workspace
+&#x2502;   &#x251c;&#x2500;&#x2500; Cargo.toml                         # Workspace root (members: firmware/*, inputs/*, outputs/*)
+&#x2502;   &#x251c;&#x2500;&#x2500; firmware/                          # Core Rust crates
+&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; app/                         # Application logic (lib + bin, controller)
+&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; rid-core/                    # Kalman filter, security, TX pipeline, scheduler
+&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; rid-app/                     # Feature logic (NVS, OTA, web, LED, config, JSON)
+&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; rid-interface/               # Transport abstraction (WiFi/BLE/USB traits)
+&#x2502;   &#x2502;   &#x2514;&#x2500;&#x2500; bsp-sim/                      # Simulation board (host testing)
+&#x2502;   &#x251c;&#x2500;&#x2500; inputs/                          # Protocol parsers
+&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; proto-mavlink/                 # MAVLink v2 + MESSAGE_PACK + ODID messages
+&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; proto-msp/                     # MSP v1 (RAW_GPS, ATTITUDE, STATUS)
+&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; proto-nmea/                    # NMEA 0183 (GGA, RMC, VTG)
+&#x2502;   &#x2502;   &#x2514;&#x2500;&#x2500; proto-dronecan/                # DroneCAN CAN bus (TWAI decode)
+&#x2502;   &#x251c;&#x2500;&#x2500; outputs/                         # Protocol encoders
+&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; out-astm/                      # ASTM F3411 encoder + WiFi + BLE4 pack
+&#x2502;   &#x2502;   &#x2514;&#x2500;&#x2500; out-usb-mavlink/                # USB MAVLink telemetry TX
+&#x2502;   &#x251c;&#x2500;&#x2500; external-libs/                   # Vendored C dependencies
+&#x2502;   &#x2502;   &#x2514;&#x2500;&#x2500; opendroneid-sys/                 # Intel ODID FFI bindings
+&#x2502;   &#x2514;&#x2500;&#x2500; hardware/                        # Standalone ESP-IDF workspace
+&#x2502;       &#x2514;&#x2500;&#x2500; bsp-esp32/                     # ESP32 glue (WiFi, BLE, USB, web, NVS, OTA, LED)
+&#x251c;&#x2500;&#x2500; RID_Hub/                             # Ground station (Electron)
+&#x2502;   &#x251c;&#x2500;&#x2500; main.js                        # Electron main process (IPC)
+&#x2502;   &#x251c;&#x2500;&#x2500; preload.js                     # Context bridge for the renderer
+&#x2502;   &#x251c;&#x2500;&#x2500; index.html                     # Renderer entry (plain JS/CSS, no framework)
+&#x2502;   &#x251c;&#x2500;&#x2500; package.json                   # Dependencies / scripts
+&#x2502;   &#x251c;&#x2500;&#x2500; RID_Hub.bat                    # Windows launcher
 &#x2502;   &#x251c;&#x2500;&#x2500; src/
-&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; decoder.js               # ASTM F3411-22a decoder
-&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; tracker.js               # Device tracking + CSV/KML
-&#x2502;   &#x2502;   &#x2514;&#x2500;&#x2500; capture.js               # WiFi/BLE/Serial capture
+&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; decoder.js                   # ASTM F3411-22a decoder
+&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; tracker.js                   # Device tracking + CSV/KML
+&#x2502;   &#x2502;   &#x2514;&#x2500;&#x2500; capture.js                   # WiFi/BLE/Serial capture
 &#x2502;   &#x251c;&#x2500;&#x2500; renderer/
-&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; app.js                   # Renderer UI logic
+&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; app.js                       # Renderer UI logic
 &#x2502;   &#x2502;   &#x2514;&#x2500;&#x2500; style.css
-&#x2502;   &#x2514;&#x2500;&#x2500; images/                    # Logos
-&#x251c;&#x2500;&#x2500; docs/                          # GitHub Pages site
-&#x2502;   &#x251c;&#x2500;&#x2500; index.html                 # Wiki + WebSerial installer
-&#x2502;   &#x251c;&#x2500;&#x2500; guide.html                 # Technical guide (sections 1-13)
-&#x2502;   &#x251c;&#x2500;&#x2500; config(demo).html          # Standalone config demo (Bootstrap 5)
-&#x2502;   &#x251c;&#x2500;&#x2500; bootstrap-theme.css         # Shared styles (Bootstrap theme)
-&#x2502;   &#x251c;&#x2500;&#x2500; manifest.json              # WebSerial manifest (3 targets)
-&#x2502;   &#x2514;&#x2500;&#x2500; images/                    # Logo + dashboard + FC icons
-&#x251c;&#x2500;&#x2500; .github/workflows/            # CI/CD (build.yml + release.yml)
-&#x2514;&#x2500;&#x2500; todolist/softwarestatus.md     # Per-file analysis</pre>
+&#x2502;   &#x2514;&#x2500;&#x2500; images/                        # Logos
+&#x251c;&#x2500;&#x2500; docs/                              # GitHub Pages site
+&#x2502;   &#x251c;&#x2500;&#x2500; index.html                     # Wiki + WebSerial installer
+&#x2502;   &#x251c;&#x2500;&#x2500; guide.html                     # Technical guide (this page)
+&#x2502;   &#x251c;&#x2500;&#x2500; config(demo).html              # Standalone config demo (Bootstrap 5)
+&#x2502;   &#x251c;&#x2500;&#x2500; bootstrap-theme.css             # Shared styles (Bootstrap theme)
+&#x2502;   &#x251c;&#x2500;&#x2500; manifest.json                  # WebSerial manifest (3 targets)
+&#x2502;   &#x2514;&#x2500;&#x2500; images/                        # Logo + dashboard + FC icons
+&#x251c;&#x2500;&#x2500; .github/workflows/                # CI/CD (rid-rust-ci.yml + esp32-build.yml)
+&#x2514;&#x2500;&#x2500; todolist/                         # Development docs + conversion plan</pre>
 </div>
 </div>
 </div>
@@ -646,7 +606,7 @@ idf.py -p COM3 monitor</pre>
 
 <h4>Accessing the Web UI</h4>
 <ol>
-<li>Power the ESP DRONE REMOTEID (USB or battery).</li>
+<li>Power the OmniRID (USB or battery).</li>
 <li>On your phone, tablet, or PC, scan for WiFi networks.</li>
 <li>Connect to <b>ESP-RID</b> (no password by default).</li>
 <li>Open a browser and navigate to <b>http://192.168.4.1</b>.</li>
@@ -654,7 +614,7 @@ idf.py -p COM3 monitor</pre>
 <div class="callout"><strong>&#x26a0; Note:</strong> The ESP32 creates its own WiFi network. You will lose internet connectivity while connected to it. This is normal.</div>
 
 <h4>Step-by-Step Setup Walkthrough</h4>
-<p>Follow this sequence to configure your ESP DRONE REMOTEID for the first time. You can start in demo mode (no hardware needed) and switch to FC mode later:</p>
+<p>Follow this sequence to configure your OmniRID for the first time. You can start in demo mode (no hardware needed) and switch to FC mode later:</p>
 <div class="table-responsive">
 <table>
 <tr><th>Step</th><th>Action</th><th>Details</th></tr>
@@ -760,7 +720,7 @@ idf.py -p COM3 monitor</pre>
 <div class="callout"><strong>&#x1f4a1; Status:</strong> OTA is implemented with client-side SHA-256 verification (Web Crypto API) and server-side Ed25519 signature verification (lock level &ge; 1). The web UI computes a SHA-256 hash of the firmware binary before upload and sends it via the <code>X-Expected-SHA256</code> header. The <code>rid_security.c</code> module handles all cryptographic verification. The partition scheme is factory + a single OTA slot (<code>ota_0</code>); a failed update rolls back to the factory image.</div>
 
 <h4>Over-the-Air Firmware Update</h4>
-<p>The ESP DRONE REMOTEID supports updating firmware wirelessly through the web interface. No USB cable is needed once the initial firmware is flashed. The upload process includes cryptographic verification to prevent corrupt or malicious firmware.</p>
+<p>The OmniRID supports updating firmware wirelessly through the web interface. No USB cable is needed once the initial firmware is flashed. The upload process includes cryptographic verification to prevent corrupt or malicious firmware.</p>
 
 <h4>Prerequisites</h4>
 <ul>
@@ -1137,10 +1097,11 @@ cat public.pem</pre>
 <div class="table-responsive">
 <table>
 <tr><th>Error</th><th>Solution</th></tr>
-<tr><td><code>esp_remote_id.h: No such file or directory</code></td><td>Run <code>idf.py reconfigure</code> to generate build files. Ensure CMakeLists.txt includes the component.</td></tr>
-<tr><td><code>undefined reference to 'odid_wifi_...'</code></td><td>The opendroneid library is not linked. Check components/esp_remote_id/CMakeLists.txt for the REQUIRES directive.</td></tr>
-<tr><td><code>Python venv not found</code></td><td>Run <code>install.ps1</code> (Windows) or <code>install.sh</code> (Linux/Mac) in the ESP-IDF directory.</td></tr>
-<tr><td><code>No such file or directory: '.../python.exe'</code></td><td>Run <code>export.ps1</code> (Windows) or <code>export.sh</code> (Linux/Mac) to set up the Python environment.</td></tr>
+<tr><td><code>cargo: command not found</code></td><td>Install Rust: <code>curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh</code></td></tr>
+<tr><td><code>error[E0463]: can't find crate for ...</code></td><td>Run <code>cargo build --workspace</code> from the <code>OmniRID/</code> directory.</td></tr>
+<tr><td><code>error: unused import / dead code</code></td><td>Run <code>cargo clippy --workspace -- -D warnings</code> to see all warnings as errors.</td></tr>
+<tr><td><code>no_std build fails on host</code></td><td>Use <code>cargo +esp build</code> with the ESP toolchain for <code>no_std</code> targets. Host builds use <code>bsp-sim</code>.</td></tr>
+<tr><td><code>ESP-IDF not found (bsp-esp32)</code></td><td>The <code>bsp-esp32</code> crate is a standalone workspace requiring <code>espup</code>. Run host tests in the main workspace instead.</td></tr>
 </table>
 </div>
 
@@ -1156,7 +1117,7 @@ cat public.pem</pre>
 <ul>
 <li>Check power supply (brownout detection can cause reboots). Use a quality USB cable or BEC.</li>
 <li>Re-flash the firmware via USB (serial flashing always works even with bad config).</li>
-<li>Erase NVS before flashing: <code>idf.py -p COM3 erase-flash</code> then re-flash.</li>
+<li>Erase NVS before flashing: <code>esptool.py --chip esp32c6 --port COM3 erase_flash</code> then re-flash.</li>
 </ul>
 
 <h4>OTA Update Fails</h4>
@@ -1291,14 +1252,14 @@ flowchart TB
 <div class="accordion-collapse collapse" id="guide-regulatory-body">
 <div class="accordion-body gs-body">
 <h4>Standards Compliance (targeted)</h4>
-<p>ESP DRONE REMOTEID targets the following standards (message encoding complete, compliance testing with certified receivers pending):</p>
+<p>OmniRID targets the following standards (message encoding complete, compliance testing with certified receivers pending):</p>
 <ul>
 <li><b>ASTM F3411-22a</b> &mdash; Standard Specification for Remote ID and Tracking. This is the US FAA-accepted standard that also forms the basis for many international regulations.</li>
 <li><b>ASD-STAN prEN 4709-002</b> &mdash; European standard for direct Remote ID, adopted by EASA and EU member states.</li>
 </ul>
 
 <h4>FAA (United States)</h4>
-<p>FAA Part 89 requires all drones weighing more than 0.55 lb (250 g) and flown outdoors to broadcast Remote ID. The regulation came into effect on September 16, 2023. ESP DRONE REMOTEID helps drone operators comply with this requirement by:</p>
+<p>FAA Part 89 requires all drones weighing more than 0.55 lb (250 g) and flown outdoors to broadcast Remote ID. The regulation came into effect on September 16, 2023. OmniRID helps drone operators comply with this requirement by:</p>
 <ul>
 <li>Broadcasting ASTM F3411-22a Standard Remote ID messages via WiFi Beacon and BLE</li>
 <li>Transmitting at 1 Hz (meeting the minimum requirement)</li>
@@ -1307,7 +1268,7 @@ flowchart TB
 <p><b>Note:</b> Regulatory compliance with certified receivers has <b>not been verified</b>. Do not use in actual flight operations until testing confirms compliance.</p>
 
 <h4>EASA (European Union)</h4>
-<p>EU Implementing Regulation 2021/664 (U-Space) and 2019/947 require Remote ID for most drone operations in the Open and Specific categories. Direct Remote ID (prEN 4709-002) has been mandatory since January 1, 2024. The same framework applies in the EEA states (Norway, Iceland, Liechtenstein) and non-EU EASA states (Switzerland). ESP DRONE REMOTEID supports compliance by broadcasting Direct Remote ID (prEN 4709-002) over WiFi and BLE.</p>
+<p>EU Implementing Regulation 2021/664 (U-Space) and 2019/947 require Remote ID for most drone operations in the Open and Specific categories. Direct Remote ID (prEN 4709-002) has been mandatory since January 1, 2024. The same framework applies in the EEA states (Norway, Iceland, Liechtenstein) and non-EU EASA states (Switzerland). OmniRID supports compliance by broadcasting Direct Remote ID (prEN 4709-002) over WiFi and BLE.</p>
 
 <h4>Country-by-Country Overview</h4>
 <div class="table-responsive">
@@ -1332,10 +1293,10 @@ flowchart TB
 </div>
 
 <h4>FCC / CE Compliance</h4>
-<p>ESP DRONE REMOTEID operates in the 2.4 GHz ISM band. The ESP32's WiFi and BLE transmitters are certified under FCC Part 15 and CE RED when used with Espressif's reference modules. Using external antennas may affect compliance. Ensure your antenna setup complies with local radio regulations.</p>
+<p>OmniRID operates in the 2.4 GHz ISM band. The ESP32's WiFi and BLE transmitters are certified under FCC Part 15 and CE RED when used with Espressif's reference modules. Using external antennas may affect compliance. Ensure your antenna setup complies with local radio regulations.</p>
 
 <h4>Operator Registration</h4>
-<p>Most countries require drone operators to register with the national aviation authority and display their operator ID on the drone. ESP DRONE REMOTEID allows you to set your operator ID in the configuration, which is included in the System Message (Type 2) of the ODID transmission. Check your local authority's requirements:</p>
+<p>Most countries require drone operators to register with the national aviation authority and display their operator ID on the drone. OmniRID allows you to set your operator ID in the configuration, which is included in the System Message (Type 2) of the ODID transmission. Check your local authority's requirements:</p>
 <ul>
 <li><b>USA:</b> <a href="https://faadronezone.faa.gov">FAA DroneZone</a></li>
 <li><b>EU:</b> Register in your country's UAS system</li>
@@ -1401,33 +1362,34 @@ flowchart TB
 
 <h4>Code Style</h4>
 <ul>
-<li>C code: ESP-IDF coding style, 4-space indentation, descriptive variable names.</li>
+<li>Rust code: <code>cargo fmt</code> (edition 2024), <code>cargo clippy -D warnings</code>.</li>
+<li><code>no_std</code> for firmware crates; <code>std</code> only in <code>bsp-esp32</code>.</li>
+<li>Keep <code>unsafe</code> out of core crates (only in hardware glue).</li>
 <li>HTML/CSS: Clean, minimal, responsive. The web UI is embedded and must be compact.</li>
-<li>No comments in code unless the logic is non-obvious.</li>
 </ul>
 
 <h4>Development Workflow</h4>
-<pre>git clone https://github.com/YOUR_USERNAME/ESP_DRONE_REMOTEID.git
+<pre>git clone https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID.git
 cd ESP_DRONE_REMOTEID
 git checkout -b my-feature-branch
+cd OmniRID
 # Make changes
-idf.py build
-idf.py -p COM3 flash monitor
+cargo test --workspace
+cargo clippy --workspace -- -D warnings
 # Commit and push
 git push -u origin my-feature-branch</pre>
 
 <h4>Adding a New Protocol</h4>
 <p>To add support for a new protocol:</p>
 <ol>
-<li>Create a new parser file in <code>components/esp_remote_id/src/</code> and its header in <code>include/</code></li>
-<li>Implement the standard parser interface: <code>void xxx_parser_init(uint8_t uart_port)</code> + <code>bool xxx_parser_get(rid_gps_data_t *gps)</code> (see <code>nmea_parser.c</code>, <code>msp_parser.c</code>, <code>mavlink_parser.c</code>)</li>
-<li>Add the protocol to <code>rid_protocol_t</code> in <code>esp_remote_id.h</code> and to the <code>proto_name</code> array in <code>esp_remote_id.c</code></li>
-<li>Register the new protocol in the auto-detection sequence in <code>protocol_detect.c</code></li>
-<li>Test with your hardware and submit a PR</li>
+<li>Create a new crate in <code>inputs/proto-myproto/</code> with a <code>Cargo.toml</code> and <code>src/lib.rs</code>.</li>
+<li>Implement the standard parser trait from <code>rid-interface</code>: <code>fn parse(&amp;mut self, byte: u8) -&gt; Option&lt;InputSample&gt;</code> and <code>fn source_name(&amp;self) -&gt; &amp;str</code>.</li>
+<li>Register the new protocol in the auto-detection sequence in <code>rid-interface/src/input.rs</code>.</li>
+<li>Test with your hardware and submit a PR.</li>
 </ol>
 
 <h4>Disclaimer &amp; Acknowledgments</h4>
-<p>This is a <b>personal open-source project</b> made public for educational and research purposes. It is <b>not affiliated with, endorsed by, or derived from ArduPilot</b>. The project takes <b>inspiration</b> from the functionality of ArduPilot's ArduRemoteID system and implements a compatible Remote ID transmitter using independent code written from scratch for the ESP32 platform using ESP-IDF.</p>
+<p>This is a <b>personal open-source project</b> made public for educational and research purposes. It is <b>not affiliated with, endorsed by, or derived from ArduPilot</b>. The project takes <b>inspiration</b> from the functionality of ArduPilot's ArduRemoteID system and implements a compatible Remote ID transmitter using independent code written from scratch for the ESP32 platform in Rust.</p>
 <p>The author respects all intellectual property rights. No ArduPilot source code has been copied or incorporated. The implementation follows the open ASTM F3411-22a standard and uses the independently developed <b>opendroneid-core-c</b> library (BSD-3-Clause) for ODID message packing.</p>
 <p>Technologies and protocols referenced:</p>
 <ul>
@@ -1435,7 +1397,7 @@ git push -u origin my-feature-branch</pre>
 <li><b>Open Drone ID Core C</b> &mdash; Intel's open-source ODID library (BSD-3-Clause)</li>
 <li><b>MAVLink</b> &mdash; lightweight communication protocol (MIT)</li>
 <li><b>MSP</b> &mdash; MultiWii Serial Protocol</li>
-<li><b>ESP-IDF</b> &mdash; Espressif's IoT Development Framework (Apache 2.0)</li>
+<li><b>Rust + ESP-IDF</b> &mdash; Firmware in Rust, hardware glue via esp-idf-sys (Apache 2.0)</li>
 </ul>
 
 <h4>License</h4>
@@ -1470,7 +1432,7 @@ GitHub
 <span class="sep text-secondary opacity-50 mx-2">|</span>
 <a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/issues" class="text-secondary">Issues</a>
 </div>
-<div class="fw-copy text-secondary">ESP DRONE REMOTEID v1.0.0-beta &mdash; ASTM F3411-22a Open DroneID (beta) &mdash; <a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/blob/main/LICENSE" class="text-secondary">Apache-2.0 License</a></div>
+<div class="fw-copy text-secondary">OmniRID v1.0.0-beta &mdash; ASTM F3411-22a Open DroneID (beta) &mdash; <a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/blob/main/LICENSE" class="text-secondary">Apache-2.0 License</a></div>
 </footer>
 
 <script>

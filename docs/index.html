@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="ESP DRONE REMOTEID [BETA] — Open DroneID transmitter for ESP32/ESP32-S3/ESP32-C6. ASTM F3411-22a WiFi Beacon and BLE Remote ID.">
-<meta property="og:title" content="ESP DRONE REMOTEID [BETA] — Open DroneID Transmitter">
+<meta name="description" content="OmniRID [BETA] — Open DroneID transmitter for ESP32/ESP32-S3/ESP32-C6. ASTM F3411-22a WiFi Beacon and BLE Remote ID.">
+<meta property="og:title" content="OmniRID [BETA] — Open DroneID Transmitter">
 <meta property="og:description" content="Open DroneID transmitter for ESP32 — WiFi Beacon, BLE 4.0/5.0, MAVLink, MSP, NMEA.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://VOLTEKOVER.github.io/ESP_DRONE_REMOTEID/">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="ESP DRONE REMOTEID [BETA]">
+<meta name="twitter:title" content="OmniRID [BETA]">
 <meta name="twitter:description" content="Open DroneID transmitter for ESP32 — WiFi Beacon &amp; BLE.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -32,7 +32,7 @@
 .guide-section .gs-title{font-size:.88rem;font-weight:600;line-height:1.35;letter-spacing:-.2px}
 </style>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 56 56'><rect width='56' height='56' rx='12' fill='%23222'/><ellipse cx='28' cy='29' rx='2.2' ry='13' fill='%23fff'/></svg>">
-<title>ESP DRONE REMOTEID [BETA] — Open DroneID Transmitter</title>
+<title>OmniRID [BETA] — Open DroneID Transmitter</title>
 <script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
 <script async defer src="https://buttons.github.io/buttons.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
@@ -44,8 +44,8 @@
 
 <header class="navbar navbar-expand-lg sticky-top bg-body-tertiary">
 <div class="container">
-<a href="#" class="navbar-brand brand p-0 me-3" aria-label="ESP DRONE REMOTEID home">
-<img class="logo-img" src="images/logo%20con%20scritta.svg" alt="ESP DRONE REMOTEID">
+<a href="#" class="navbar-brand brand p-0 me-3" aria-label="OmniRID home">
+<img class="logo-img" src="images/logo%20con%20scritta.svg" alt="OmniRID">
 </a>
 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
 <div class="collapse navbar-collapse" id="mainNav">
@@ -67,8 +67,8 @@
 
 <div class="container">
 <div class="hero">
-<img class="logo-hero mx-auto d-block mb-3" src="images/logo.svg" alt="ESP DRONE REMOTEID">
-<h1>ESP DRONE REMOTEID <span style="font-size:.5em;color:#c62828;font-weight:700">[BETA]</span></h1>
+<img class="logo-hero mx-auto d-block mb-3" src="images/logo.svg" alt="OmniRID">
+<h1>OmniRID <span style="font-size:.5em;color:#c62828;font-weight:700">[BETA]</span></h1>
 <p>Universal ASTM F3411-22a Open DroneID transmitter &mdash; WiFi Beacon &middot; BLE 4.0/5.0 &middot; MAVLink &middot; MSP &middot; NMEA &middot; Security hardened</p>
 <div class="alert alert-warning text-start" role="alert" style="max-width:640px;margin:0 auto 1rem">&#x26a0; BETA &mdash; v1.0.0-beta &middot; All 21 ESPsquawk fork fixes ported, security hardening complete, FC hardware testing in progress</div>
 <div class="small text-secondary mt-2"><b>Dependencies:</b> <a href="https://github.com/mavlink/c_library_v2" class="text-primary fw-medium">MAVLink c_library_v2</a> Jul 2026 &middot; <a href="https://github.com/opendroneid/core-c" class="text-primary fw-medium">OpenDroneID core-c</a> Protocol v2 &middot; <a href="https://components.espressif.com/components/espressif/cjson" class="text-primary fw-medium">cJSON</a> ^1.7.19 &middot; <a href="https://github.com/espressif/esp-idf" class="text-primary fw-medium">ESP-IDF</a> v6.0.1</div>
@@ -109,7 +109,7 @@
 <p class="text-secondary small mb-4">Install via browser &mdash; no tools required.</p>
 <div class="install-box">
 <div class="mini-logo">
-<img class="logo-mini mb-1" src="images/logo.svg" alt="ESP DRONE REMOTEID">
+<img class="logo-mini mb-1" src="images/logo.svg" alt="OmniRID">
 <p class="sub small text-secondary mb-3">Select your device &amp; install</p>
 <div class="chip-selector" id="chip-selector">
   <label class="chip-option active">
@@ -162,8 +162,8 @@
 </h3>
 <div class="accordion-collapse collapse show" id="guide-intro-body">
 <div class="accordion-body gs-body">
-<h4>What is ESP DRONE REMOTEID?</h4>
-<p>ESP DRONE REMOTEID is an open-source firmware being developed to transform any ESP32 microcontroller into a universal Remote ID transmitter targeting <b>ASTM F3411-22a</b> (USA) and <b>ASD-STAN prEN 4709-002</b> (EU) standards. It is designed to read GPS position data from a flight controller via UART and broadcast ASTM-standard Open Drone ID messages over WiFi Beacon (802.11) and Bluetooth Low Energy (BLE 4.0 and BLE 5.0 Coded PHY).</p>
+<h4>What is OmniRID?</h4>
+<p>OmniRID is an open-source firmware being developed to transform any ESP32 microcontroller into a universal Remote ID transmitter targeting <b>ASTM F3411-22a</b> (USA) and <b>ASD-STAN prEN 4709-002</b> (EU) standards. It is designed to read GPS position data from a flight controller via UART and broadcast ASTM-standard Open Drone ID messages over WiFi Beacon (802.11) and Bluetooth Low Energy (BLE 4.0 and BLE 5.0 Coded PHY).</p>
 
 <div class="callout"><strong>&#x26a0; Development Status:</strong> The firmware code is feature-complete for v1.0.0-beta. All 21 ESPsquawk fork security and functionality fixes have been ported. A <b>built-in demo mode</b> simulates a GPS patrol over Rome (Colosseum) so you can test the full config UI, OTA flow, and telemetry dashboard without flight controller hardware. Actual flight controller (FC) hardware verification with MAVLink/MSP/NMEA is ongoing. See the <a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/blob/main/todolist/softwarestatus.md">software status</a> for the complete per-file analysis.</div>
 
@@ -235,7 +235,7 @@
 flowchart LR
   GPS["GNSS/GPS Module<br/>UART / NMEA"]
   FC["Flight Controller<br/>MAVLink / MSP<br/>Parses GPS data<br/>UART TX → ESP32<br/>57600 / 115200 baud"]
-  ESP["ESP DRONE REMOTEID<br/>ESP32 / S3 / C6<br/>UART2 RX (GPIO16)<br/>Packs ODID messages<br/>Web UI @ 192.168.4.1<br/>OTA updates supported"]
+  ESP["OmniRID<br/>ESP32 / S3 / C6<br/>UART2 RX (GPIO16)<br/>Packs ODID messages<br/>Web UI @ 192.168.4.1<br/>OTA updates supported"]
   WiFi["WiFi Beacon<br/>802.11 b/g/n"]
   BLE["BLE<br/>4.0 / 5.0 LR"]
 
@@ -244,7 +244,7 @@ flowchart LR
   ESP -->|WiFi| WiFi
   ESP -->|Bluetooth| BLE
 </pre>
-<div class="diag-cap">System architecture: GPS → Flight Controller → ESP DRONE REMOTEID → WiFi/BLE broadcast</div>
+<div class="diag-cap">System architecture: GPS → Flight Controller → OmniRID → WiFi/BLE broadcast</div>
 </div>
 </div>
 </div>
@@ -283,7 +283,7 @@ flowchart LR
     GND1["GND"]
     BEC["5V BEC"]
   end
-  subgraph ESP["ESP DRONE REMOTEID<br/>ESP32 / S3 / C6"]
+  subgraph ESP["OmniRID<br/>ESP32 / S3 / C6"]
     direction TB
     RX2["GPIO16 (RX)"]
     GND2["GND"]
@@ -294,7 +294,7 @@ flowchart LR
   BEC -->|"5V → VIN"| VIN
   ALT[/"⚡ Alt RX pins:<br/>S3 → GPIO18<br/>C6 → GPIO7"/]
 </pre>
-<div class="diag-cap">Wiring connections between Flight Controller and ESP DRONE REMOTEID. For NMEA tap method, add a 1k&Omega; series resistor on the TX line.</div>
+<div class="diag-cap">Wiring connections between Flight Controller and OmniRID. For NMEA tap method, add a 1k&Omega; series resistor on the TX line.</div>
 </div>
 
 <h4>Wiring by Flight Controller</h4>
@@ -430,7 +430,7 @@ GitHub
 <span class="sep text-secondary opacity-50 mx-2">|</span>
 <a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/issues" class="text-secondary">Issues</a>
 </div>
-<div class="fw-copy text-secondary">ESP DRONE REMOTEID v1.0.0-beta &mdash; ASTM F3411-22a Open DroneID (beta) &mdash; <a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/blob/main/LICENSE" class="text-secondary">Apache-2.0 License</a></div>
+<div class="fw-copy text-secondary">OmniRID v1.0.0-beta &mdash; ASTM F3411-22a Open DroneID (beta) &mdash; <a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/blob/main/LICENSE" class="text-secondary">Apache-2.0 License</a></div>
 </footer>
 
 <script>

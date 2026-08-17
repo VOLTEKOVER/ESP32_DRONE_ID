@@ -1,4 +1,9 @@
-# ESP DRONE REMOTEID — Every Process Running (Debug Reference)
+# OmniRID — Every Process Running (Legacy C Firmware Reference)
+
+> **⚠ LEGACY C FIRMWARE:** This document covers the C firmware `ESP32_DRONE_REMOTE_ID_Firmware/`
+> (deleted). The Rust port (`OmniRID/`) preserves the same FreeRTOS task architecture
+> (rid_task loop, CLI task, web server) but uses Rust crate boundaries instead of C source file
+> organization. The same logical processes and gate chains apply.
 
 Last updated: 2026-08-14 (verified against `components/esp_remote_id/src` and `main/`)
 Scope: every concurrent context, task, callback, logical process and data path in `ESP32_DRONE_REMOTE_ID_Firmware`.
