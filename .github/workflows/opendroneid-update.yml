@@ -37,7 +37,7 @@ jobs:
           fi
 
       - name: Update vendored files
-        working-directory: firmware-rid
+        working-directory: OmniLink-REMOTE-ID
         run: ./scripts/update-opendroneid.sh "${{ steps.tag.outputs.tag }}"
 
       - name: Open pull request
@@ -53,7 +53,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git checkout -b "${branch}"
-          git add firmware-rid/external-libs/opendroneid-sys/vendor
+          git add OmniLink-REMOTE-ID/external-libs/opendroneid-sys/vendor
           git commit -m "chore(opendroneid-sys): vendored library to ${tag}"
           git push origin "${branch}"
           gh pr create \

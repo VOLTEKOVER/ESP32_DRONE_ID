@@ -4,13 +4,13 @@ on:
   push:
     branches: [ "main" ]
     paths:
-      - 'firmware-rid/**'
+      - 'OmniLink-REMOTE-ID/**'
       - 'hardware/**'
       - '.github/workflows/esp32-build.yml'
   pull_request:
     branches: [ "main" ]
     paths:
-      - 'firmware-rid/**'
+      - 'OmniLink-REMOTE-ID/**'
       - 'hardware/**'
       - '.github/workflows/esp32-build.yml'
   workflow_dispatch:
@@ -25,7 +25,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: firmware-rid
+        working-directory: OmniLink-REMOTE-ID
 
     steps:
       - name: Checkout
@@ -45,7 +45,7 @@ jobs:
       - name: Cache Cargo
         uses: Swatinem/rust-cache@v2
         with:
-          workspaces: firmware-rid
+          workspaces: OmniLink-REMOTE-ID
           key: esp32c6
 
       - name: Cache ESP-IDF SDK
@@ -55,7 +55,7 @@ jobs:
           path: |
             ~/.espressif
             ~/esp-idf
-          key: esp-idf-${{ runner.os }}-${{ hashFiles('firmware-rid/hardware/bsp-esp32/Cargo.toml') }}
+          key: esp-idf-${{ runner.os }}-${{ hashFiles('OmniLink-REMOTE-ID/hardware/bsp-esp32/Cargo.toml') }}
           restore-keys: |
             esp-idf-${{ runner.os }}-
 
@@ -74,7 +74,7 @@ jobs:
 
       - name: Cross-build bsp-esp32 for ESP32-C6
         shell: bash
-        working-directory: firmware-rid/hardware/bsp-esp32
+        working-directory: OmniLink-REMOTE-ID/hardware/bsp-esp32
         run: |
           source ~/export-esp.sh
           cargo build --features esp32c6,hardware --target riscv32imac-unknown-none-elf

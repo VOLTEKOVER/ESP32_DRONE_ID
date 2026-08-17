@@ -37,7 +37,7 @@ host-compilabile o no: questo decide se può restare dentro o deve uscire.
 
 **PRIMA (struttura attuale, da modificare):**
 ```
-firmware-rid/
+OmniLink-REMOTE-ID/
 ├── Cargo.toml                       # workspace radice: SOLO firmware applicativo
 ├── crates/                          # WORKSPACE #1 (proprio Cargo.toml + Cargo.lock)
 │   ├── app/  rid-core/  rid-interface/  rid-app/  bsp-esp32/  bsp-sim/
@@ -51,7 +51,7 @@ firmware-rid/
 
 **DOPO (struttura target, da realizzare):**
 ```
-firmware-rid/
+OmniLink-REMOTE-ID/
 ├── Cargo.toml                       # UNICO workspace, resolver = "2", members a glob
 │
 ├── firmware/                        # 📦 BOX 1 — nucleo firmware, agnostico hw e protocolli
@@ -234,10 +234,10 @@ aggiornamento path/lockfile. Rischio basso, nessun test dovrebbe cambiare risult
       lint resta pulito — eseguito, pulito
 - [x] **13.11** Aggiornare `rid-rust-ci.yml` (CI) con i nuovi path se referenzia `crates/`,
       `inputs/`, `outputs/`, `external-libs/` come working-directory o cache-key esplicite —
-      nessuna modifica necessaria: la CI usa già `firmware-rid` come working-directory e comandi
+      nessuna modifica necessaria: la CI usa già `OmniLink-REMOTE-ID` come working-directory e comandi
       `--workspace` dalla radice
 - [x] **13.12** Aggiornare `dependabot.yml` se ha `directory:` puntati ai vecchi sub-workspace —
-      nessuna modifica necessaria: c'è già una entry `cargo` unica su `/firmware-rid`
+      nessuna modifica necessaria: c'è già una entry `cargo` unica su `/OmniLink-REMOTE-ID`
 - [x] **13.13** Aggiornare i riferimenti a path nei doc collegati (`todolist/softwarestatus.md`,
       `todolist/processes.md`, `todolist/dataflow.md`) se citano `crates/`, `inputs/`, `outputs/`,
       `external-libs/` come sub-workspace — nessuna modifica necessaria: gli altri doc non citano
@@ -247,7 +247,7 @@ aggiornamento path/lockfile. Rischio basso, nessun test dovrebbe cambiare risult
 
 ## 14. Checklist di avanzamento — FASI ORIGINALI (invariata, riportata come da tracking esistente)
 
-- [x] Fase 0: scaffold workspace (`firmware-rid/` — Cargo.toml root, `firmware/rid-interface`,
+- [x] Fase 0: scaffold workspace (`OmniLink-REMOTE-ID/` — Cargo.toml root, `firmware/rid-interface`,
       `firmware/rid-core`, `firmware/bsp-sim`) — CI GitHub Actions in Fase 6
 - [x] Fase 1: `rid-interface` (trait e tipi neutri, port 1:1 di `esp_remote_id.h`; contratto
       input/output `input.rs` con `GpsSource`/`Transmitter`/`InputSample`) + `rid-core`
@@ -343,7 +343,7 @@ aggiornamento path/lockfile. Rischio basso, nessun test dovrebbe cambiare risult
         ubuntu+windows)
   - [x] `opendroneid-update.yml` + `scripts/update-opendroneid.sh` — aggiornamento automatico
         settimanale + PR con parity test
-  - [x] `dependabot.yml` — entry `cargo` unica su `/firmware-rid` (già consolidata)
+  - [x] `dependabot.yml` — entry `cargo` unica su `/OmniLink-REMOTE-ID` (già consolidata)
   - [ ] **DA FARE**: release binario / build matrix ESP32 nel workflow (quando `bsp-esp32` è
         completo hardware-side)
   - [ ] **DA FARE**: dipendenze git `rev = "main"` per protocolli (oggi tutto è path-dependency
