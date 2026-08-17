@@ -1,4 +1,4 @@
-name: Protocol auto-updates
+name: Weekly checks
 
 on:
   schedule:
@@ -240,3 +240,136 @@ $INFO
 1. Check https://github.com/DroneCAN/DSDL/blob/master/uavcan/equipment/gnss/Fix2.uavcan
 2. If struct layout changed, update \`proto-dronecan/src/parser.rs\` bit offsets
 3. Run \`cargo test --workspace\`"
+
+  # ── ESP-IDF releases ───────────────────────────────────────────────────
+  esp-idf:
+    name: ESP-IDF
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check crates.io for esp-idf-sys
+        id: check
+        run: |
+          python3 << 'PYEOF'
+          import json, urllib.request
+
+          with open("OmniRID/hardware/bsp-esp32/Cargo.toml") as f:
+              for line in f:
+                  if "esp-idf-sys" in line and "version" in line:
+                      import re
+                      m = re.search(r'version\s*=\s*"([^"]+)"', line)
+                      if m:
+                          current = m.group(1)
+                          break
+
+          url = "https://crates.io/api/v1/crates/esp-idf-sys"
+          req = urllib.request.Request(url, headers={"User-Agent": "omnirid-ci"})
+          resp = urllib.request.urlopen(req, timeout=10)
+          data = json.loads(resp.read())
+          latest = data["crate"]["max_stable_version"]
+
+          print(f"Current: {current}, Latest: {latest}")
+          if latest != current:
+              with open("/tmp/esp-idf-new.txt", "w") as f:
+                  f.write(f"{current}\n{latest}")
+          PYEOF
+
+      - name: Open issue
+        if: hashFiles('/tmp/esp-idf-new.txt') != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          EXISTING=$(gh issue list --label "protocol-update" --state open --json number --jq '.[0].number // empty')
+          if [ -n "$EXISTING" ]; then
+            echo "Issue #$EXISTING already exists"
+            exit 0
+          fi
+
+          CURRENT=$(sed -n '1p' /tmp/esp-idf-new.txt)
+          LATEST=$(sed -n '2p' /tmp/esp-idf-new.txt)
+          gh issue create \
+            --title "ESP-IDF update: $LATEST" \
+            --label "protocol-update" \
+            --body "## New esp-idf-sys available
+
+Current: \`$CURRENT\` → Latest: \`$LATEST\`
+
+1. Update \`esp-idf-sys\` in \`bsp-esp32/Cargo.toml\`
+2. Run \`cargo check\` with ESP-IDF toolchain
+3. Check https://github.com/espressif/esp-idf/releases for breaking changes"
+
+  # ── Regulatory page changes ────────────────────────────────────────────
+  regulatory:
+    name: Regulatory
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Fetch and diff pages
+        run: |
+          mkdir -p .regwatch
+          CHANGES=""
+          declare -A URLS=(
+            ["faa-remote-id"]="https://www.faa.gov/uas/getting_started/remote_id"
+            ["easa-drones"]="https://www.easa.europa.eu/en/domains/drones-air-mobility"
+            ["easa-u-space"]="https://www.easa.europa.eu/en/domains/drones-air-mobility/u-space"
+            ["astm-rid"]="https://www.astm.org/committee/b10/home"
+            ["china-sac"]="https://openstd.samr.gov.cn/bzgk/gb/"
+          )
+
+          for name in "${!URLS[@]}"; do
+            url="${URLS[$name]}"
+            curl -sL --max-time 30 "$url" | sed 's/<[^>]*>//g' | tr -s '[:space:]' '\n' | grep -v '^$' > ".regwatch/$name.new" 2>/dev/null || true
+            [ ! -s ".regwatch/$name.new" ] && rm -f ".regwatch/$name.new" && continue
+
+            if [ -f ".regwatch/$name.txt" ]; then
+              OLD=$(cat ".regwatch/$name.txt" | tr -s '[:space:]' '\n' | grep -v '^$')
+              NEW=$(cat ".regwatch/$name.new" | tr -s '[:space:]' '\n' | grep -v '^$')
+              ADDED=$(diff <(echo "$OLD") <(echo "$NEW") 2>/dev/null | grep '^>' | wc -l)
+              REMOVED=$(diff <(echo "$OLD") <(echo "$NEW") 2>/dev/null | grep '^<' | wc -l)
+
+              if [ "$ADDED" -gt 3 ] || [ "$REMOVED" -gt 3 ]; then
+                DIFF=$(diff <(echo "$OLD") <(echo "$NEW") 2>/dev/null | head -30)
+                CHANGES="${CHANGES}\n### ${name}\n+${ADDED}/-${REMOVED} lines\n\`\`\`diff\n${DIFF}\n\`\`\`\n"
+              fi
+            fi
+            mv ".regwatch/$name.new" ".regwatch/$name.txt"
+          done
+
+          echo -e "$CHANGES" > .regwatch/changes.md
+          [ -n "$CHANGES" ] && echo "HAS_CHANGES=true" >> "$GITHUB_ENV" || echo "HAS_CHANGES=false" >> "$GITHUB_ENV"
+
+      - name: Persist baseline
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .regwatch/*.txt
+          git diff --cached --quiet || git commit -m "chore: regulatory baseline $(date +%Y-%m-%d)"
+          git push || echo "Nothing to push"
+
+      - name: Open issue
+        if: env.HAS_CHANGES == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          EXISTING=$(gh issue list --label "protocol-update" --state open --json number --jq '.[0].number // empty')
+          if [ -n "$EXISTING" ]; then
+            gh issue comment "$EXISTING" --body "Updated $(date +%Y-%m-%d):\n$(cat .regwatch/changes.md)"
+            exit 0
+          fi
+
+          gh issue create \
+            --title "Regulatory pages changed" \
+            --label "protocol-update" \
+            --body "## Regulatory page changes detected
+
+$(cat .regwatch/changes.md)
+
+### Action required:
+1. Review each changed source
+2. Determine if wire format, timing, or regional standard changed
+3. Update code or close if only layout changed"
