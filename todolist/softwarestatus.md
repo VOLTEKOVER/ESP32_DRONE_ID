@@ -1,4 +1,4 @@
-# OmniRID — Software Status (Legacy C Firmware Audit)
+# OmniRID — Software Status
 
 > **⚠ LEGACY C FIRMWARE:** This document covers the C firmware `ESP32_DRONE_REMOTE_ID_Firmware/`
 > which has been **deleted from the repository**. The active Rust firmware lives in
@@ -283,6 +283,13 @@ Action options: remove the 2 FRDID prototypes (or vendor `frdid.c`) and drop `ri
 **Ground tools**
 - [ ] NVS provisioning tool — flash a known-good config via CLI
 - [ ] Timing analysis — measure beacon inter-transmission gaps against ASTM 3411-22a
+
+## 🔧 Remaining from conversion.md (moved 2026-08-17)
+
+- [ ] **Release binario / build matrix ESP32** nel workflow CI — quando `bsp-esp32` è completo hardware-side
+- [ ] **Auto-update protocolli da GitHub** — dipendenze git `rev = "main"` per protocolli; oggi tutto è path-dependency locale. Da decidere se serve davvero o se il workspace unico con `cargo update` basta (le CI `protocol-updates.yml` e `security-audit.yml` già coprono aggiornamenti upstream)
+
+---
 
 ## Port Sources
 - **peinser/esp-remoteid** — Ed25519, OTA, DroneCAN, MAVLink features, flash encryption, WS2812, GPIO lighting, devcontainer, startup delay. Most ported; still missing flash encryption, devcontainer.
