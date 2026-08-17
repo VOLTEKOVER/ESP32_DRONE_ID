@@ -47,13 +47,17 @@ jobs:
           git add OmniRID/external-libs/opendroneid-sys/vendor
           git commit -m "chore(opendroneid-sys): vendored library to ${tag}"
           git push origin "${branch}"
+          BODY=$(cat <<'EOF'
+          Automated update of the vendored OpenDroneID C library.
+
+          The layout-parity tests in `opendroneid-sys` and the byte-exact tests in `out-astm` gate this PR: if the C struct layout or encoder behaviour changed, update the FFI mirror in `external-libs/opendroneid-sys/src/lib.rs` in this same PR.
+          EOF
+          )
           gh pr create \
             --base main \
             --head "${branch}" \
             --title "Update vendored OpenDroneID to ${tag}" \
-            --body "Automated update of the vendored OpenDroneID C library.
-
-The layout-parity tests in \`opendroneid-sys\` and the byte-exact tests in \`out-astm\` gate this PR: if the C struct layout or encoder behaviour changed, update the FFI mirror in \`external-libs/opendroneid-sys/src/lib.rs\` in this same PR."
+            --body "$BODY"
 
   # ── MAVLink message IDs ────────────────────────────────────────────────
   mavlink:
@@ -160,22 +164,14 @@ The layout-parity tests in \`opendroneid-sys\` and the byte-exact tests in \`out
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git checkout -b "$BRANCH"
           git add OmniRID/inputs/proto-mavlink/src/parser.rs
-          git commit -m "chore(proto-mavlink): update message IDs from upstream
-
-$RESULT"
+          git commit -m "chore(proto-mavlink): update message IDs from upstream - ${BRANCH}"
           git push origin "$BRANCH"
+          BODY="Automated update from upstream MAVLink XML specs. Changed: ${RESULT}"
           gh pr create \
             --base main \
             --head "$BRANCH" \
             --title "Update MAVLink message IDs from upstream" \
-            --body "Automated update from upstream MAVLink XML specs.
-
-Changed message IDs:
-\`\`\`
-$RESULT
-\`\`\`
-
-Verify CRC extras and field decoders still match."
+            --body "$BODY"
 
   # ── DroneCAN DSDL ──────────────────────────────────────────────────────
   dronecan:
@@ -230,16 +226,7 @@ Verify CRC extras and field decoders still match."
           gh issue create \
             --title "DroneCAN DSDL upstream changed" \
             --label "protocol-update" \
-            --body "## DroneCAN DSDL change detected
-
-\`\`\`
-$INFO
-\`\`\`
-
-### Action required:
-1. Check https://github.com/DroneCAN/DSDL/blob/master/uavcan/equipment/gnss/Fix2.uavcan
-2. If struct layout changed, update \`proto-dronecan/src/parser.rs\` bit offsets
-3. Run \`cargo test --workspace\`"
+            --body "DroneCAN DSDL change detected. Info: ${INFO}. Check https://github.com/DroneCAN/DSDL/blob/master/uavcan/equipment/gnss/Fix2.uavcan and update proto-dronecan/src/parser.rs if needed."
 
   # ── ESP-IDF releases ───────────────────────────────────────────────────
   esp-idf:
@@ -292,13 +279,7 @@ $INFO
           gh issue create \
             --title "ESP-IDF update: $LATEST" \
             --label "protocol-update" \
-            --body "## New esp-idf-sys available
-
-Current: \`$CURRENT\` → Latest: \`$LATEST\`
-
-1. Update \`esp-idf-sys\` in \`bsp-esp32/Cargo.toml\`
-2. Run \`cargo check\` with ESP-IDF toolchain
-3. Check https://github.com/espressif/esp-idf/releases for breaking changes"
+            --body "New esp-idf-sys: ${CURRENT} -> ${LATEST}. Update bsp-esp32/Cargo.toml, run cargo check, check https://github.com/espressif/esp-idf/releases"
 
   # ── Regulatory page changes ────────────────────────────────────────────
   regulatory:
@@ -365,11 +346,4 @@ Current: \`$CURRENT\` → Latest: \`$LATEST\`
           gh issue create \
             --title "Regulatory pages changed" \
             --label "protocol-update" \
-            --body "## Regulatory page changes detected
-
-$(cat .regwatch/changes.md)
-
-### Action required:
-1. Review each changed source
-2. Determine if wire format, timing, or regional standard changed
-3. Update code or close if only layout changed"
+            --body "Regulatory page changes detected. Review changed sources, check if wire format/timing/regional standard changed. Changes: $(cat .regwatch/changes.md | tr '\n' ' ')"

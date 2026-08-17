@@ -112,9 +112,9 @@ jobs:
           cat > release-notes.md << EOF
           # OmniRID v${VERSION}
 
-Open DroneID transmitter for ESP32 -- ASTM F3411-22a / ASD-STAN prEN 4709-002.
+          Open DroneID transmitter for ESP32 - ASTM F3411-22a / ASD-STAN prEN 4709-002.
 
-Written in Rust. Firmware builds via \`cargo +esp build\` (see CI).
+          Written in Rust. Firmware builds via \`cargo +esp build\` (see CI).
 
           ## Downloads
 
