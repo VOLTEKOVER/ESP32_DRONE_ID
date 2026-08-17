@@ -1,226 +1,97 @@
-# OmniRID — Web UI & Desktop App Status
+# OmniRID — Web UI, Desktop App & Documentation Status
 
 > Embedded web UI served by `bsp-esp32` from flash (`include_str!`).
 > Desktop app: Electron + React 19 + Ant Design 6 + Vite 8.
+> Documentation: README.md + docs/index.html + docs/guide.html
 > Last updated: 2026-08-17
 
 ---
 
-## 🗂️ Tab Structure (15 tabs)
+## Part 1 — Web UI (Embedded)
 
-### Monitor
-| Tab | ID | Description |
-|-----|----|-------------|
-| Dashboard | `dashboard` | Live telemetry: GPS, protocol, TX status, battery, RSSI |
+### 🗂️ Tab Structure (15 tabs)
 
-### Configuration
-| Tab | ID | Description |
-|-----|----|-------------|
-| Identity | `identity` | UAS ID, ID type, UA type, operator ID, self-ID, operator location, second BasicID |
-| Transmission | `transmission` | WiFi BCN/NAN, BLE4/5 toggles, channel, power, rates |
-| Access Point | `ap` | WiFi SSID/password, web server toggle |
-| Flight Controller | `fc` | Protocol (AUTO/MAVLink/MSP/NMEA), baud, SysID, broadcast on power |
-| Hardware | `hardware` | LED GPIO (R/G/B), WS2812 pin/brightness, UART, TX/RX pins, DroneCAN pins/bitrate, lighting channels (5x pin/pattern/phase), OTA trigger GPIO, USB MAVLink, startup delay |
+| Group | Tab | ID | Description |
+|-------|-----|----|-------------|
+| Monitor | Dashboard | `dashboard` | Live telemetry: GPS, protocol, TX status, battery, RSSI |
+| Config | Identity | `identity` | UAS ID, ID/UA type, operator ID/self-ID, location, second BasicID |
+| Config | Transmission | `transmission` | WiFi BCN/NAN, BLE4/5 toggles, channel, power, rates |
+| Config | Access Point | `ap` | WiFi SSID/password, web server toggle |
+| Config | Flight Controller | `fc` | Protocol, baud, SysID, broadcast on power |
+| Config | Hardware | `hardware` | LED GPIO, WS2812, UART, TX/RX pins, DroneCAN, lighting, OTA GPIO, USB, startup delay |
+| Compliance | Compliance | `compliance` | Region selector, per-region requirement checklist |
+| Compliance | Security | `security` | Password, timeout, lock level, 5 public keys, 9 option flags |
+| Advanced | System | `system` | Save, Factory Reset, Restart |
+| Advanced | Firmware | `firmware` | OTA upload (.bin file) |
+| Tools | Console | `console` | Serial terminal, CLI commands, signed commands |
+| Tools | Presets | `presets` | Save/load/import/export config presets |
+| Tools | Logging | `logging` | Start/stop telemetry log, download CSV |
+| Tools | Sensors | `sensors` | Sensor readings (placeholder) |
+| Other | Help | `help` | Documentation links, version info |
 
-### Compliance & Security
-| Tab | ID | Description |
-|-----|----|-------------|
-| Compliance | `compliance` | Region selector, per-region requirement checklist, standard status |
-| Security | `security` | Password, timeout, lock level, 5 public keys, option flags (9 checkboxes) |
+### 🔘 All Buttons
 
-### Advanced
-| Tab | ID | Description |
-|-----|----|-------------|
-| System | `system` | Save, Factory Reset, Restart |
-| Firmware | `firmware` | OTA upload (.bin file) |
+**Header Actions:** ☰ Menu, 💾 Save All, 📥 Export, 📤 Import, 🔄 Reconnect, ☀/☾ Dark
+**System:** 🔄 Restart, ↻ Factory Reset
+**Console:** 📋 Copy, 📋 All, 🗑 Clear, ⬇ Auto-scroll, ⚡ CLI dialog, Send
+**Firmware:** Choose .bin, Upload
+**Presets:** 💾 Save, 📥 Export All, 📤 Import
+**Logging:** ▶ Start, ⏹ Stop, 📥 Download, 🗑 Clear
+**Compliance:** 🔄 Update
+**Security:** 👁 Show/Hide password, Save Security
 
-### Tools
-| Tab | ID | Description |
-|-----|----|-------------|
-| Console | `console` | Serial terminal, CLI commands, signed commands |
-| Presets | `presets` | Save/load/import/export config presets |
-| Logging | `logging` | Start/stop telemetry log, download CSV |
-| Sensors | `sensors` | Sensor readings (placeholder) |
+### 📊 Form Fields (50+)
 
-### Other
-| Tab | ID | Description |
-|-----|----|-------------|
-| Help | `help` | Documentation links, version info |
+**Identity:** uas_id, id_type, ua_type, op_id, self_id_text, op_lat, op_lon, op_alt, uas_id2, id_type2, ua_type2
+**Transmission:** tx_wifi_bcn, tx_wifi_nan, tx_ble4, tx_ble5, wifi_ch, wifi_pwr (2-20), wifi_bcn, wifi_nan, bt4_rate, bt4_pwr, bt5_rate, bt5_pwr
+**AP:** wifi_ssid, wifi_pass, websrv_en
+**FC:** protocol (AUTO/MAVLink/MSP/NMEA), baud, mav_sysid, bcast_pwr
+**Hardware:** led_r/g/b_gpio, ws2812_gpio, ws2812_brightness, uart_port, tx/rx_pin, dronecan_rx/tx_gpio, dronecan_bitrate, lighting_pin/pattern/phase 0-4, ota_trigger_gpio, mavlink_usb_enable, start_delay_ms
+**Security:** lock_lvl, sec-password, sec-timeout, pubkey1-5, opt_arm/nosave/print/demo/kalman/auth/mavlink_arm/mavlink_op_loc/identity_gate
 
----
+### 🔌 API Endpoints
 
-## 🔘 All Buttons
+| Endpoint | Method | Content |
+|----------|--------|---------|
+| `/` `/config.html` | GET | HTML page |
+| `/style.css` | GET | CSS |
+| `/app.js` | GET | JavaScript |
+| `/api/config` | GET/POST | Config JSON |
+| `/api/status` | GET | Runtime status |
+| `/api/capabilities` | GET | Build descriptor |
+| `/api/command` | POST | Signed commands |
+| `/api/reset` | GET/POST | Factory reset |
+| `/api/logs` | GET | Log entries |
+| `/ota` | POST | Firmware upload |
 
-### Header Actions
-| Button | Action | Status |
-|--------|--------|--------|
-| ☰ Menu | `toggleMobileMenu()` — mobile sidebar toggle | ✅ |
-| 💾 Save All | `saveAll()` — save all dirty fields | ✅ |
-| 📥 Export | `exportCfg()` — download config JSON | ✅ |
-| 📤 Import | `importCfg()` — upload config JSON | ✅ |
-| 🔄 Reconnect | `getCfg()` — refresh from device | ✅ |
-| ☀/☾ Dark | `toggleDark()` — theme toggle | ✅ |
+### 🔧 TODO — UI Improvements
 
-### System
-| Button | Action | Status |
-|--------|--------|--------|
-| 🔄 Restart | `sendSigCmd('restart')` — restart device | ✅ Factory Reset |
-| ↻ Factory Reset | `showModal('reset')` — confirm dialog | ✅ |
+**High:**
+- [ ] WiFi SSID/password maxlength 20 → 32/63
+- [ ] Operator lat/lon precision float → f64
+- [ ] Demo public-safe hardening
 
-### Console
-| Button | Action | Status |
-|--------|--------|--------|
-| 📋 Copy | `copyTerm()` — copy terminal output | ✅ |
-| 📋 All | `copyAllLogs()` — copy all logs | ✅ |
-| 🗑 Clear | `clearTerm()` — clear terminal | ✅ |
-| ⬇ Auto | `toggleTermScroll()` — auto-scroll toggle | ✅ |
-| ⚡ CLI | `showCliDialog()` — open CLI dialog | ✅ |
-| Send | `sendCmd()` — send command | ✅ |
+**Medium:**
+- [ ] manifest.json version auto-gen
+- [ ] Settings search across all tabs
+- [ ] Export/import with auth keys
+- [ ] Console CLI history (up/down arrows)
+- [ ] Sensors tab real data
+- [ ] Mobile responsiveness verify
 
-### Firmware
-| Button | Action | Status |
-|--------|--------|--------|
-| Choose .bin | File picker for OTA | ✅ |
-| Upload | OTA upload with progress | ✅ |
-
-### Presets
-| Button | Action | Status |
-|--------|--------|--------|
-| 💾 Save | `savePreset()` — save to localStorage | ✅ |
-| 📥 Export All | `exportAllPresets()` — download all | ✅ |
-| 📤 Import | Import presets from file | ✅ |
-
-### Logging
-| Button | Action | Status |
-|--------|--------|--------|
-| ▶ Start | `startLogging()` — begin telemetry capture | ✅ |
-| ⏹ Stop | `stopLogging()` — stop capture | ✅ |
-| 📥 Download | `downloadLog()` — download CSV | ✅ |
-| 🗑 Clear | `clearLog()` — clear data | ✅ |
-
-### Compliance
-| Button | Action | Status |
-|--------|--------|--------|
-| 🔄 Update | `updateCompliance()` — re-evaluate checklist | ✅ |
-
-### Security
-| Button | Action | Status |
-|--------|--------|--------|
-| 👁 Show/Hide | `toggleSecPwd()` — password visibility | ✅ |
-| Save Security | Save password/timeout/keys | ✅ |
+**Low:**
+- [ ] Dark mode polish
+- [ ] Keyboard shortcuts (Ctrl+S, Ctrl+E)
+- [ ] Loading states / error toasts
+- [ ] OTA progress bar
+- [ ] Compliance region auto-detect from GPS
+- [ ] Config diff view before save
+- [ ] Lighting pattern preview
 
 ---
 
-## 📊 Form Fields (50+)
+## Part 2 — Desktop App (OmniRID-Desktop)
 
-### Identity Tab
-| Field | ID | Type | Max | Notes |
-|-------|-----|------|-----|-------|
-| UAS ID | `uas_id` | text | 20 | e.g. RID-12345678 |
-| ID Type | `id_type` | select | — | Enum |
-| UA Type | `ua_type` | select | — | Enum |
-| Operator ID | `op_id` | text | 20 | |
-| Self-ID | `self_id_text` | text | 23 | e.g. Camera drone |
-| Operator Lat | `op_lat` | number | — | GPS decimal |
-| Operator Lon | `op_lon` | number | — | GPS decimal |
-| Operator Alt | `op_alt` | number | — | meters |
-| UAS ID 2 | `uas_id2` | text | 20 | Second BasicID |
-| ID Type 2 | `id_type2` | select | — | |
-| UA Type 2 | `ua_type2` | select | — | |
-
-### Transmission Tab
-| Field | ID | Type | Range | Notes |
-|-------|-----|------|-------|-------|
-| WiFi BCN | `tx_wifi_bcn` | checkbox | — | |
-| WiFi NAN | `tx_wifi_nan` | checkbox | — | |
-| BLE 4.0 | `tx_ble4` | checkbox | — | |
-| BLE 5.0 LR | `tx_ble5` | checkbox | — | |
-| WiFi Channel | `wifi_ch` | select | — | |
-| WiFi Power | `wifi_pwr` | number | 2-20 | step 0.5 |
-| WiFi BCN Rate | `wifi_bcn` | number | — | Hz |
-| WiFi NAN Rate | `wifi_nan` | number | — | Hz |
-| BLE4 Rate | `bt4_rate` | number | — | Hz |
-| BLE4 Power | `bt4_pwr` | number | — | dBm |
-| BLE5 Rate | `bt5_rate` | number | — | Hz |
-| BLE5 Power | `bt5_pwr` | number | — | dBm |
-
-### Access Point Tab
-| Field | ID | Type | Notes |
-|-------|-----|------|-------|
-| WiFi SSID | `wifi_ssid` | text | max 20 (⚠ spec allows 32) |
-| WiFi Password | `wifi_pass` | password | max 20 (⚠ spec allows 63) |
-| Web Server | `websrv_en` | checkbox | |
-
-### Flight Controller Tab
-| Field | ID | Type | Notes |
-|-------|-----|------|-------|
-| Protocol | `protocol` | select | AUTO/MAVLink/MSP/NMEA |
-| Baud | `baud` | select | |
-| MAVLink SysID | `mav_sysid` | number | |
-| Broadcast Power | `bcast_pwr` | checkbox | |
-
-### Hardware Tab
-| Field | ID | Type | Notes |
-|-------|-----|------|-------|
-| LED R GPIO | `led_r_gpio` | number | |
-| LED G GPIO | `led_g_gpio` | number | |
-| LED B GPIO | `led_b_gpio` | number | |
-| WS2812 GPIO | `ws2812_gpio` | number | |
-| WS2812 Brightness | `ws2812_brightness` | number | |
-| UART Port | `uart_port` | select | |
-| TX Pin | `tx_pin` | number | |
-| RX Pin | `rx_pin` | number | |
-| DroneCAN RX | `dronecan_rx_gpio` | number | |
-| DroneCAN TX | `dronecan_tx_gpio` | number | |
-| DroneCAN Bitrate | `dronecan_bitrate` | select | |
-| Lighting Pin 0-4 | `lighting_pin_N` | number | dynamic |
-| Lighting Pattern 0-4 | `lighting_pattern_N` | select | dynamic |
-| Lighting Phase 0-4 | `lighting_phase_N` | number | dynamic |
-| OTA Trigger GPIO | `ota_trigger_gpio` | number | |
-| USB MAVLink | `mavlink_usb_enable` | checkbox | |
-| Startup Delay | `start_delay_ms` | number | |
-
-### Security Tab
-| Field | ID | Type | Notes |
-|-------|-----|------|-------|
-| Lock Level | `lock_lvl` | select | |
-| Password | `sec-password` | password | |
-| Timeout | `sec-timeout` | select | |
-| Public Key 1-5 | `pubkey1`-`pubkey5` | text | PEM/DER/base64 |
-| Option: Arm | `opt_arm` | checkbox | |
-| Option: No Save | `opt_nosave` | checkbox | |
-| Option: Print | `opt_print` | checkbox | |
-| Option: Demo | `opt_demo` | checkbox | |
-| Option: Kalman | `opt_kalman` | checkbox | |
-| Option: Auth | `opt_auth` | checkbox | |
-| Option: MAVLink Arm | `opt_mavlink_arm` | checkbox | |
-| Option: MAVLink OpLoc | `opt_mavlink_op_loc` | checkbox | |
-| Option: Identity Gate | `opt_identity_gate` | checkbox | |
-
----
-
-## 🔌 API Endpoints
-
-| Endpoint | Method | Content | Status |
-|----------|--------|---------|--------|
-| `/` | GET | config.html | ✅ |
-| `/config.html` | GET | config.html | ✅ |
-| `/style.css` | GET | style.css | ✅ |
-| `/app.js` | GET | app.js | ✅ |
-| `/api/config` | GET | Full config JSON | ✅ |
-| `/api/config` | POST | Update config fields | ✅ |
-| `/api/status` | GET | Runtime status JSON | ✅ |
-| `/api/capabilities` | GET | Build descriptor (inputs/regions/standards) | ✅ |
-| `/api/command` | POST | Signed command dispatch | ✅ |
-| `/api/reset` | POST | Factory reset | ✅ |
-| `/api/logs` | GET | Log entries | ✅ |
-| `/ota` | POST | Firmware upload (multipart) | ✅ |
-
----
-
-## 🖥️ Desktop App (OmniRID-Desktop)
-
-### Modules
 | Module | File | Status |
 |--------|------|--------|
 | IPC Bridge | `main.js` + `preload.js` | ✅ |
@@ -229,57 +100,113 @@
 | WiFi/BLE Capture | `src/capture.js` | ✅ |
 | UI (6 tabs) | `renderer/app.js` | ✅ |
 
-### Desktop Tabs
-1. Dashboard — live device connection
-2. Devices — tracked UAS
-3. Map — device positions
-4. Timeline — telemetry over time
-5. Capture — WiFi/BLE/Serial sniffing
-6. Settings — app configuration
+Tabs: Dashboard, Devices, Map, Timeline, Capture, Settings
 
 ---
 
-## 🔧 TODO — UI Improvements
+## Part 3 — Documentation Restructuring (C → Rust)
 
-### 🔴 High Priority
-- [ ] **WiFi SSID/password max length** — fields capped at 20, WiFi spec allows 32/63. Widen in HTML + config struct
-- [ ] **Operator lat/lon precision** — stored as float (~1m error). Change to f64 in config
-- [ ] **Demo public-safe hardening** — clear localStorage on load, disable password field in demo mode
+### C → Rust Reference Mapping
 
-### 🟡 Medium Priority
-- [ ] **manifest.json version** — hardcoded, should auto-generate from CI
-- [ ] **Settings search** — index built but verify works across all tabs
-- [ ] **Export/import with auth keys** — currently exports config JSON only, not keys
-- [ ] **Console CLI history** — add readline-style up/down arrow for last 10 commands
-- [ ] **Sensors tab** — placeholder, needs real sensor data display
-- [ ] **Mobile responsiveness** — verify sidebar/menu works on small screens
-- [ ] **Tooltip consistency** — 63 real / 66 demo buttons have tooltips, verify all
+| Old C Reference | New Rust Reference |
+|---|---|
+| `main.c` | `firmware/app/src/main.rs` |
+| `web_config.c` / `web_server.c` | `firmware/rid-app/src/web_config.rs` + `bsp-esp32/src/web.rs` |
+| `rid_security.c` | `firmware/rid-core/src/security.rs` |
+| `rid_ota.c` | `firmware/rid-app/src/ota.rs` + `bsp-esp32/src/ota.rs` |
+| `rid_auth.c` | `firmware/rid-core/src/auth.rs` |
+| `rid_kalman.c` | `firmware/rid-core/src/kalman.rs` |
+| `rid_patrol.c` | `firmware/rid-core/src/patrol.rs` |
+| `rid_output.c/h` | `firmware/rid-core/src/hub.rs` |
+| `protocol_detect.c` | `firmware/rid-core/src/protocol_detect.rs` |
+| `mavlink_parser.c` | `inputs/proto-mavlink/src/parser.rs` |
+| `nmea_parser.c` | `inputs/proto-nmea/src/parser.rs` |
+| `msp_parser.c` | `inputs/proto-msp/src/parser.rs` |
+| `rid_dronecan.c` | `inputs/proto-dronecan/src/parser.rs` |
+| `rid_mavlink_usb.c` + `rid_mavlink_tx.c` | `inputs/proto-usb-mavlink/src/{tx,pack}.rs` |
+| `odid_common.c` + `wifi.c` + `ble_tx.c` | `outputs/out-astm/src/{lib,wifi,ble4}.rs` |
+| `opendroneid.c` + `mav2odid.c` | `external-libs/opendroneid-sys/` (FFI only) |
+| `cli.c` | `firmware/rid-app/src/cli.rs` |
+| `nvs_storage.c` | `firmware/rid-app/src/nvs.rs` + `bsp-esp32/src/nvs.rs` |
+| `led_status.c` | `firmware/rid-app/src/led_status.rs` |
+| `led_ws2812.c` | `firmware/rid-app/src/led_ws2812.rs` |
+| `rid_lighting.c` | `firmware/rid-app/src/lighting.rs` |
+| `ble_tx.c` | `firmware/rid-app/src/ble4.rs` + `bsp-esp32/src/ble.rs` |
+| `wifi_tx.c` | `bsp-esp32/src/wifi.rs` |
+| `esp_remote_id.h` | `firmware/rid-interface/src/{types,input,region,odid}.rs` |
+| `MAVLink c_library_v2` | `inputs/proto-mavlink` (pure Rust) |
+| `Vendored C` | `opendroneid-sys` FFI bindings only |
 
-### 🟢 Low Priority
-- [ ] **Dark mode polish** — verify all elements have dark theme support
-- [ ] **Keyboard shortcuts** — Ctrl+S save, Ctrl+E export, Escape close modals
-- [ ] **Loading states** — show spinner during API calls
-- [ ] **Error messages** — user-friendly toast notifications on API errors
-- [ ] **Compliance region auto-detect** — detect from GPS coords instead of manual selection
-- [ ] **OTA progress bar** — show upload progress with percentage
-- [ ] **Config diff view** — show what changed before saving
-- [ ] **Preset thumbnails** — visual preview of preset configs
-- [ ] **Log graph** — plot telemetry data over time (like desktop app)
-- [ ] **BLE 5.0 LR info** — explain when LR is available (S3/C6 only)
-- [ ] **Lighting preview** — show LED pattern visualization
-- [ ] **Compliance per-region requirements** — expandable details for each requirement
+### Search & Replace Commands
 
----
+```bash
+# Find all C references
+git grep -n "rid_security.c\|rid_ota.c\|web_config.c\|rid_auth.c\|main.c\|opendroneid-core-c\|Vendored C"
 
-## 🎨 UI Design Notes
+# Replace file names
+git grep -l "rid_security.c" | xargs sed -i 's/rid_security.c/firmware\/rid-core\/src\/security.rs/g'
+git grep -l "rid_ota.c" | xargs sed -i 's/rid_ota.c/firmware\/rid-app\/src\/ota.rs/g'
+git grep -l "web_config.c" | xargs sed -i 's/web_config.c/firmware\/rid-app\/src\/web_config.rs/g'
+git grep -l "rid_auth.c" | xargs sed -i 's/rid_auth.c/firmware\/rid-core\/src\/auth.rs/g'
+git grep -l "main.c" | xargs sed -i 's/main.c/firmware\/app\/src\/main.rs/g'
+git grep -l "rid_kalman.c" | xargs sed -i 's/rid_kalman.c/firmware\/rid-core\/src\/kalman.rs/g'
+git grep -l "nvs_storage.c" | xargs sed -i 's/nvs_storage.c/firmware\/rid-app\/src\/nvs.rs/g'
+git grep -l "cli.c" | xargs sed -i 's/cli.c/firmware\/rid-app\/src\/cli.rs/g'
 
-- **Framework**: Bootstrap 5.3.3 (vendored inline in app.js, works offline)
-- **Theme**: Light/Dark with glassmorphism CSS
-- **Layout**: Sidebar navigation + main content area
-- **Responsive**: Mobile hamburger menu, collapsible sidebar
-- **Accessibility**: Keyboard/focus accessible tooltips
-- **Icons**: Unicode emoji (no icon library dependency)
-- **Color scheme**: Primary blue, danger red, success green
-- **Splash screen**: Logo + progress bar on initial load
-- **Modals**: Factory reset, OTA upload confirmation
-- **Toasts**: Center-positioned notifications
+# Generic replacements
+git grep -l "Vendored C" | xargs sed -i 's/Vendored C/FFI bindings (opendroneid-sys)/g'
+git grep -l "rid_security.c/h" | xargs sed -i 's/rid_security.c\/h/rid-core::security/g'
+```
+
+### Files to Verify Before Deletion
+
+```bash
+# List all C/H files still in repo
+git ls-files '*.c' '*.h'
+
+# Check if these directories exist and are referenced
+git grep -n "opendroneid-core-c\|mavlink-sys\|mbedtls"
+```
+
+Candidate deletions (after confirming no references):
+- `external-libs/opendroneid-core-c/` — if fully replaced by `opendroneid-sys`
+- `external-libs/mavlink/` — if replaced by `proto-mavlink` crate
+- `external-libs/mbedtls/` — if provided by ESP-IDF
+
+### Specific Text Changes by File
+
+**README.md:**
+- One-liner: "OmniRID — hardware-agnostic Open DroneID transmitter (Rust). Any flight-controller input → any RID standard output."
+- Quickstart: `git clone` → `cd OmniRID` → `cargo build --workspace && cargo test --workspace`
+- Remove duplicated content already in docs/
+- Update badges to correct repo/branch
+- Replace "Vendored Dependencies" section with Rust crate list
+
+**docs/index.html:**
+- Keep hero + WebSerial button + 3-step flash
+- Remove technical deep-dives (move to guide.html)
+- Add links to guide sections (Protocols, Config, OTA, Security, Hardware)
+
+**docs/guide.html:**
+- Security section: replace C file refs with Rust paths
+- OTA section: update to describe Rust implementation
+- Build section: remove CMake/make steps, use cargo only
+- "Legacy C Firmware" section: mark as "completed port, C deleted"
+- Security Hardening table: replace C file column with Rust crate paths
+- "Vendored Dependencies" block: list Rust crates + opendroneid-sys only
+
+### Post-Change Verification
+
+```bash
+# Build
+cargo build --workspace
+
+# Test
+cargo test --workspace
+
+# Check no C references remain
+git grep -n "\.c\b" -- '*.md' '*.html' | grep -v "opendroneid-sys\|vendor\|changelog\|LICENSE"
+
+# Verify links in docs
+# Open docs/index.html locally, check all links resolve
+```
