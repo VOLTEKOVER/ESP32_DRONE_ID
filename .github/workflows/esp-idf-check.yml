@@ -1,0 +1,94 @@
+name: Check ESP-IDF releases
+
+on:
+  schedule:
+    - cron: "0 7 * * 1"
+  workflow_dispatch:
+
+permissions:
+  issues: write
+
+jobs:
+  check:
+    name: Check new ESP-IDF releases
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Get latest ESP-IDF release
+        id: latest
+        run: |
+          LATEST=$(curl -sL "https://api.github.com/repos/espressif/esp-idf/releases/latest" | python3 -c "import sys,json; print(json.load(sys.stdin)['tag_name'])")
+          echo "tag=$LATEST" >> "$GITHUB_OUTPUT"
+          echo "Latest ESP-IDF release: $LATEST"
+
+      - name: Get current pinned version
+        id: current
+        run: |
+          # Extract version from esp-idf-sys dependency in bsp-esp32/Cargo.toml
+          VERSION=$(grep 'esp-idf-sys' OmniRID/hardware/bsp-esp32/Cargo.toml | head -1 | sed 's/.*version = "\([^"]*\)".*/\1/')
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Current esp-idf-sys version: $VERSION"
+
+      - name: Compare versions
+        id: compare
+        run: |
+          python3 << 'PYEOF'
+          import json, sys
+
+          with open("${{ github.workspace }}/OmniRID/hardware/bsp-esp32/Cargo.toml") as f:
+              content = f.read()
+
+          latest_tag = "${{ steps.latest.outputs.tag }}"
+          current_ver = "${{ steps.current.outputs.version }}"
+
+          # Check if there's a newer esp-idf-sys crate on crates.io
+          import urllib.request
+          try:
+              url = "https://crates.io/api/v1/crates/esp-idf-sys"
+              req = urllib.request.Request(url, headers={"User-Agent": "omnirid-ci"})
+              resp = urllib.request.urlopen(req, timeout=10)
+              data = json.loads(resp.read())
+              latest_crate = data["crate"]["max_stable_version"]
+              print(f"Latest esp-idf-sys on crates.io: {latest_crate}")
+              print(f"Current pinned: {current_ver}")
+
+              if latest_crate != current_ver:
+                  print(f"NEW_VERSION={latest_crate}")
+              else:
+                  print("UP_TO_DATE")
+          except Exception as e:
+              print(f"Error checking crates.io: {e}")
+              print("SKIPPED")
+          PYEOF
+
+      - name: Create issue if new version available
+        if: contains(steps.compare.outputs.stdout, 'NEW_VERSION')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          NEW_VER=$(echo "${{ steps.compare.outputs.stdout }}" | grep "NEW_VERSION" | cut -d= -f2)
+
+          EXISTING=$(gh issue list --label "esp-idf-update" --state open --json number --jq '.[0].number // empty')
+          if [ -n "$EXISTING" ]; then
+            echo "Issue #$EXISTING already exists"
+            exit 0
+          fi
+
+          gh issue create \
+            --title "ESP-IDF update available: $NEW_VER" \
+            --label "esp-idf-update" \
+            --body "## New esp-idf-sys version available
+
+Current: \`${{ steps.current.outputs.version }}\`
+Latest: \`$NEW_VER\`
+
+### Action required:
+1. Update \`esp-idf-sys\` in \`OmniRID/hardware/bsp-esp32/Cargo.toml\`
+2. Run \`cargo check --manifest-path OmniRID/hardware/bsp-esp32/Cargo.toml\` (requires ESP-IDF toolchain)
+3. Run \`cargo test --workspace\` to verify no regressions
+4. Check ESP-IDF release notes for breaking changes
+
+https://github.com/espressif/esp-idf/releases"
