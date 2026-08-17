@@ -39,7 +39,7 @@ OmniRID/
 │   └── rid-interface/     # Transport abstraction (WiFi/BLE/USB)
 ├── inputs/                # Protocol parsers (MAVLink, MSP, NMEA, DroneCAN)
 ├── outputs/               # Protocol encoders (ASTM, NAN, BLE4, pack)
-├── external-libs/         # Vendored C dependencies (opendroneid-sys)
+├── external-libs/         # FFI bindings (opendroneid-sys)
 └── hardware/bsp-esp32/    # ESP-IDF glue (standalone workspace)
 
 OmniRID-Desktop/                   # Electron desktop app

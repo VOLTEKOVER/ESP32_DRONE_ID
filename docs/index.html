@@ -175,8 +175,8 @@
 <li><b>Built-in demo mode</b> &mdash; GPS patrol simulation for testing without FC hardware</li>
 <li><b>Built-in WiFi Access Point</b> with web configuration at 192.168.4.1</li>
 <li><b>Over-the-Air (OTA) updates</b> with client-side SHA-256 + Ed25519 signature verification</li>
-<li><b>Security hardening:</b> cJSON parser, rate limiting (10 fails/60s), strncpy null-termination, PSA Crypto init</li>
-<li><b>Shared security module:</b> <code>rid_security.c/h</code> for SHA-256 + Ed25519 verification</li>
+<li><b>Security hardening:</b> JSON parsing (serde), rate limiting (10 fails/60s), safe string handling, PSA Crypto init</li>
+<li><b>Shared security module:</b> <code>rid-core::security</code> for SHA-256 + Ed25519 verification</li>
 <li><b>Takeoff location capture:</b> first 3D GPS fix stored as operator reference position</li>
 <li><b>Security lock levels:</b> level 0 (open), level 1 (Ed25519 signed commands), level 2 (eFuse permanent)</li>
 <li><b>eFuse permanent lock:</b> one-time irreversible level 2 burn with "RID!" magic</li>

@@ -56,8 +56,8 @@ ensures automatic rollback on failure.
 
 ### Security Hardening
 
-- **cJSON parser** — all JSON inputs parsed with cJSON instead of naive `strstr()`
+- **Safe JSON parsing** — all JSON inputs parsed with `serde_json` (no unsafe C parsers)
 - **Rate limiting** — 10 failed signature attempts per 60s sliding window, then lockout
-- **strncpy null-termination** — all string fields explicitly null-terminated
+- **Safe string handling** — Rust's ownership model prevents buffer overflows
 - **psa_crypto_init()** — PSA Crypto API initialized at boot for ESP-IDF v5+
-- **Shared verification module** — `rid_security.c/h` used by both web config and OTA
+- **Shared verification module** — `rid-core::security` used by both web config and OTA

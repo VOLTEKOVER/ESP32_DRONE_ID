@@ -561,7 +561,7 @@ esptool.py --chip esp32c6 --port COM3 write_flash 0x0 target/riscv32imc-unknown-
 &#x2502;   &#x251c;&#x2500;&#x2500; outputs/                         # Protocol encoders
 &#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; out-astm/                      # ASTM F3411 encoder + WiFi + BLE4 pack
 &#x2502;   &#x2502;   &#x2514;&#x2500;&#x2500; out-usb-mavlink/                # USB MAVLink telemetry TX
-&#x2502;   &#x251c;&#x2500;&#x2500; external-libs/                   # Vendored C dependencies
+&#x2502;   &#x251c;&#x2500;&#x2500; external-libs/                   # FFI bindings
 &#x2502;   &#x2502;   &#x2514;&#x2500;&#x2500; opendroneid-sys/                 # Intel ODID FFI bindings
 &#x2502;   &#x2514;&#x2500;&#x2500; hardware/                        # Standalone ESP-IDF workspace
 &#x2502;       &#x2514;&#x2500;&#x2500; bsp-esp32/                     # ESP32 glue (WiFi, BLE, USB, web, NVS, OTA, LED)
@@ -717,7 +717,7 @@ esptool.py --chip esp32c6 --port COM3 write_flash 0x0 target/riscv32imc-unknown-
 </h3>
 <div class="accordion-collapse collapse" id="guide-ota-body">
 <div class="accordion-body gs-body">
-<div class="callout"><strong>&#x1f4a1; Status:</strong> OTA is implemented with client-side SHA-256 verification (Web Crypto API) and server-side Ed25519 signature verification (lock level &ge; 1). The web UI computes a SHA-256 hash of the firmware binary before upload and sends it via the <code>X-Expected-SHA256</code> header. The <code>rid_security.c</code> module handles all cryptographic verification. The partition scheme is factory + a single OTA slot (<code>ota_0</code>); a failed update rolls back to the factory image.</div>
+<div class="callout"><strong>&#x1f4a1; Status:</strong> OTA is implemented with client-side SHA-256 verification (Web Crypto API) and server-side Ed25519 signature verification (lock level &ge; 1). The web UI computes a SHA-256 hash of the firmware binary before upload and sends it via the <code>X-Expected-SHA256</code> header. The <code>rid-core::security</code> crate handles all cryptographic verification. The partition scheme is factory + a single OTA slot (<code>ota_0</code>); a failed update rolls back to the factory image.</div>
 
 <h4>Over-the-Air Firmware Update</h4>
 <p>The OmniRID supports updating firmware wirelessly through the web interface. No USB cable is needed once the initial firmware is flashed. The upload process includes cryptographic verification to prevent corrupt or malicious firmware.</p>
@@ -743,7 +743,7 @@ esptool.py --chip esp32c6 --port COM3 write_flash 0x0 target/riscv32imc-unknown-
 </ol>
 
 <h4>Verification Flow</h4>
-<p>The OTA update uses a two-layer verification process implemented in <code>rid_security.c</code>:</p>
+<p>The OTA update uses a two-layer verification process implemented in <code>rid-core::security</code>:</p>
 <ol>
 <li><b>SHA-256 integrity check:</b> The browser computes SHA-256 of the firmware binary before upload. The server independently computes SHA-256 of the received data and compares it to the <code>X-Expected-SHA256</code> header. Mismatches are rejected immediately.</li>
 <li><b>Ed25519 signature (lock level &ge; 1):</b> When lock level is 1 or 2, an <code>X-Signature</code> header containing an Ed25519 signature over the SHA-256 hash must be provided. The signature is verified against the configured public keys.</li>
@@ -778,7 +778,7 @@ flowchart LR
 
 <ol>
 <li>The web server receives the firmware binary in an HTTP POST to <code>/ota</code>.</li>
-<li>It verifies the SHA-256 hash of the received data against the <code>X-Expected-SHA256</code> header using the <code>rid_security.c</code> module.</li>
+<li>It verifies the SHA-256 hash of the received data against the <code>X-Expected-SHA256</code> header using the <code>rid-core::security</code> crate.</li>
 <li>If lock level &ge; 1, it also verifies the Ed25519 signature against configured public keys.</li>
 <li>On success, it writes the binary to the <code>ota_0</code> OTA partition.</li>
 <li>It sets the OTA partition as the boot partition and calls <code>esp_restart()</code>.</li>
@@ -821,7 +821,7 @@ flowchart LR
 </h3>
 <div class="accordion-collapse collapse" id="guide-security-body">
 <div class="accordion-body gs-body">
-<div class="callout"><strong>&#x1f4a1; Status:</strong> All three lock levels are implemented. Level 2 burns "RID!" magic to EFUSE_BLK3 and is one-time irreversible. Level 1 enforces Ed25519 signature verification via the <code>X-Signature</code> header. Shared verification logic is in <code>rid_security.c/h</code> (SHA-256 + Ed25519 + hex utilities). Rate limiting protects against brute-force attacks (10 fails per 60s sliding window).</div>
+<div class="callout"><strong>&#x1f4a1; Status:</strong> All three lock levels are implemented. Level 2 burns "RID!" magic to EFUSE_BLK3 and is one-time irreversible. Level 1 enforces Ed25519 signature verification via the <code>X-Signature</code> header. Shared verification logic is in <code>rid-core::security</code> (SHA-256 + Ed25519 + hex utilities). Rate limiting protects against brute-force attacks (10 fails per 60s sliding window).</div>
 
 <h4>Lock Levels</h4>
 <p>The firmware implements three lock levels to prevent unauthorized configuration changes:</p>
@@ -838,14 +838,14 @@ flowchart LR
 <p>The following security improvements were ported from the ESPsquawk fork and are now part of the firmware:</p>
 <div class="table-responsive">
 <table>
-<tr><th>Fix</th><th>File</th><th>Description</th></tr>
-<tr><td>cJSON parser</td><td><code>web_config.c</code></td><td>All web API JSON inputs parsed with cJSON instead of naive <code>strstr()</code> — prevents injection attacks</td></tr>
-<tr><td>Rate limiting</td><td><code>web_config.c</code></td><td>Sliding window: 10 failed signature attempts per 60 seconds, then lockout</td></tr>
-<tr><td>strncpy null-term</td><td><code>web_config.c</code></td><td>All 9 string fields explicitly null-terminated after <code>strncpy</code></td></tr>
-<tr><td>PSA Crypto init</td><td><code>main.c</code></td><td><code>psa_crypto_init()</code> called at boot for ESP-IDF v5+ crypto API</td></tr>
-<tr><td>Shared module</td><td><code>rid_security.c/h</code></td><td><code>verify_sha256()</code>, <code>verify_signed_body()</code>, <code>bytes_to_hex()</code>, <code>hex_to_bytes()</code></td></tr>
-<tr><td>Ed25519 bit check</td><td><code>rid_auth.c</code></td><td>Validates signature length is exactly 256 bits (32 bytes)</td></tr>
-<tr><td>OTA SHA-256</td><td><code>rid_ota.c</code></td><td>SHA-256 hash mandatory, Ed25519 signature required when lock level &ge; 1</td></tr>
+<tr><td>Fix</td><th>Module</th><th>Description</th></tr>
+<tr><td>Safe JSON parsing</td><td><code>rid-app::web_config</code></td><td>All web API JSON inputs parsed with <code>serde_json</code> — prevents injection attacks</td></tr>
+<tr><td>Rate limiting</td><td><code>rid-app::web_config</code></td><td>Sliding window: 10 failed signature attempts per 60 seconds, then lockout</td></tr>
+<tr><td>Safe string handling</td><td><code>rid-app::web_config</code></td><td>All string fields use Rust's safe ownership model — no buffer overflows possible</td></tr>
+<tr><td>PSA Crypto init</td><td><code>app::main</code></td><td><code>psa_crypto_init()</code> called at boot for ESP-IDF v5+ crypto API</td></tr>
+<tr><td>Shared module</td><td><code>rid-core::security</code></td><td><code>verify_sha256()</code>, <code>verify_signed_body()</code>, <code>bytes_to_hex()</code>, <code>hex_to_bytes()</code></td></tr>
+<tr><td>Ed25519 bit check</td><td><code>rid-core::auth</code></td><td>Validates signature length is exactly 256 bits (32 bytes)</td></tr>
+<tr><td>OTA SHA-256</td><td><code>rid-app::ota</code></td><td>SHA-256 hash mandatory, Ed25519 signature required when lock level &ge; 1</td></tr>
 </table>
 </div>
 
@@ -1390,11 +1390,11 @@ git push -u origin my-feature-branch</pre>
 
 <h4>Disclaimer &amp; Acknowledgments</h4>
 <p>This is a <b>personal open-source project</b> made public for educational and research purposes. It is <b>not affiliated with, endorsed by, or derived from ArduPilot</b>. The project takes <b>inspiration</b> from the functionality of ArduPilot's ArduRemoteID system and implements a compatible Remote ID transmitter using independent code written from scratch for the ESP32 platform in Rust.</p>
-<p>The author respects all intellectual property rights. No ArduPilot source code has been copied or incorporated. The implementation follows the open ASTM F3411-22a standard and uses the independently developed <b>opendroneid-core-c</b> library (BSD-3-Clause) for ODID message packing.</p>
+<p>The author respects all intellectual property rights. No ArduPilot source code has been copied or incorporated. The implementation follows the open ASTM F3411-22a standard and uses the <b>opendroneid-sys</b> FFI bindings (BSD-3-Clause) for ODID message packing.</p>
 <p>Technologies and protocols referenced:</p>
 <ul>
 <li><b>ArduRemoteID</b> &mdash; functional inspiration from ArduPilot's Remote ID implementation</li>
-<li><b>Open Drone ID Core C</b> &mdash; Intel's open-source ODID library (BSD-3-Clause)</li>
+<li><b>OpenDroneID sys</b> &mdash; Intel's ODID FFI bindings (BSD-3-Clause)</li>
 <li><b>MAVLink</b> &mdash; lightweight communication protocol (MIT)</li>
 <li><b>MSP</b> &mdash; MultiWii Serial Protocol</li>
 <li><b>Rust + ESP-IDF</b> &mdash; Firmware in Rust, hardware glue via esp-idf-sys (Apache 2.0)</li>

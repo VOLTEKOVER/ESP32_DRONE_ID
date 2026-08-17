@@ -3,11 +3,11 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/VOLTEKOVER/ESP_DRONE_REMOTEID/ci.yml?logo=github" alt="CI"></a>
-  <a href="https://VOLTEKOVER.github.io/ESP_DRONE_REMOTEID/"><img src="https://img.shields.io/badge/BETA-000?logo=esphome&color=f9a825" alt="BETA"></a>
-  <a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/releases"><img src="https://img.shields.io/github/v/release/VOLTEKOVER/ESP_DRONE_REMOTEID?include_prereleases&logo=github&label=version" alt="Release"></a>
+  <a href="https://github.com/VOLTEKOVER/OmniRID-Universal-Drone-ID/actions/workflows/rid-rust-ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/VOLTEKOVER/OmniRID-Universal-Drone-ID/rid-rust-ci.yml?logo=github" alt="CI"></a>
+  <a href="https://VOLTEKOVER.github.io/OmniRID-Universal-Drone-ID/"><img src="https://img.shields.io/badge/BETA-000?logo=esphome&color=f9a825" alt="BETA"></a>
+  <a href="https://github.com/VOLTEKOVER/OmniRID-Universal-Drone-ID/releases"><img src="https://img.shields.io/github/v/release/VOLTEKOVER/OmniRID-Universal-Drone-ID?include_prereleases&logo=github&label=version" alt="Release"></a>
   <a href="https://www.espressif.com/"><img src="https://img.shields.io/badge/ESP32%20|%20S3%20|%20C6-000?logo=espressif" alt="Platform"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/github/license/VOLTEKOVER/ESP_DRONE_REMOTEID?color=blue" alt="License"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/VOLTEKOVER/OmniRID-Universal-Drone-ID?color=blue" alt="License"></a>
 </p>
 
 <p align="center">
@@ -24,10 +24,15 @@
 </p>
 
 <p align="center">
-  <b>Vendored Dependencies</b><br>
-  <a href="https://github.com/mavlink/c_library_v2"><code>MAVLink c_library_v2</code></a> Jul 2026 &middot;
-  <a href="https://github.com/opendroneid/core-c"><code>OpenDroneID core-c</code></a> Protocol v2 &middot;
-  <a href="https://github.com/espressif/esp-idf"><code>ESP-IDF</code></a> v6.0.1 &middot;
+  <b>Rust crates</b><br>
+  <code>rid-core</code> &middot;
+  <code>rid-interface</code> &middot;
+  <code>proto-mavlink</code> &middot;
+  <code>proto-nmea</code> &middot;
+  <code>proto-msp</code> &middot;
+  <code>out-astm</code> &middot;
+  <code>opendroneid-sys</code> (FFI) &middot;
+  <a href="https://github.com/espressif/esp-idf"><code>ESP-IDF</code></a> v6.0.1+
   <a href="https://github.com/Mbed-TLS/mbedtls"><code>mbedTLS</code></a>
 </p>
 
@@ -286,10 +291,8 @@ ESP_DRONE_REMOTEID/
 │   │   ├── wifi_nan/
 │   │   └── ble_advertise/
 │   │
-│   ├── external-libs/               # Vendored C / unsafe glue
-│   │   ├── opendroneid-core-c/
-│   │   ├── mavlink/
-│   │   └── mbedtls/
+│   ├── external-libs/               # FFI bindings
+│   │   └── opendroneid-sys/         # OpenDroneID C FFI (vendor)
 │   │
 │   └── hardware/bsp-esp32/          # Board support packages (standalone crate)
 │       ├── Cargo.toml
@@ -472,21 +475,23 @@ See LICENSE file for details.
 
 | Project | Purpose | Status |
 |---|---|---|
-| **opendroneid-core-c** | ASTM F3411 encoder/decoder | Vendored in repo |
+| **opendroneid-sys** | OpenDroneID FFI bindings (ASTM F3411 encoder/decoder) | Vendored in repo |
 | **ESP-IDF** | ESP32 SDK | v6.0.1+ |
-| **MAVLink v2** | ArduPilot/PX4 protocol | ardupilotmega dialect, vendored |
+| **proto-mavlink** | MAVLink v2 parser (pure Rust) | In-repo crate |
+| **proto-nmea** | NMEA parser (pure Rust) | In-repo crate |
+| **proto-msp** | MSP parser (pure Rust) | In-repo crate |
 | **mbedTLS** | Crypto (Ed25519, ECDSA) | ESP-IDF built-in |
-| **RID Hub** | Ground station (Electron) | Standalone app |
+| **OmniRID-Desktop** | Ground station (Electron) | Standalone app |
 
 ---
 
 ## Next Steps
 
-1. **Try the demo**: [offline config UI](https://VOLTEKOVER.github.io/ESP_DRONE_REMOTEID/config(demo).html)
+1. **Try the demo**: [offline config UI](https://VOLTEKOVER.github.io/OmniRID-Universal-Drone-ID/config(demo).html)
 2. **Build locally**: clone repo, `cargo build --workspace`, flash to ESP32
 3. **Connect**: WiFi **ESP-RID** -> `192.168.4.1`
-4. **Check documentation**: [Wiki](https://VOLTEKOVER.github.io/ESP_DRONE_REMOTEID/guide.html)
-5. **Report issues**: [GitHub Issues](https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/issues)
+4. **Check documentation**: [Wiki](https://VOLTEKOVER.github.io/OmniRID-Universal-Drone-ID/guide.html)
+5. **Report issues**: [GitHub Issues](https://github.com/VOLTEKOVER/OmniRID-Universal-Drone-ID/issues)
 
 ---
 
