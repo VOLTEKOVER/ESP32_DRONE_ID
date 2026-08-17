@@ -17,97 +17,79 @@
 </p>
 
 <p align="center">
-  <b>ASTM F3411-22a / ASD-STAN prEN 4709-002 / GB 42590-2023</b> Open DroneID transmitter.<br>
-  Parses <b>MAVLink &middot; MSP &middot; NMEA &middot; DroneCAN</b> from any flight controller.<br>
-  Broadcasts via <b>WiFi Beacon + NAN + BLE 4.0/5.0</b> with Kalman filter, Ed25519 auth, SHA-256 OTA verification, and security hardening.<br>
-  Written in <b>Rust</b> (<code>no_std</code> core, <code>esp-idf-sys</code> glue for hardware).
+  Open Drone ID transmitter compliant with <b>ASTM F3411-22a</b> / <b>ASD-STAN prEN 4709-002</b> / <b>GB 42590-2023</b>.<br>
+  Parses <b>MAVLink · MSP · NMEA · DroneCAN</b> from any flight controller.<br>
+  Broadcasts via <b>WiFi Beacon + NAN + BLE 4.0/5.0</b>, with Kalman filtering, Ed25519 signing, and SHA-256-verified OTA updates.<br>
+  Written in <b>Rust</b> (<code>no_std</code> core, <code>esp-idf-sys</code> glue for hardware access).
 </p>
 
 <p align="center">
-  <b>Rust crates</b><br>
-  <code>rid-core</code> &middot;
-  <code>rid-interface</code> &middot;
-  <code>proto-mavlink</code> &middot;
-  <code>proto-nmea</code> &middot;
-  <code>proto-msp</code> &middot;
-  <code>out-astm</code> &middot;
-  <code>opendroneid-sys</code> (FFI) &middot;
-  <a href="https://github.com/espressif/esp-idf"><code>ESP-IDF</code></a> v6.0.1+
-  <a href="https://github.com/Mbed-TLS/mbedtls"><code>mbedTLS</code></a>
-</p>
-
-<p align="center">
-  Supports: <b>ESP32, ESP32-S3, ESP32-C6</b> &nbsp;&middot;&nbsp; Includes: <b>RID Hub</b> ground station (Electron + React 19)
-</p>
-
-<p align="center">
-  <a href="https://VOLTEKOVER.github.io/ESP_DRONE_REMOTEID/"><b>Wiki & Demo</b></a>&nbsp;&nbsp;
-  <a href="https://VOLTEKOVER.github.io/ESP_DRONE_REMOTEID/config(demo).html"><b>Live Demo</b></a>
+  <a href="https://VOLTEKOVER.github.io/OmniRID-Universal-Drone-ID/"><b>Wiki & Demo</b></a>&nbsp;&nbsp;
+  <a href="https://VOLTEKOVER.github.io/OmniRID-Universal-Drone-ID/config(demo).html"><b>Live Demo</b></a>
 </p>
 
 ---
 
 > [!CAUTION]
-> ## NO RELEASE UNTIL SECURITY AUDIT IS COMPLETE
+> ## ⚠️ No release until the security audit is complete
 >
-> **This firmware has NOT been security tested yet.**
+> **This firmware has not been security tested yet.**
 > No official release will be published until a full security audit
 > (penetration testing, firmware analysis, protocol fuzzing) has been
-> performed and all critical/high findings are resolved.
+> performed and all critical/high findings resolved.
 >
-> **Do NOT use this in production aircraft.**
-> Use only for development and testing on the ground.
->
-> See [SECURITY.md](SECURITY.md) for details.
+> **Do not use on production aircraft.** Development and ground testing only.
+> Details in [SECURITY.md](SECURITY.md).
 
 ---
 
 ## Table of Contents
 
-1. [Quick Start](#-quick-start)
-2. [Features](#-features)
-3. [Communication Overview](#-communication-overview)
-4. [Hardware](#-hardware)
-5. [Build](#️-build)
-6. [Project Structure](#-project-structure)
-7. [Development Status](#-development-status)
-8. [Testing](#-testing)
-9. [Documentation](#-documentation)
-10. [Security Notes](#-security-notes)
-11. [Contributing](#-contributing)
-12. [License & Ecosystem](#-license)
-13. [Next Steps](#-next-steps)
+1. [Quick Start](#quick-start)
+2. [Features](#features)
+3. [Communication](#communication)
+4. [Hardware](#hardware)
+5. [Build](#build)
+6. [Project Structure](#project-structure)
+7. [Development Status](#development-status)
+8. [Testing](#testing)
+9. [Documentation](#documentation)
+10. [Security](#security)
+11. [Contributing](#contributing)
+12. [License & Ecosystem](#license--ecosystem)
+13. [Next Steps](#next-steps)
 
 ---
 
 ## Quick Start
 
-> No hardware yet? Try the **[offline demo](https://VOLTEKOVER.github.io/ESP_DRONE_REMOTEID/config(demo).html)** first — full simulation, no ESP32 required.
+> No hardware yet? Try the **[offline demo](https://VOLTEKOVER.github.io/OmniRID-Universal-Drone-ID/config(demo).html)** first — full simulation, no ESP32 required.
 
-### Host (Linux / macOS / Windows)
+### Host build (Linux / macOS / Windows)
 
 ```bash
-git clone https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID.git
-cd ESP_DRONE_REMOTEID
-cargo build --workspace          # builds all crates for host
+git clone https://github.com/VOLTEKOVER/OmniRID-Universal-Drone-ID.git
+cd OmniRID-Universal-Drone-ID
+cargo build --workspace          # builds all crates for the host
 cargo test --workspace           # runs 312 tests
 ```
 
-### ESP32 Cross-Build
+### ESP32 cross-build
+
+Requires Rust nightly with the ESP32 target + the ESP-IDF SDK:
 
 ```bash
-# Requires Rust nightly with the ESP32 target + ESP-IDF SDK
 cargo +esp build --target xtensa-esp32-none-elf    --manifest-path firmware/Cargo.toml
 cargo +esp build --target xtensa-esp32s3-none-elf  --manifest-path firmware/Cargo.toml
 cargo +esp build --target riscv32imc-esp-none-elf   --manifest-path firmware/Cargo.toml
 ```
 
-### Flash & Connect
+### Flash & connect
 
 | Step | Action |
 |:---:|---|
 | 1 | Flash the firmware to your ESP32 via USB |
-| 2 | Connect to WiFi **ESP-RID** |
+| 2 | Connect to WiFi network **ESP-RID** |
 | 3 | Open `http://192.168.4.1` to configure |
 | 4 | Run `rid-hub` for the ground station dashboard |
 
@@ -115,31 +97,31 @@ cargo +esp build --target riscv32imc-esp-none-elf   --manifest-path firmware/Car
 
 ## Features
 
-### Radio & Protocols
+### Radio & protocols
 
 | Feature | Details |
 |---|---|
-| **Broadcast** | WiFi Beacon (802.11 mgmt) + WiFi NAN + BLE 4.0 Legacy + BLE 5.0 Long Range (dual instances, S3/C6) |
-| **Input protocols** | MAVLink v2 (ArduPilot/PX4), MSP (Betaflight/iNAV), NMEA, DroneCAN/CAN bus — auto-detect |
-| **GPS source** | From flight controller (MAVLink/MSP/NMEA/CAN) **or** direct GPS module, takeoff location capture |
-| **Position filter** | 1D x 3 Kalman (lat/lon/alt) with velocity prediction, 3s timeout |
+| **Broadcast** | WiFi Beacon (802.11 mgmt) + WiFi NAN + BLE 4.0 Legacy + BLE 5.0 Long Range (dual instance on S3/C6) |
+| **Input protocols** | MAVLink v2 (ArduPilot/PX4), MSP (Betaflight/iNAV), NMEA, DroneCAN/CAN bus — auto-detected |
+| **GPS source** | From flight controller (MAVLink/MSP/NMEA/CAN) or a direct GPS module, with takeoff-location capture |
+| **Position filter** | 1D × 3 Kalman filter (lat/lon/alt) with velocity prediction, 3 s timeout |
 
-### Security & Compliance
+### Security & compliance
 
 | Feature | Details |
 |---|---|
 | **Authentication** | Ed25519 signing (ASTM F3411-22a compliant), 4 pages per broadcast cycle |
-| **Lock levels** | 3-tier: Normal / Ed25519 signed / eFuse permanent |
-| **OTA updates** | WiFi AP with client-side SHA-256 (Web Crypto) + Ed25519 signature verification |
-| **Security hardening** | Safe JSON parsing, rate limiting (10 fails/60s), bounded strings, `psa_crypto_init()` |
+| **Lock levels** | 3 tiers: Normal / Ed25519 signed / eFuse permanent |
+| **OTA updates** | WiFi AP with client-side SHA-256 verification (Web Crypto) + Ed25519 signature |
+| **Hardening** | Safe JSON parsing, rate limiting (10 failed attempts/60s), bounded strings, `psa_crypto_init()` |
 | **Configuration** | 70+ parameters: UAS ID, rates, power, public keys, auth, lock, lighting |
 
-### User Interface
+### User interface
 
 | Feature | Details |
 |---|---|
 | **Web UI** | Built-in WiFi AP at `192.168.4.1` + REST API + live telemetry |
-| **CLI** | Raw UART REPL (14 commands: status, config, restart, patrol, transmit, etc.) |
+| **CLI** | UART REPL (14 commands: status, config, restart, patrol, transmit, etc.) |
 | **Storage** | Persistent NVS configuration, eFuse tamper detection |
 | **Dashboard** | Dark/light mode, responsive (mobile/tablet/desktop) |
 
@@ -147,16 +129,16 @@ cargo +esp build --target riscv32imc-esp-none-elf   --manifest-path firmware/Car
   <img src="docs/images/dashboard.png" alt="RID Hub Dashboard" width="820">
 </p>
 
-### Hardware & Lighting
+### Hardware & lighting
 
 | Feature | Details |
 |---|---|
-| **Status LED** | RGB PWM (LEDC) with 7 states + TX flash (configurable GPIO) |
-| **Addressable LED** | WS2812 RGB (RMT driver) with HSV/RGB + brightness control |
-| **GPIO Lighting** | 5-channel pattern outputs (OFF/SOLID/BLINK_SLOW/BLINK_FAST/ARMED/GPS_FLASH) with phase offsets |
-| **Demo mode** | Simulated GPS patrol (Rome Colosseum, 200 m radius, 6 m/s) |
+| **Status LED** | RGB PWM (LEDC), 7 states + TX flash (configurable GPIO) |
+| **Addressable LED** | WS2812 RGB (RMT driver), HSV/RGB control with brightness |
+| **GPIO lighting** | 5-channel patterns (OFF/SOLID/BLINK_SLOW/BLINK_FAST/ARMED/GPS_FLASH) with phase offsets |
+| **Demo mode** | Simulated GPS patrol (Colosseum, 200 m radius, 6 m/s) |
 
-### Ground Station (RID Hub)
+### Ground station (RID Hub)
 
 | Component | Stack |
 |---|---|
@@ -167,9 +149,9 @@ cargo +esp build --target riscv32imc-esp-none-elf   --manifest-path firmware/Car
 
 ---
 
-## Communication Overview
+## Communication
 
-### Input (GPS from Flight Controller)
+### Input (GPS from flight controller)
 
 | Protocol | Format | Details |
 |---|---|---|
@@ -178,7 +160,7 @@ cargo +esp build --target riscv32imc-esp-none-elf   --manifest-path firmware/Car
 | **NMEA 0183** | Direct GPS module | `$GPGGA`, `$GNGGA`, `$GPRMC`, `$GNRMC`, `$GPVTG`, `$GNVTG` |
 | **DroneCAN** | CAN bus | `uavcan.equipment.gnss.Fix2` (TWAI decode) |
 
-### Output (RID Broadcast)
+### Output (RID broadcast)
 
 | Medium | Standard | Range |
 |---|---|---|
@@ -187,7 +169,7 @@ cargo +esp build --target riscv32imc-esp-none-elf   --manifest-path firmware/Car
 | **BLE 4.0** | Legacy advertising | ~50 m |
 | **BLE 5.0** | Coded PHY (S3/C6) | ~200+ m (LR mode) |
 
-### Configuration & Control
+### Configuration & control
 
 | Channel | Type | Access |
 |---|---|---|
@@ -200,7 +182,7 @@ cargo +esp build --target riscv32imc-esp-none-elf   --manifest-path firmware/Car
 
 ## Hardware
 
-### Minimum Wiring (ESP32 + Flight Controller)
+### Minimum wiring (ESP32 + flight controller)
 
 ```
 Flight Controller    ESP32 (or variant)
@@ -210,13 +192,13 @@ GND             ->   GND
 5V (BEC)        ->   5V / VIN
 ```
 
-> **NMEA tap**: add a **1 kohm series resistor** on the tap line to prevent backfeed.
+> **NMEA tap**: add a **1 kΩ series resistor** on the tap line to prevent backfeed.
 
-### Recommended: Seeed XIAO ESP32-C6 (Zero-solder Kit)
+### Recommended: Seeed XIAO ESP32-C6 (zero-solder kit)
 
 | Feature | Benefit |
 |---|---|
-| **21 x 17.8 mm** | Fits in any enclosure |
+| **21 × 17.8 mm** | Fits in any enclosure |
 | **USB-C + LiPo charger** | Battery-ready, no soldering |
 | **WiFi 6 + BT 5.3** | Better range & throughput |
 | **802.15.4 capable** | Future mesh support |
@@ -230,18 +212,18 @@ Full BOM & pinout: [`docs/prototype_bom.md`](docs/prototype_bom.md)
 
 ## Build
 
-### Online (No Toolchain)
+### Online (no toolchain)
 
-Push to `main` -> automatic CI for all targets via GitHub Actions.
-See [Latest builds](https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/actions/workflows/ci.yml)
+Every push to `main` triggers automatic CI for all targets via GitHub Actions.
+See [latest builds](https://github.com/VOLTEKOVER/OmniRID-Universal-Drone-ID/actions/workflows/rid-rust-ci.yml).
 
-### Host Build
+### Host build
 
 ```bash
 cargo build --workspace
 ```
 
-### ESP32 Cross-Build (nightly + ESP-IDF)
+### ESP32 cross-build (nightly + ESP-IDF)
 
 ```bash
 cargo +esp build --target xtensa-esp32-none-elf    --manifest-path firmware/Cargo.toml
@@ -249,7 +231,7 @@ cargo +esp build --target xtensa-esp32s3-none-elf  --manifest-path firmware/Carg
 cargo +esp build --target riscv32imc-esp-none-elf   --manifest-path firmware/Cargo.toml
 ```
 
-### Run Tests
+### Run tests
 
 ```bash
 cargo test --workspace       # 312 tests, all passing, clippy clean
@@ -260,12 +242,11 @@ cargo test --workspace       # 312 tests, all passing, clippy clean
 ## Project Structure
 
 ```
-ESP_DRONE_REMOTEID/
-├── OmniRID/              # Rust workspace root
+OmniRID-Universal-Drone-ID/
+├── OmniRID/                         # Rust workspace root
 │   ├── Cargo.toml                   # Workspace manifest
 │   │
 │   ├── firmware/                    # Core firmware (no_std, esp-idf-sys glue)
-│   │   ├── Cargo.toml
 │   │   └── src/
 │   │       ├── main.rs              # Entry point
 │   │       ├── beacon.rs            # WiFi Beacon + NAN TX
@@ -291,30 +272,27 @@ ESP_DRONE_REMOTEID/
 │   │   ├── wifi_nan/
 │   │   └── ble_advertise/
 │   │
-│   ├── external-libs/               # FFI bindings
-│   │   └── opendroneid-sys/         # OpenDroneID C FFI (vendor)
+│   ├── external-libs/
+│   │   └── opendroneid-sys/         # OpenDroneID C FFI bindings (vendored)
 │   │
-│   └── hardware/bsp-esp32/          # Board support packages (standalone crate)
-│       ├── Cargo.toml
-│       └── src/lib.rs
+│   └── hardware/bsp-esp32/          # Board support package (standalone crate)
 │
-├── OmniRID-Desktop/                         # Ground station (Electron)
+├── OmniRID-Desktop/                 # Ground station (Electron)
 │   ├── main.js
 │   ├── preload.js
 │   ├── src/
 │   │   ├── decoder.js               # ASTM F3411-22a decoder
 │   │   ├── tracker.js               # Device tracking + CSV/KML
 │   │   └── capture.js               # WiFi/BLE/Serial capture
-│   ├── renderer/src/
-│   │   ├── App.tsx
-│   │   ├── components/
-│   │   │   ├── DashboardTab.tsx
-│   │   │   ├── DevicesTab.tsx
-│   │   │   ├── MapTab.tsx
-│   │   │   ├── TimelineTab.tsx
-│   │   │   └── CaptureTab.tsx
-│   │   └── hooks/useRidApi.ts
-│   └── package.json
+│   └── renderer/src/
+│       ├── App.tsx
+│       ├── components/
+│       │   ├── DashboardTab.tsx
+│       │   ├── DevicesTab.tsx
+│       │   ├── MapTab.tsx
+│       │   ├── TimelineTab.tsx
+│       │   └── CaptureTab.tsx
+│       └── hooks/useRidApi.ts
 │
 ├── docs/                            # GitHub Pages
 │   ├── index.html
@@ -324,56 +302,53 @@ ESP_DRONE_REMOTEID/
 │   └── images/
 │
 ├── .github/workflows/
-│   ├── ci.yml                       # Host test + ESP32-C6 cross-build
+│   ├── rid-rust-ci.yml              # Host tests + ESP32-C6 cross-build
 │   ├── release.yml
 │   ├── rid-hub-ci.yml
 │   └── dependabot.yml
+│
 ├── SECURITY.md
 ├── LICENSE                          # Apache 2.0
-└── README.md                        # This file
+└── README.md
 ```
 
 ---
 
 ## Development Status
 
-### Rust Port Progress
+The legacy C firmware (`ESP32_DRONE_REMOTE_ID_Firmware/`) has been **removed**. All functionality has been ported to Rust. The old repository was fully replaced by this Rust workspace on 2026-08-17.
 
 | Component | Status |
-|---|---|
-| **Workspace structure** | 4 boxes + standalone BSP crate |
-| **Firmware core** | Main orchestrator, NVS, CLI, web server |
-| **WiFi Beacon + NAN TX** | Implemented (esp-idf-sys bindings) |
-| **BLE 4.0/5.0 TX** | Implemented (dual instances on S3/C6) |
-| **MAVLink v2 parser** | Implemented (MESSAGE_PACK, ARM_STATUS, 6 ODID submessages) |
-| **MSP parser** | Implemented |
-| **NMEA parser** | Implemented |
-| **DroneCAN (TWAI)** | Implemented |
-| **Kalman filter** | 1D x 3 with velocity prediction |
-| **Ed25519 auth** | ASTM F3411-22a compliant, 4 pages/cycle |
-| **OTA updates** | SHA-256 + Ed25519 verification, dual-partition rollback |
-| **Security hardening** | Safe JSON, rate limiting, bounded strings |
-| **WS2812 RGB LED** | RMT driver, HSV/RGB |
-| **GPIO lighting** | 5-channel patterns with phase offsets |
-| **Demo patrol** | Simulated GPS (Rome Colosseum) |
-| **CI** | Host tests + ESP32-C6 cross-build on GitHub Actions |
-
-### Legacy C Firmware
-
-The original C firmware (`ESP32_DRONE_REMOTE_ID_Firmware/`) has been **deleted**. All functionality has been ported to Rust. The old repository was fully replaced by this Rust workspace on 2026-08-17.
+|---|:---:|
+| Workspace structure | ✅ 4 crates + standalone BSP crate |
+| Firmware core | ✅ Main orchestrator, NVS, CLI, web server |
+| WiFi Beacon + NAN TX | ✅ Implemented (esp-idf-sys bindings) |
+| BLE 4.0/5.0 TX | ✅ Implemented (dual instance on S3/C6) |
+| MAVLink v2 parser | ✅ Implemented (MESSAGE_PACK, ARM_STATUS, 6 ODID submessages) |
+| MSP parser | ✅ Implemented |
+| NMEA parser | ✅ Implemented |
+| DroneCAN (TWAI) | ✅ Implemented |
+| Kalman filter | ✅ 1D × 3 with velocity prediction |
+| Ed25519 auth | ✅ ASTM F3411-22a compliant, 4 pages/cycle |
+| OTA updates | ✅ SHA-256 + Ed25519 verification, dual-partition rollback |
+| Security hardening | ✅ Safe JSON, rate limiting, bounded strings |
+| WS2812 RGB LED | ✅ RMT driver, HSV/RGB |
+| GPIO lighting | ✅ 5-channel patterns with phase offsets |
+| Demo patrol | ✅ Simulated GPS (Colosseum) |
+| CI | ✅ Host tests + ESP32-C6 cross-build on GitHub Actions |
 
 ---
 
 ## Testing
 
-### Firmware Tests (Rust)
+### Firmware tests (Rust)
 
 ```bash
-cargo test --workspace       # 312 tests, all passing
-cargo clippy --workspace -- -D warnings    # zero warnings
+cargo test --workspace                       # 312 tests, all passing
+cargo clippy --workspace -- -D warnings      # zero warnings
 ```
 
-### CLI Commands (after flash)
+### CLI commands (after flashing)
 
 ```
 > status              # Show GPS, TX rates, identity state
@@ -382,19 +357,19 @@ cargo clippy --workspace -- -D warnings    # zero warnings
 > patrol              # Start demo GPS patrol
 ```
 
-### Ground Station (RID Hub)
+### Ground station (RID Hub)
 
 ```bash
 cd OmniRID-Desktop
 npm install
 npm run dev            # http://localhost:5173
-npm run build          # Production build
-npm start              # Launch Electron
+npm run build           # Production build
+npm start                # Launch Electron
 ```
 
-### Web UI Demo (No Hardware)
+### Web UI demo (no hardware)
 
-Live demo at [VOLTEKOVER.github.io/ESP_DRONE_REMOTEID/config(demo).html](https://VOLTEKOVER.github.io/ESP_DRONE_REMOTEID/config(demo).html) with simulated GPS, battery, counters, logs.
+Live demo at [config(demo).html](https://VOLTEKOVER.github.io/OmniRID-Universal-Drone-ID/config(demo).html), with simulated GPS, battery, counters, and logs.
 
 ---
 
@@ -402,76 +377,72 @@ Live demo at [VOLTEKOVER.github.io/ESP_DRONE_REMOTEID/config(demo).html](https:/
 
 | Resource | Link |
 |---|---|
-| **Quick Start** | [GitHub Pages](https://VOLTEKOVER.github.io/ESP_DRONE_REMOTEID/) |
-| **Technical Wiki** | [Protocols, wiring, API, security](https://VOLTEKOVER.github.io/ESP_DRONE_REMOTEID/guide.html) |
+| **Quick Start** | [GitHub Pages](https://VOLTEKOVER.github.io/OmniRID-Universal-Drone-ID/) |
+| **Technical Wiki** | [Protocols, wiring, API, security](https://VOLTEKOVER.github.io/OmniRID-Universal-Drone-ID/guide.html) |
 | **Hardware BOM** | [`docs/prototype_bom.md`](docs/prototype_bom.md) |
-| **API Reference** | Web UI `/api/*` endpoints (documented in guide) |
+| **API Reference** | Web UI `/api/*` endpoints (documented in the guide) |
 
 ---
 
-## Security Notes
+## Security
 
-### Authentication (Lock System)
+### Authentication (lock system)
 
 | Level | Name | Behavior |
-|---|---|---|
-| **0** | Normal | No restrictions, read all config |
-| **1** | Ed25519 Signed | Signature-based control for sensitive commands (restart, reset, OTA) |
-| **2** | eFuse Permanent | Reads `EFUSE_BLK3` magic; irreversible (chip erase only) |
+|:---:|---|---|
+| **0** | Normal | No restrictions, full read access to config |
+| **1** | Ed25519 signed | Signature-based control for sensitive commands (restart, reset, OTA) |
+| **2** | eFuse permanent | Reads the magic value in `EFUSE_BLK3`; irreversible (chip erase only) |
 
-### OTA Updates
+### OTA updates
 
-- **Client-side SHA-256** computed via Web Crypto API (`crypto.subtle.digest`)
-- **Mandatory `X-Expected-SHA256`** header (hex-encoded SHA-256 of firmware body)
-- **Optional `X-Signature`** header (Ed25519 signature when lock level >= 1)
-- Server-side SHA-256 + Ed25519 verification via shared security module
-- Rejects mismatched or missing hashes — prevents corrupt or malicious firmware
+- **Client-side SHA-256** computed via the Web Crypto API (`crypto.subtle.digest`)
+- Mandatory **`X-Expected-SHA256`** header (hex-encoded SHA-256 of the firmware body)
+- Optional **`X-Signature`** header (Ed25519 signature, when lock level ≥ 1)
+- Server-side SHA-256 + Ed25519 verification via the shared security module
+- Mismatched or missing hashes are rejected, preventing corrupt or malicious firmware
 - Dual-OTA partition scheme with automatic rollback on failure
 
-### Security Hardening
+### Hardening
 
-- **Safe JSON parsing** — all web API inputs parsed safely (no unsafe `cJSON` in Rust)
+- **Safe JSON parsing** — all web API inputs are validated (no unsafe `cJSON` in Rust)
 - **Rate limiting** — 10 failed signature attempts per 60 s sliding window
 - **Bounded strings** — all string fields use stack-allocated or length-bounded types
 - **`psa_crypto_init()`** — PSA Crypto API initialized at boot for ESP-IDF v5+
-- **No unsafe in hot paths** — Rust type system enforces memory safety at compile time
+- **No unsafe in hot paths** — memory safety enforced by Rust's type system at compile time
 
-### Key Storage
+### Key storage
 
-- Ed25519 **private key** stored in NVS (encrypted at rest if flash encryption enabled)
-- **Public keys** (up to 5) for lock level command authentication
-- Consider `CONFIG_SECURE_FLASH_ENC` on production builds
+- The Ed25519 **private key** is stored in NVS (encrypted at rest if flash encryption is enabled)
+- Up to **5 public keys** are supported for command authentication at each lock level
+- Consider enabling `CONFIG_SECURE_FLASH_ENC` on production builds
 
 ---
 
 ## Contributing
 
-Contributions welcome! Please:
-
-1. Use Rust edition 2024, follow `rustfmt` defaults
+1. Use Rust edition 2024 and follow `rustfmt` defaults
 2. Run `cargo test --workspace` and `cargo clippy --workspace -- -D warnings` before submitting
 3. Test on at least one target (ESP32 / S3 / C6)
-4. Update documentation for major changes
-5. Create PR with description + hardware test notes
+4. Update documentation for significant changes
+5. Open a PR with a description and hardware test notes
 
-See [`PULL_REQUEST_TEMPLATE.md`](.github/PULL_REQUEST_TEMPLATE.md) for the full checklist.
+Full checklist: [`PULL_REQUEST_TEMPLATE.md`](.github/PULL_REQUEST_TEMPLATE.md)
 
 ---
 
-## License
+## License & Ecosystem
 
 ```
-OmniRID — Open DroneID Transmitter for ESP32
+OmniRID — Open Drone ID transmitter for ESP32
 Copyright (C) 2024-2026 VOLTEKOVER
 
 Based on Intel Open Drone ID (https://github.com/opendroneid)
 Copyright (C) 2019-2023 Intel Corporation
 
 Licensed under the Apache License, Version 2.0.
-See LICENSE file for details.
+See the LICENSE file for details.
 ```
-
-### Ecosystem
 
 | Project | Purpose | Status |
 |---|---|---|
@@ -480,7 +451,7 @@ See LICENSE file for details.
 | **proto-mavlink** | MAVLink v2 parser (pure Rust) | In-repo crate |
 | **proto-nmea** | NMEA parser (pure Rust) | In-repo crate |
 | **proto-msp** | MSP parser (pure Rust) | In-repo crate |
-| **mbedTLS** | Crypto (Ed25519, ECDSA) | ESP-IDF built-in |
+| **mbedTLS** | Crypto (Ed25519, ECDSA) | Built into ESP-IDF |
 | **OmniRID-Desktop** | Ground station (Electron) | Standalone app |
 
 ---
@@ -488,9 +459,9 @@ See LICENSE file for details.
 ## Next Steps
 
 1. **Try the demo**: [offline config UI](https://VOLTEKOVER.github.io/OmniRID-Universal-Drone-ID/config(demo).html)
-2. **Build locally**: clone repo, `cargo build --workspace`, flash to ESP32
-3. **Connect**: WiFi **ESP-RID** -> `192.168.4.1`
-4. **Check documentation**: [Wiki](https://VOLTEKOVER.github.io/OmniRID-Universal-Drone-ID/guide.html)
+2. **Build locally**: clone the repo, `cargo build --workspace`, flash to an ESP32
+3. **Connect**: WiFi **ESP-RID** → `192.168.4.1`
+4. **Check the docs**: [Wiki](https://VOLTEKOVER.github.io/OmniRID-Universal-Drone-ID/guide.html)
 5. **Report issues**: [GitHub Issues](https://github.com/VOLTEKOVER/OmniRID-Universal-Drone-ID/issues)
 
 ---
