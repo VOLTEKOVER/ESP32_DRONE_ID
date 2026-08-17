@@ -23,3 +23,15 @@ updates:
       prefix: "deps"
       include: "scope"
     open-pull-requests-limit: 2
+
+  - package-ecosystem: "cargo"
+    directory: "/firmware-rid"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Europe/Rome"
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+    open-pull-requests-limit: 2

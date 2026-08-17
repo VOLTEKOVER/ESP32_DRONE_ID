@@ -1,0 +1,11 @@
+[package]
+name = "bsp-sim"
+version = "0.1.0"
+edition = "2021"
+description = "Host simulator for the Remote ID firmware (no hardware required)"
+
+[dependencies]
+rid-core = { path = "../rid-core" }
+rid-interface = { path = "../rid-interface" }
+out-astm = { path = "../../outputs/out-astm" }
+opendroneid-sys = { path = "../../external-libs/opendroneid-sys" }

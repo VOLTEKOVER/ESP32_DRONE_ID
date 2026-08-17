@@ -1,0 +1,65 @@
+name: Update vendored OpenDroneID
+
+on:
+  schedule:
+    # Every Monday 06:00 UTC: check for a new upstream release.
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Upstream tag (default: latest release)"
+        required: false
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update:
+    name: Update to ${{ inputs.tag || 'latest' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+
+      - name: Resolve upstream tag
+        id: tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ -n "${{ inputs.tag }}" ]; then
+            echo "tag=${{ inputs.tag }}" >> "$GITHUB_OUTPUT"
+          else
+            tag="$(gh api repos/opendroneid/opendroneid-core-c/releases/latest --jq .tag_name)"
+            echo "tag=${tag}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Update vendored files
+        working-directory: firmware-rid
+        run: ./scripts/update-opendroneid.sh "${{ steps.tag.outputs.tag }}"
+
+      - name: Open pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="${{ steps.tag.outputs.tag }}"
+          branch="ci/opendroneid-${tag}"
+          if git diff --quiet; then
+            echo "No changes: vendored library already at ${tag}"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "${branch}"
+          git add firmware-rid/external-libs/opendroneid-sys/vendor
+          git commit -m "chore(opendroneid-sys): vendored library to ${tag}"
+          git push origin "${branch}"
+          gh pr create \
+            --base main \
+            --head "${branch}" \
+            --title "Update vendored OpenDroneID to ${tag}" \
+            --body "Automated update of the vendored OpenDroneID C library.
+
+The layout-parity tests in \`opendroneid-sys\` and the byte-exact tests in \`out-astm\` gate this PR: if the C struct layout or encoder behaviour changed, update the FFI mirror in \`external-libs/opendroneid-sys/src/lib.rs\` in this same PR."

@@ -1,0 +1,17 @@
+[workspace]
+resolver = "2"
+members = [
+    "firmware/*",
+    "inputs/*",
+    "outputs/*",
+    "external-libs/*",
+]
+# hardware/* (bsp-esp32, futuri bsp-*) resta fuori: target triple diverso
+# (xtensa/riscv32imc) e toolchain dedicata (espup); crate standalone con il
+# proprio [workspace].
+exclude = ["hardware"]
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = true

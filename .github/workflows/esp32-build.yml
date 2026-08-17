@@ -1,0 +1,80 @@
+name: ESP32 Cross-Build
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'firmware-rid/**'
+      - 'hardware/**'
+      - '.github/workflows/esp32-build.yml'
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - 'firmware-rid/**'
+      - 'hardware/**'
+      - '.github/workflows/esp32-build.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  esp32c6:
+    name: ESP32-C6 cross-build
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: firmware-rid
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Rust (stable)
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: riscv32imac-unknown-none-elf
+
+      - name: Install espup
+        run: cargo install espup
+
+      - name: Install ESP-IDF Rust ecosystem
+        run: espup install --targets esp32c6
+
+      - name: Cache Cargo
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: firmware-rid
+          key: esp32c6
+
+      - name: Cache ESP-IDF SDK
+        uses: actions/cache@v4
+        id: idf-cache
+        with:
+          path: |
+            ~/.espressif
+            ~/esp-idf
+          key: esp-idf-${{ runner.os }}-${{ hashFiles('firmware-rid/hardware/bsp-esp32/Cargo.toml') }}
+          restore-keys: |
+            esp-idf-${{ runner.os }}-
+
+      # --- Host workspace (no ESP-IDF needed) ---
+
+      - name: Build host workspace (--locked)
+        run: cargo build --workspace --locked
+
+      - name: Test host workspace (--locked)
+        run: cargo test --workspace --locked
+
+      - name: Clippy host workspace (-D warnings)
+        run: cargo clippy --workspace --all-targets --locked -- -D warnings
+
+      # --- ESP32-C6 cross-build (needs ESP-IDF toolchain) ---
+
+      - name: Cross-build bsp-esp32 for ESP32-C6
+        shell: bash
+        working-directory: firmware-rid/hardware/bsp-esp32
+        run: |
+          source ~/export-esp.sh
+          cargo build --features esp32c6,hardware --target riscv32imac-unknown-none-elf

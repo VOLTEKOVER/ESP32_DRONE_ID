@@ -1,0 +1,8 @@
+[package]
+name = "proto-nmea"
+version = "0.1.0"
+edition = "2021"
+description = "NMEA GPS parser input (port of nmea_parser.c), implements the rid-interface GpsSource contract"
+
+[dependencies]
+rid-interface = { path = "../../firmware/rid-interface" }

@@ -1,0 +1,7 @@
+[package]
+name = "rid-interface"
+version = "0.1.0"
+edition = "2021"
+description = "Neutral contracts (traits and types) for the modular Remote ID firmware"
+
+[dependencies]

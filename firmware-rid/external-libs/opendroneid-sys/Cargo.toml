@@ -1,0 +1,12 @@
+[package]
+name = "opendroneid-sys"
+version = "0.1.0"
+edition = "2021"
+description = "Bindings to the official Open Drone ID C encoder (vendored, Fase 3)"
+links = "opendroneid"
+build = "build.rs"
+
+[dependencies]
+
+[build-dependencies]
+cc = "1"

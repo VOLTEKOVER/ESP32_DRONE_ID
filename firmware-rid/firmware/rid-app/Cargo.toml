@@ -1,0 +1,17 @@
+[package]
+name = "rid-app"
+version = "0.1.0"
+edition = "2021"
+description = "Board-agnostic Remote ID application layer, ported from components/esp_remote_id (config, web JSON API, CLI, security primitives, state, NVS contract, BLE framing). Pure no_std+alloc: builds and tests on any host."
+license = "MIT"
+
+[dependencies]
+rid-core = { path = "../rid-core" }
+rid-interface = { path = "../rid-interface" }
+out-astm = { path = "../../outputs/out-astm" }
+opendroneid-sys = { path = "../../external-libs/opendroneid-sys" }
+serde_json = { version = "1", default-features = false, features = ["alloc", "preserve_order", "arbitrary_precision"] }
+sha2 = { version = "0.10", default-features = false }
+
+[dev-dependencies]
+ed25519-dalek = { version = "2", default-features = false, features = ["std"] }

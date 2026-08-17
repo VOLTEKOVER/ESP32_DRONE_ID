@@ -1,0 +1,12 @@
+[package]
+name = "app"
+version = "0.1.0"
+edition = "2021"
+description = "Remote ID application layer (Fase 5): assembles BSP + inputs + outputs into the rid-core hub. Port of the esp_remote_id.c glue (esp_rid_init/set_config/factory_reset) plus the /api/capabilities build descriptor."
+license = "MIT"
+
+[dependencies]
+rid-core = { path = "../rid-core" }
+rid-interface = { path = "../rid-interface" }
+rid-app = { path = "../rid-app" }
+serde_json = { version = "1", default-features = false, features = ["alloc", "preserve_order", "arbitrary_precision"] }
