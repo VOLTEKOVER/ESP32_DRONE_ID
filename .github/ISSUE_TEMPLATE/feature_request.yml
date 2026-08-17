@@ -39,7 +39,7 @@ body:
       label: Component scope
       options:
         - Firmware (ESP32)
-        - RID Hub (desktop app)
+        - OmniRID Desktop (desktop app)
         - Web configuration
         - Documentation
         - Build / CI

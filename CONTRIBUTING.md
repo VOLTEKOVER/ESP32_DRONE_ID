@@ -22,7 +22,7 @@ cargo clippy --workspace -- -D warnings   # lint
 ### Building RID Hub (Desktop App)
 
 ```bash
-cd RID_Hub
+cd OmniRID-Desktop
 npm ci
 npm start                    # run in dev mode
 npx electron-builder --dir   # pack without installer
@@ -42,7 +42,7 @@ OmniRID/
 ├── external-libs/         # Vendored C dependencies (opendroneid-sys)
 └── hardware/bsp-esp32/    # ESP-IDF glue (standalone workspace)
 
-RID_Hub/                   # Electron desktop app
+OmniRID-Desktop/                   # Electron desktop app
 docs/                      # GitHub Pages documentation
 ```
 

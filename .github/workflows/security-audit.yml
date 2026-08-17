@@ -1,0 +1,58 @@
+name: Security Audit
+
+on:
+  push:
+    branches: [ "main", "universal" ]
+  pull_request:
+    branches: [ "main", "universal" ]
+  schedule:
+    - cron: "0 8 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  cargo-audit:
+    name: Vulnerability audit
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: OmniRID
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install cargo-audit
+        run: cargo install cargo-audit
+
+      - name: Audit dependencies
+        run: cargo audit
+
+  cargo-deny:
+    name: License & advisory check
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: OmniRID
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install cargo-deny
+        run: cargo install cargo-deny
+
+      - name: Check advisories
+        run: cargo deny check advisories
+
+      - name: Check licenses
+        run: cargo deny check licenses
+
+      - name: Check bans
+        run: cargo deny check bans

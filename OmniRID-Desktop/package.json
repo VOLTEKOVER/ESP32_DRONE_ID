@@ -1,7 +1,7 @@
 {
-  "name": "rid-hub",
+  "name": "omnirid-desktop",
   "version": "1.0.0",
-  "description": "RID Hub — Open DroneID Ground Station",
+  "description": "OmniRID Desktop — Open DroneID Ground Station",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
@@ -9,8 +9,8 @@
     "dist": "electron-builder"
   },
   "build": {
-    "appId": "com.votekover.rid-hub",
-    "productName": "RID Hub",
+    "appId": "com.votekover.omnirid-desktop",
+    "productName": "OmniRID Desktop",
     "directories": {
       "output": "release"
     },

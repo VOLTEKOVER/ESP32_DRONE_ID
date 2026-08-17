@@ -16,7 +16,7 @@ Fixes #
 
 - [ ] Firmware (esp_remote_id)
 - [ ] Web UI (config.html / guide.html)
-- [ ] RID Hub (desktop app)
+- [ ] OmniRID Desktop (desktop app)
 - [ ] Documentation (docs/)
 - [ ] CI / workflows
 

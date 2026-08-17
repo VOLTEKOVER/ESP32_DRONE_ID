@@ -68,7 +68,7 @@ function createWindow() {
   const isMac = process.platform === 'darwin';
   mainWindow = new BrowserWindow({
     width: 1280, height: 860, minWidth: 800, minHeight: 600,
-    title: 'RID Hub',
+    title: 'OmniRID Desktop',
     frame: isMac,
     titleBarStyle: isMac ? 'hidden' : 'default',
     ...(isMac ? { trafficLightPosition: { x: 12, y: 8 } } : {}),

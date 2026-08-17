@@ -1,4 +1,4 @@
-name: Release RID Hub
+name: Release OmniRID Desktop
 
 on:
   push:
@@ -9,8 +9,8 @@ permissions:
   contents: read
 
 jobs:
-  build-ridhub-windows:
-    name: RID Hub (Windows)
+  build-omnirid-desktop-windows:
+    name: OmniRID Desktop (Windows)
     runs-on: windows-latest
     steps:
       - name: Checkout
@@ -23,23 +23,23 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
-        working-directory: RID_Hub
+        working-directory: OmniRID-Desktop
 
       - name: Build Windows installer
         run: npx electron-builder --win --publish never
-        working-directory: RID_Hub
+        working-directory: OmniRID-Desktop
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload Windows artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
-          name: ridhub-windows
-          path: RID_Hub/release/*.exe
+          name: omnirid-desktop-windows
+          path: OmniRID-Desktop/release/*.exe
           retention-days: 30
 
-  build-ridhub-linux:
-    name: RID Hub (Linux)
+  build-omnirid-desktop-linux:
+    name: OmniRID Desktop (Linux)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -52,24 +52,24 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
-        working-directory: RID_Hub
+        working-directory: OmniRID-Desktop
 
       - name: Build Linux AppImage
         run: npx electron-builder --linux --publish never
-        working-directory: RID_Hub
+        working-directory: OmniRID-Desktop
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload Linux artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
-          name: ridhub-linux
-          path: RID_Hub/release/*.AppImage
+          name: omnirid-desktop-linux
+          path: OmniRID-Desktop/release/*.AppImage
           retention-days: 30
 
   create-release:
     name: Create Release
-    needs: [build-ridhub-windows, build-ridhub-linux]
+    needs: [build-omnirid-desktop-windows, build-omnirid-desktop-linux]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -86,11 +86,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Download RID Hub artifacts
+      - name: Download OmniRID Desktop artifacts
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
         with:
           path: artifacts
-          pattern: ridhub-*
+          pattern: omnirid-desktop-*
 
       - name: Get version
         run: echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_ENV
@@ -99,7 +99,7 @@ jobs:
       - name: Prepare release assets
         run: |
           mkdir -p release
-          for dir in artifacts/ridhub-*/; do
+          for dir in artifacts/omnirid-desktop-*/; do
             [ -d "$dir" ] || continue
             cp -r "$dir"* release/
           done
@@ -120,8 +120,8 @@ Written in Rust. Firmware builds via \`cargo +esp build\` (see CI).
 
           | File | Platform |
           |------|----------|
-          | \`RID Hub Setup $VERSION.exe\` | Windows desktop app |
-          | \`RID Hub $VERSION.AppImage\` | Linux desktop app |
+          | \`OmniRID Desktop Setup $VERSION.exe\` | Windows desktop app |
+          | \`OmniRID Desktop $VERSION.AppImage\` | Linux desktop app |
           EOF
 
           echo "" >> release-notes.md

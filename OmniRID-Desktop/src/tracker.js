@@ -190,7 +190,7 @@ class Tracker {
   generateKML() {
     let kml = `<?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2">
-<Document><name>RID Hub — Drone Report</name>`;
+<Document><name>OmniRID Desktop — Drone Report</name>`;
     for (const d of this._devices.values()) {
       const name = d.basicId || d.mac;
       kml += `<Placemark><name>${name}</name>`;

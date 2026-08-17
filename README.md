@@ -295,7 +295,7 @@ ESP_DRONE_REMOTEID/
 │       ├── Cargo.toml
 │       └── src/lib.rs
 │
-├── RID_Hub/                         # Ground station (Electron)
+├── OmniRID-Desktop/                         # Ground station (Electron)
 │   ├── main.js
 │   ├── preload.js
 │   ├── src/
@@ -382,7 +382,7 @@ cargo clippy --workspace -- -D warnings    # zero warnings
 ### Ground Station (RID Hub)
 
 ```bash
-cd RID_Hub
+cd OmniRID-Desktop
 npm install
 npm run dev            # http://localhost:5173
 npm run build          # Production build

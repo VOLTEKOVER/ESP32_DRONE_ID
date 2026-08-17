@@ -2,13 +2,13 @@ name: ESP32 Cross-Build
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "universal" ]
     paths:
       - 'OmniRID/**'
       - 'hardware/**'
       - '.github/workflows/esp32-build.yml'
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "universal" ]
     paths:
       - 'OmniRID/**'
       - 'hardware/**'

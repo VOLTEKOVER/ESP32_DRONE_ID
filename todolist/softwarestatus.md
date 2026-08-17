@@ -200,7 +200,7 @@ Action options: remove the 2 FRDID prototypes (or vendor `frdid.c`) and drop `ri
 - **Active**: ardupilotmega, common, minimal, protocol, types
 - **Unused**: standard, development, ASLUAV, matrixpilot, test, helpers
 
-### `RID_Hub/` — Electron + React 19 + Ant Design 6 + Vite 8
+### `OmniRID-Desktop/` — Electron + React 19 + Ant Design 6 + Vite 8
 
 | Module | Status | Notes |
 |--------|--------|-------|

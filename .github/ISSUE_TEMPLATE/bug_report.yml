@@ -1,5 +1,5 @@
 name: Bug Report
-description: Report a bug in firmware, RID Hub, or web configuration
+description: Report a bug in firmware, OmniRID Desktop, or web configuration
 title: "[BUG] "
 labels: ["bug"]
 body:
@@ -46,7 +46,7 @@ body:
       options:
         - Firmware (ESP32 / S3 / C6)
         - Web UI (config.html)
-        - RID Hub (desktop app)
+        - OmniRID Desktop (desktop app)
         - Documentation
         - Build / CI
     validations:

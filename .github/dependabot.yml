@@ -13,7 +13,7 @@ updates:
     open-pull-requests-limit: 2
 
   - package-ecosystem: "npm"
-    directory: "/RID_Hub"
+    directory: "/OmniRID-Desktop"
     schedule:
       interval: "weekly"
       day: "monday"

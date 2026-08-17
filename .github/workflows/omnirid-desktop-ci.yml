@@ -1,14 +1,14 @@
-name: RID Hub CI
+name: OmniRID Desktop CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "universal" ]
     paths:
-      - 'RID_Hub/**'
+      - 'OmniRID-Desktop/**'
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "universal" ]
     paths:
-      - 'RID_Hub/**'
+      - 'OmniRID-Desktop/**'
   workflow_dispatch:
 
 permissions:
@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   build:
-    name: RID Hub (${{ matrix.os }})
+    name: OmniRID Desktop (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -32,12 +32,12 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: RID_Hub/package-lock.json
+          cache-dependency-path: OmniRID-Desktop/package-lock.json
 
       - name: Install dependencies
         run: npm ci
-        working-directory: RID_Hub
+        working-directory: OmniRID-Desktop
 
       - name: Verify build (pack)
         run: npx electron-builder --dir
-        working-directory: RID_Hub
+        working-directory: OmniRID-Desktop
