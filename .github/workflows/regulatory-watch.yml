@@ -1,0 +1,130 @@
+name: Regulatory change detector
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  issues: write
+
+jobs:
+  check:
+    name: Detect regulatory page changes
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Fetch and diff regulatory pages
+        run: |
+          mkdir -p .regwatch
+          CHANGES=""
+
+          declare -A URLS=(
+            ["faa-remote-id"]="https://www.faa.gov/uas/getting_started/remote_id"
+            ["easa-drones"]="https://www.easa.europa.eu/en/domains/drones-air-mobility"
+            ["easa-u-space"]="https://www.easa.europa.eu/en/domains/drones-air-mobility/u-space"
+            ["astm-rid-news"]="https://www.astm.org/committee/b10/home"
+            ["china-sac"]="https://openstd.samr.gov.cn/bzgk/gb/"
+          )
+
+          for name in "${!URLS[@]}"; do
+            url="${URLS[$name]}"
+            echo "Fetching: $name ($url)"
+
+            # Fetch page text (strip HTML tags, collapse whitespace)
+            curl -sL --max-time 30 "$url" \
+              | sed 's/<[^>]*>//g' \
+              | tr -s '[:space:]' '\n' \
+              | grep -v '^$' \
+              > ".regwatch/$name.new" 2>/dev/null || true
+
+            if [ ! -s ".regwatch/$name.new" ]; then
+              echo "  WARNING: empty response for $name, skipping"
+              rm -f ".regwatch/$name.new"
+              continue
+            fi
+
+            if [ -f ".regwatch/$name.txt" ]; then
+              # Compare ignoring whitespace-only changes
+              OLD=$(cat ".regwatch/$name.txt" | tr -s '[:space:]' '\n' | grep -v '^$')
+              NEW=$(cat ".regwatch/$name.new" | tr -s '[:space:]' '\n' | grep -v '^$')
+
+              DIFF=$(diff <(echo "$OLD") <(echo "$NEW") 2>/dev/null || true)
+              ADDED=$(echo "$DIFF" | grep '^>' | wc -l)
+              REMOVED=$(echo "$DIFF" | grep '^<' | wc -l)
+
+              # Ignore trivial changes (< 3 lines changed — likely layout/template updates)
+              if [ "$ADDED" -gt 3 ] || [ "$REMOVED" -gt 3 ]; then
+                echo "  CHANGE DETECTED: +$ADDED/-$REMOVED lines"
+                CHANGES="${CHANGES}\n### ${name}\n- URL: ${url}\n- Added: ${ADDED} lines\n- Removed: ${REMOVED} lines\n- Diff preview:\n\`\`\`diff\n$(echo "$DIFF" | head -30)\n\`\`\`\n"
+              else
+                echo "  Minor change ($ADDED/$REMOVED lines), ignoring"
+              fi
+            else
+              echo "  First run, saving baseline"
+            fi
+
+            mv ".regwatch/$name.new" ".regwatch/$name.txt"
+          done
+
+          echo -e "$CHANGES" > .regwatch/changes.md
+
+          if [ -n "$CHANGES" ]; then
+            echo "HAS_CHANGES=true" >> "$GITHUB_ENV"
+          else
+            echo "HAS_CHANGES=false" >> "$GITHUB_ENV"
+          fi
+
+      - name: Persist baseline
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .regwatch/*.txt
+          git diff --cached --quiet || git commit -m "chore: update regulatory baseline $(date +%Y-%m-%d)"
+          git push || echo "Nothing to push"
+
+      - name: Open issue if significant changes
+        if: env.HAS_CHANGES == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          CHANGES=$(cat .regwatch/changes.md)
+
+          # Check if we already have an open regulatory-watch issue this week
+          EXISTING=$(gh issue list --label "regulatory-watch" --state open --json number --jq '.[0].number // empty')
+          if [ -n "$EXISTING" ]; then
+            gh issue comment "$EXISTING" --body "## Updated regulatory page changes
+
+$CHANGES
+
+---
+*Auto-detected by regulatory-watch workflow on $(date +%Y-%m-%d)*"
+            echo "Commented on existing issue #$EXISTING"
+            exit 0
+          fi
+
+          gh issue create \
+            --title "Regulatory pages changed — review needed" \
+            --label "regulatory-watch" \
+            --body "## Regulatory page changes detected
+
+The following regulatory sources have significant text changes:
+
+$CHANGES
+
+### Action required:
+1. Review each changed source above
+2. Determine if the change affects:
+   - Wire format (ASTM F3411, CN 46750) → update \`out-astm\` or create new \`out-cn\`
+   - Transmit frequency / timing → update \`rid-app/src/config.rs\`
+   - New regional standard → create new \`out-*\` crate
+3. If no code change needed, close this issue with a comment explaining why
+
+---
+*Auto-detected by regulatory-watch workflow on $(date +%Y-%m-%d)*"
+
+          echo "Created new regulatory-watch issue"
