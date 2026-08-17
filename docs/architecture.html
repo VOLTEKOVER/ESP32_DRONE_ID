@@ -73,6 +73,9 @@
     <div class="fc-btn" data-proto="nmea" onclick="selectFC(this)">
       <div class="name">iNAV</div><div class="proto">NMEA</div>
     </div>
+    <div class="fc-btn" data-proto="dronecan" onclick="selectFC(this)">
+      <div class="name">Pixhawk</div><div class="proto">DroneCAN</div>
+    </div>
   </div>
 
   <svg id="archSvg" viewBox="0 0 800 760" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block;">
@@ -160,14 +163,17 @@
       <path id="fc2" d="M 335 190 C 335 215, 370 232, 400 255" fill="none"/>
       <path id="fc3" d="M 580 190 C 580 215, 435 232, 400 255" fill="none"/>
       <path id="fc4" d="M 190 230 C 190 242, 315 252, 400 255" fill="none"/>
+      <path id="fp-dronecan" d="M 325 48 C 325 65, 190 85, 190 168" fill="none"/>
 
-      <path id="fs1" d="M 355 375 C 355 400, 200 415, 200 438" fill="none"/>
-      <path id="fs2" d="M 400 375 C 400 400, 400 415, 400 438" fill="none"/>
-      <path id="fs3" d="M 445 375 C 445 400, 600 415, 600 438" fill="none"/>
+      <path id="fs1" d="M 355 375 C 355 400, 142 415, 142 438" fill="none"/>
+      <path id="fs2" d="M 378 375 C 378 400, 320 415, 320 438" fill="none"/>
+      <path id="fs3" d="M 400 375 C 400 400, 497 415, 497 438" fill="none"/>
+      <path id="fs4" d="M 422 375 C 422 400, 674 415, 674 438" fill="none"/>
 
-      <path id="fhw1" d="M 200 478 C 200 495, 200 505, 200 518" fill="none"/>
-      <path id="fhw2" d="M 400 478 C 400 495, 400 505, 400 518" fill="none"/>
-      <path id="fhw3" d="M 600 478 C 600 495, 600 505, 600 518" fill="none"/>
+      <path id="fhw1" d="M 142 478 C 142 495, 142 505, 142 518" fill="none"/>
+      <path id="fhw2" d="M 320 478 C 320 495, 320 505, 320 518" fill="none"/>
+      <path id="fhw3" d="M 497 478 C 497 495, 497 505, 497 518" fill="none"/>
+      <path id="fhw4" d="M 674 478 C 674 495, 674 505, 674 518" fill="none"/>
 
       <path id="fd1" d="M 125 585 C 125 600, 125 605, 125 618" fill="none"/>
       <path id="fd2" d="M 275 585 C 275 600, 275 605, 275 618" fill="none"/>
@@ -201,8 +207,10 @@
     <g opacity=".18" stroke-width="1.5" fill="none" stroke-linecap="round">
       <use href="#fc1" stroke="#60a5fa"/><use href="#fc2" stroke="#60a5fa"/>
       <use href="#fc3" stroke="#60a5fa"/><use href="#fc4" stroke="#60a5fa"/>
-      <use href="#fs1" stroke="#fbbf24"/><use href="#fs2" stroke="#fbbf24"/><use href="#fs3" stroke="#fbbf24"/>
-      <use href="#fhw1" stroke="#34d399"/><use href="#fhw2" stroke="#34d399"/><use href="#fhw3" stroke="#34d399"/>
+      <use href="#fs1" stroke="#fbbf24"/><use href="#fs2" stroke="#fbbf24"/>
+      <use href="#fs3" stroke="#fbbf24"/><use href="#fs4" stroke="#fbbf24"/>
+      <use href="#fhw1" stroke="#34d399"/><use href="#fhw2" stroke="#34d399"/>
+      <use href="#fhw3" stroke="#34d399"/><use href="#fhw4" stroke="#34d399"/>
       <use href="#fd1" stroke="#34d399"/><use href="#fd2" stroke="#34d399"/>
       <use href="#fd3" stroke="#34d399"/><use href="#fd4" stroke="#34d399"/><use href="#fd5" stroke="#34d399"/>
       <use href="#fr1" stroke="#34d399"/><use href="#fr2" stroke="#34d399"/>
@@ -218,6 +226,8 @@
       <circle r="4" fill="#60a5fa" class="pkt pkt-msp" style="offset-path:path('M 400 48 C 400 65, 335 80, 335 100');--dur:2.2s;--delay:1.1s"/>
       <circle r="4" fill="#60a5fa" class="pkt pkt-nmea" style="offset-path:path('M 475 48 C 475 65, 580 80, 580 100');--dur:2.2s;--delay:0s"/>
       <circle r="4" fill="#60a5fa" class="pkt pkt-nmea" style="offset-path:path('M 475 48 C 475 65, 580 80, 580 100');--dur:2.2s;--delay:1.1s"/>
+      <circle r="4" fill="#8b5cf6" class="pkt pkt-dronecan" style="offset-path:path('M 325 48 C 325 65, 190 85, 190 168');--dur:2.5s;--delay:0s"/>
+      <circle r="4" fill="#8b5cf6" class="pkt pkt-dronecan" style="offset-path:path('M 325 48 C 325 65, 190 85, 190 168');--dur:2.5s;--delay:1.25s"/>
     </g>
 
     <!-- Parsers → Core -->
@@ -237,16 +247,18 @@
 
     <!-- Core → Standards -->
     <g filter="url(#pkt-glow)">
-      <circle r="4.5" fill="#fbbf24" class="pkt" style="offset-path:path('M 355 375 C 355 400, 200 415, 200 438');--dur:2.2s;--delay:0s"/>
-      <circle r="4.5" fill="#fbbf24" class="pkt" style="offset-path:path('M 400 375 C 400 400, 400 415, 400 438');--dur:2.2s;--delay:.7s"/>
-      <circle r="4.5" fill="#fbbf24" class="pkt" style="offset-path:path('M 445 375 C 445 400, 600 415, 600 438');--dur:2.2s;--delay:1.4s"/>
+      <circle r="4.5" fill="#fbbf24" class="pkt" style="offset-path:path('M 355 375 C 355 400, 142 415, 142 438');--dur:2.2s;--delay:0s"/>
+      <circle r="4.5" fill="#fbbf24" class="pkt" style="offset-path:path('M 378 375 C 378 400, 320 415, 320 438');--dur:2.2s;--delay:.55s"/>
+      <circle r="4.5" fill="#fbbf24" class="pkt" style="offset-path:path('M 400 375 C 400 400, 497 415, 497 438');--dur:2.2s;--delay:1.1s"/>
+      <circle r="4.5" fill="#fbbf24" class="pkt" style="offset-path:path('M 422 375 C 422 400, 674 415, 674 438');--dur:2.2s;--delay:1.65s"/>
     </g>
 
     <!-- Standards → HW -->
     <g filter="url(#pkt-glow)">
-      <circle r="4" fill="#34d399" class="pkt" style="offset-path:path('M 200 478 C 200 495, 200 505, 200 518');--dur:1.6s;--delay:0s"/>
-      <circle r="4" fill="#34d399" class="pkt" style="offset-path:path('M 400 478 C 400 495, 400 505, 400 518');--dur:1.6s;--delay:.5s"/>
-      <circle r="4" fill="#34d399" class="pkt" style="offset-path:path('M 600 478 C 600 495, 600 505, 600 518');--dur:1.6s;--delay:1s"/>
+      <circle r="4" fill="#34d399" class="pkt" style="offset-path:path('M 142 478 C 142 495, 142 505, 142 518');--dur:1.6s;--delay:0s"/>
+      <circle r="4" fill="#34d399" class="pkt" style="offset-path:path('M 320 478 C 320 495, 320 505, 320 518');--dur:1.6s;--delay:.4s"/>
+      <circle r="4" fill="#34d399" class="pkt" style="offset-path:path('M 497 478 C 497 495, 497 505, 497 518');--dur:1.6s;--delay:.8s"/>
+      <circle r="4" fill="#34d399" class="pkt" style="offset-path:path('M 674 478 C 674 495, 674 505, 674 518');--dur:1.6s;--delay:1.2s"/>
     </g>
 
     <!-- HW → Drivers -->
@@ -280,7 +292,7 @@
     <rect x="128" y="100" width="124" height="20" rx="8" fill="#3b82f6" opacity=".15"/>
     <text x="190" y="116" text-anchor="middle" font-size="10.5" font-weight="700" fill="#dbeafe">MAVLink</text>
     <text x="190" y="133" text-anchor="middle" font-size="8" fill="#93c5fd">proto-mavlink</text>
-    <text x="190" y="148" text-anchor="middle" font-size="7" fill="#60a5fa" font-weight="500">UART1 512B</text>
+    <text x="190" y="148" text-anchor="middle" font-size="7" fill="#60a5fa" font-weight="500">UART 512B read</text>
 
     <rect x="273" y="100" width="124" height="58" rx="8" fill="url(#gBoxBlue)" stroke="#60a5fa" stroke-width="1.2" filter="url(#ds)"/>
     <rect x="273" y="100" width="124" height="20" rx="8" fill="#3b82f6" opacity=".15"/>
@@ -321,7 +333,7 @@
 
     <rect x="370" y="306" width="60" height="28" rx="5" fill="#fef3c7" stroke="#f59e0b" stroke-width=".8"/>
     <text x="400" y="317" text-anchor="middle" font-size="9" font-weight="700" fill="#92400e">Scheduler</text>
-    <text x="400" y="328" text-anchor="middle" font-size="6.5" fill="#b45309">100ms tick</text>
+    <text x="400" y="328" text-anchor="middle" font-size="6.5" fill="#b45309">config rate</text>
 
     <rect x="440" y="306" width="60" height="28" rx="5" fill="#fef3c7" stroke="#f59e0b" stroke-width=".8"/>
     <text x="470" y="317" text-anchor="middle" font-size="9" font-weight="700" fill="#92400e">Security</text>
@@ -347,20 +359,28 @@
     <line x1="273" y1="308" x2="285" y2="308" stroke="#e65100" stroke-width="1.2" opacity=".25" stroke-dasharray="3,2"/>
 
     <!-- ════ STANDARDS BOXES ════ -->
-    <rect x="115" y="438" width="170" height="42" rx="10" fill="url(#gBoxStd)" stroke="#3b82f6" stroke-width="1.3" filter="url(#ds)"/>
-    <rect x="115" y="438" width="170" height="16" rx="10" fill="#3b82f6" opacity=".08"/>
-    <text x="200" y="452" text-anchor="middle" font-size="9" font-weight="700" fill="#1d4ed8">ASTM F3411-22a</text>
-    <text x="200" y="471" text-anchor="middle" font-size="7" fill="#64748b">WiFi Beacon + BLE 4.0/5.0</text>
+    <rect x="60" y="438" width="165" height="42" rx="10" fill="url(#gBoxStd)" stroke="#3b82f6" stroke-width="1.3" filter="url(#ds)"/>
+    <rect x="60" y="438" width="165" height="16" rx="10" fill="#3b82f6" opacity=".08"/>
+    <text x="142" y="452" text-anchor="middle" font-size="9" font-weight="700" fill="#1d4ed8">ASTM F3411-22a</text>
+    <text x="142" y="471" text-anchor="middle" font-size="7" fill="#64748b">WiFi Beacon + BLE 4.0/5.0</text>
 
-    <rect x="315" y="438" width="170" height="42" rx="10" fill="url(#gBoxStd)" stroke="#3b82f6" stroke-width="1.3" filter="url(#ds)"/>
-    <rect x="315" y="438" width="170" height="16" rx="10" fill="#3b82f6" opacity=".08"/>
-    <text x="400" y="452" text-anchor="middle" font-size="9" font-weight="700" fill="#1d4ed8">ASD-STAN prEN 4709-002</text>
-    <text x="400" y="471" text-anchor="middle" font-size="7" fill="#64748b">European Remote ID</text>
+    <rect x="237" y="438" width="165" height="42" rx="10" fill="url(#gBoxStd)" stroke="#3b82f6" stroke-width="1.3" filter="url(#ds)" opacity=".55"/>
+    <rect x="237" y="438" width="165" height="16" rx="10" fill="#3b82f6" opacity=".05"/>
+    <text x="320" y="452" text-anchor="middle" font-size="8.5" font-weight="700" fill="#1d4ed8">ASD-STAN prEN 4709</text>
+    <text x="320" y="466" text-anchor="middle" font-size="6" fill="#94a3b8">planned</text>
+    <text x="320" y="475" text-anchor="middle" font-size="6.5" fill="#64748b">European Remote ID</text>
 
-    <rect x="515" y="438" width="170" height="42" rx="10" fill="url(#gBoxStd)" stroke="#3b82f6" stroke-width="1.3" filter="url(#ds)"/>
-    <rect x="515" y="438" width="170" height="16" rx="10" fill="#3b82f6" opacity=".08"/>
-    <text x="600" y="452" text-anchor="middle" font-size="9" font-weight="700" fill="#1d4ed8">GB 42590-2023</text>
-    <text x="600" y="471" text-anchor="middle" font-size="7" fill="#64748b">Chinese Remote ID</text>
+    <rect x="414" y="438" width="165" height="42" rx="10" fill="url(#gBoxStd)" stroke="#3b82f6" stroke-width="1.3" filter="url(#ds)" opacity=".55"/>
+    <rect x="414" y="438" width="165" height="16" rx="10" fill="#3b82f6" opacity=".05"/>
+    <text x="497" y="452" text-anchor="middle" font-size="9" font-weight="700" fill="#1d4ed8">FRDID</text>
+    <text x="497" y="466" text-anchor="middle" font-size="6" fill="#94a3b8">stub</text>
+    <text x="497" y="475" text-anchor="middle" font-size="6.5" fill="#64748b">US FAA Remote ID</text>
+
+    <rect x="591" y="438" width="165" height="42" rx="10" fill="url(#gBoxStd)" stroke="#3b82f6" stroke-width="1.3" filter="url(#ds)" opacity=".55"/>
+    <rect x="591" y="438" width="165" height="16" rx="10" fill="#3b82f6" opacity=".05"/>
+    <text x="674" y="452" text-anchor="middle" font-size="9" font-weight="700" fill="#1d4ed8">GB 42590-2023</text>
+    <text x="674" y="466" text-anchor="middle" font-size="6" fill="#94a3b8">stub</text>
+    <text x="674" y="475" text-anchor="middle" font-size="6.5" fill="#64748b">Chinese Remote ID</text>
 
     <!-- ════ HARDWARE LAYER BOX ════ -->
     <rect x="55" y="518" width="690" height="64" rx="12" fill="url(#gBoxHW)" stroke="#10b981" stroke-width="1.5" stroke-dasharray="8,4" filter="url(#ds)"/>
@@ -397,7 +417,7 @@
     <rect x="605" y="618" width="140" height="52" rx="8" fill="url(#gBoxGreen)" stroke="#34d399" stroke-width="1.2" filter="url(#ds)"/>
     <rect x="605" y="618" width="140" height="18" rx="8" fill="#10b981" opacity=".15"/>
     <text x="675" y="633" text-anchor="middle" font-size="10" font-weight="700" fill="#a7f3d0">MAVLink TX</text>
-    <text x="675" y="649" text-anchor="middle" font-size="7.5" fill="#6ee7b7">UART1 + USB CDC</text>
+    <text x="675" y="649" text-anchor="middle" font-size="7.5" fill="#6ee7b7">USB CDC + UART</text>
     <text x="675" y="662" text-anchor="middle" font-size="7" fill="#34d399">proto-usb-mavlink</text>
 
     <!-- ════ RECEIVER BOX ════ -->
@@ -425,16 +445,20 @@ function selectFC(el){
   document.querySelectorAll('.fc-btn').forEach(b=>b.classList.remove('active'));
   el.classList.add('active');
   const proto=el.dataset.proto;
-  document.querySelectorAll('.pkt-mav,.pkt-msp,.pkt-nmea').forEach(p=>{p.style.display='none'});
+  document.querySelectorAll('.pkt-mav,.pkt-msp,.pkt-nmea,.pkt-dronecan').forEach(p=>{p.style.display='none'});
   document.querySelectorAll('.pkt-'+proto).forEach(p=>{p.style.display=''});
   document.querySelectorAll('#archSvg rect[stroke="#60a5fa"]').forEach(r=>{
     const h=parseFloat(r.getAttribute('height')||0);
     if(h>20) r.style.opacity='.25';
   });
-  const boxes={'mavlink':128,'msp':273,'nmea':518};
+  const boxes={'mavlink':128,'msp':273,'nmea':518,'dronecan':128};
   if(boxes[proto]){
     document.querySelectorAll('#archSvg rect').forEach(r=>{
-      if(r.getAttribute('x')==boxes[proto] && r.getAttribute('y')==100) r.style.opacity='1';
+      if(r.getAttribute('x')==boxes[proto]){
+        const y=r.getAttribute('y');
+        if(proto==='dronecan' && y==='168') r.style.opacity='1';
+        else if(proto!=='dronecan' && y==='100') r.style.opacity='1';
+      }
     });
   }
 }
