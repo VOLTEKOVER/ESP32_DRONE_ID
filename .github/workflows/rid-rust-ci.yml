@@ -1,4 +1,4 @@
-name: RID Rust CI
+name: OmniRID CI
 
 on:
   push:

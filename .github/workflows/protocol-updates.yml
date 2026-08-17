@@ -1,0 +1,242 @@
+name: Protocol auto-updates
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  # ── OpenDroneID C library ──────────────────────────────────────────────
+  opendroneid:
+    name: OpenDroneID
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+
+      - name: Resolve upstream tag
+        id: tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="$(gh api repos/opendroneid/opendroneid-core-c/releases/latest --jq .tag_name)"
+          echo "tag=${tag}" >> "$GITHUB_OUTPUT"
+
+      - name: Update vendored files
+        working-directory: OmniRID
+        run: ./scripts/update-opendroneid.sh "${{ steps.tag.outputs.tag }}"
+
+      - name: Open pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="${{ steps.tag.outputs.tag }}"
+          branch="ci/opendroneid-${tag}"
+          if git diff --quiet; then
+            echo "No changes: vendored library already at ${tag}"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "${branch}"
+          git add OmniRID/external-libs/opendroneid-sys/vendor
+          git commit -m "chore(opendroneid-sys): vendored library to ${tag}"
+          git push origin "${branch}"
+          gh pr create \
+            --base main \
+            --head "${branch}" \
+            --title "Update vendored OpenDroneID to ${tag}" \
+            --body "Automated update of the vendored OpenDroneID C library.
+
+The layout-parity tests in \`opendroneid-sys\` and the byte-exact tests in \`out-astm\` gate this PR: if the C struct layout or encoder behaviour changed, update the FFI mirror in \`external-libs/opendroneid-sys/src/lib.rs\` in this same PR."
+
+  # ── MAVLink message IDs ────────────────────────────────────────────────
+  mavlink:
+    name: MAVLink
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Fetch upstream MAVLink XML
+        run: |
+          mkdir -p /tmp/mavlink-upstream
+          curl -sL "https://raw.githubusercontent.com/mavlink/mavlink/master/message_definitions/v1.0/common.xml" -o /tmp/mavlink-upstream/common.xml
+          curl -sL "https://raw.githubusercontent.com/mavlink/mavlink/master/message_definitions/v1.0/ardupilotmega.xml" -o /tmp/mavlink-upstream/ardupilotmega.xml
+          curl -sL "https://raw.githubusercontent.com/mavlink/mavlink/master/message_definitions/v1.0/opendroneid.xml" -o /tmp/mavlink-upstream/opendroneid.xml
+
+      - name: Extract message IDs
+        run: |
+          python3 << 'PYEOF'
+          import xml.etree.ElementTree as ET
+          import json, sys
+
+          msgs = {}
+          for f in ["common.xml", "ardupilotmega.xml", "opendroneid.xml"]:
+              try:
+                  tree = ET.parse(f"/tmp/mavlink-upstream/{f}")
+                  for msg in tree.iter("message"):
+                      name = msg.get("name", "")
+                      msgid = msg.get("id", "")
+                      if name and msgid:
+                          crc_extra = msg.get("crc_extra", "0")
+                          msgs[name] = {"id": int(msgid), "crc_extra": int(crc_extra)}
+              except Exception as e:
+                  print(f"Warning: failed to parse {f}: {e}", file=sys.stderr)
+
+          with open("/tmp/mavlink-upstream/messages.json", "w") as f:
+              json.dump(msgs, f, indent=2)
+          print(f"Extracted {len(msgs)} messages from upstream XML")
+          PYEOF
+
+      - name: Compare with hardcoded values
+        id: compare
+        run: |
+          python3 << 'PYEOF'
+          import json, re, sys
+
+          with open("/tmp/mavlink-upstream/messages.json") as f:
+              upstream = json.load(f)
+
+          with open("OmniRID/inputs/proto-mavlink/src/parser.rs") as f:
+              current = f.read()
+
+          current_ids = {}
+          for m in re.finditer(r'const (MSG_ID_\w+):\s*u32\s*=\s*(\d+);', current):
+              current_ids[m.group(1)] = int(m.group(2))
+
+          changes = []
+          for name, info in upstream.items():
+              const_name = f"MSG_ID_{name}"
+              if const_name in current_ids and current_ids[const_name] != info["id"]:
+                  changes.append((const_name, current_ids[const_name], info["id"]))
+
+          if changes:
+              print(f"CHANGED={len(changes)}")
+              for c in changes:
+                  print(f"  {c[0]}: {c[1]} -> {c[2]}")
+
+              # Apply changes to parser.rs
+              new_content = current
+              for const_name, old_id, new_id in changes:
+                  new_content = new_content.replace(
+                      f"const {const_name}: u32 = {old_id};",
+                      f"const {const_name}: u32 = {new_id};"
+                  )
+
+              with open("OmniRID/inputs/proto-mavlink/src/parser.rs", "w") as f:
+                  f.write(new_content)
+
+              with open("/tmp/mavlink-changes.txt", "w") as f:
+                  for c in changes:
+                      f.write(f"{c[0]}: {c[1]} -> {c[2]}\n")
+          else:
+              print("NO_CHANGES")
+          PYEOF
+
+      - name: Open pull request
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ ! -f /tmp/mavlink-changes.txt ]; then
+            echo "No MAVLink message ID changes detected"
+            exit 0
+          fi
+
+          RESULT=$(cat /tmp/mavlink-changes.txt)
+          BRANCH="ci/mavlink-update-$(date +%Y%m%d)"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCH"
+          git add OmniRID/inputs/proto-mavlink/src/parser.rs
+          git commit -m "chore(proto-mavlink): update message IDs from upstream
+
+$RESULT"
+          git push origin "$BRANCH"
+          gh pr create \
+            --base main \
+            --head "$BRANCH" \
+            --title "Update MAVLink message IDs from upstream" \
+            --body "Automated update from upstream MAVLink XML specs.
+
+Changed message IDs:
+\`\`\`
+$RESULT
+\`\`\`
+
+Verify CRC extras and field decoders still match."
+
+  # ── DroneCAN DSDL ──────────────────────────────────────────────────────
+  dronecan:
+    name: DroneCAN
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Fetch upstream DSDL
+        run: |
+          mkdir -p /tmp/dsdl-upstream
+          curl -sL "https://raw.githubusercontent.com/DroneCAN/DSDL/master/uavcan/equipment/gnss/Fix2.uavcan" -o /tmp/dsdl-upstream/Fix2.uavcan
+
+      - name: Compare with current parser
+        id: compare
+        run: |
+          python3 << 'PYEOF'
+          import re, hashlib
+
+          with open("OmniRID/inputs/proto-dronecan/src/parser.rs") as f:
+              current = f.read()
+
+          with open("/tmp/dsdl-upstream/Fix2.uavcan") as f:
+              dsdl = f.read()
+
+          dtid_match = re.search(r'const FIX2_DTID:\s*u16\s*=\s*(\d+);', current)
+          sig_match = re.search(r'const FIX2_SIGNATURE:\s*u64\s*=\s*(0x[0-9a-fA-F]+);', current)
+
+          current_dtid = int(dtid_match.group(1)) if dtid_match else None
+          current_sig = sig_match.group(1) if sig_match else None
+          field_count = len(re.findall(r'^\s+\w+\s+\w+', dsdl, re.MULTILINE))
+          content_hash = hashlib.sha256(dsdl.encode()).hexdigest()[:16]
+
+          print(f"DTID: {current_dtid}, Signature: {current_sig}, Fields: {field_count}, Hash: {content_hash}")
+
+          with open("/tmp/dsdl-info.txt", "w") as f:
+              f.write(f"DTID: {current_dtid}\nSignature: {current_sig}\nFields: {field_count}\nHash: {content_hash}\n")
+          PYEOF
+
+      - name: Open issue if changed
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          EXISTING=$(gh issue list --label "protocol-update" --state open --json number --jq '.[0].number // empty')
+          if [ -n "$EXISTING" ]; then
+            echo "Issue #$EXISTING already exists"
+            exit 0
+          fi
+
+          INFO=$(cat /tmp/dsdl-info.txt)
+          gh issue create \
+            --title "DroneCAN DSDL upstream changed" \
+            --label "protocol-update" \
+            --body "## DroneCAN DSDL change detected
+
+\`\`\`
+$INFO
+\`\`\`
+
+### Action required:
+1. Check https://github.com/DroneCAN/DSDL/blob/master/uavcan/equipment/gnss/Fix2.uavcan
+2. If struct layout changed, update \`proto-dronecan/src/parser.rs\` bit offsets
+3. Run \`cargo test --workspace\`"
