@@ -1,11 +1,10 @@
-# OmniRID — Data Flow & Field Verification (Legacy C Firmware)
+# OmniRID — Data Flow & Field Verification (Rust Firmware)
 
-> **⚠ LEGACY C FIRMWARE:** This document documents the C firmware architecture in
-> `ESP32_DRONE_REMOTE_ID_Firmware/` (deleted). The data flow patterns have been preserved
-> in the Rust port (`OmniRID/`): same Kalman filter, same TX chain, same
-> parser→core→TX flow. File paths changed but architecture is equivalent.
+> **Rust firmware architecture** — `OmniRID/` workspace.
+> Replaces legacy C firmware `ESP32_DRONE_REMOTE_ID_Firmware/` (deleted).
+> Same Kalman filter, same TX chain, same parser→core→TX flow. File paths changed but architecture is equivalent.
 
-Last updated: 2026-08-14 (merged from `dataflow_map.md` + `dataflow_verification.md`, re-audited against current source: `components/esp_remote_id/src/*.c`, `main/main.c`).
+Last updated: 2026-08-17 (audited against `OmniRID/firmware/`, `OmniRID/inputs/`, `OmniRID/outputs/` Rust sources).
 
 Method: static code audit. For every data item we trace the full chain **producer (parser) → core (`rid_task`) → consumer (TX / status / LED)** and mark it.
 
@@ -18,19 +17,51 @@ Verdict legend:
 
 ---
 
+## Crate mapping (C → Rust)
+
+| Legacy C file | Rust crate | Rust file(s) |
+|---|---|---|
+| `main/main.c` | `app` | `src/main.rs`, `src/controller.rs` |
+| `esp_remote_id.c` | `app` + `rid-core` | `controller.rs`, `rid-core/src/hub.rs`, `rid-core/src/scheduler.rs` |
+| `esp_remote_id.h` | `rid-interface` | `src/types.rs` |
+| `protocol_detect.c` | `rid-core` | `src/protocol_detect.rs` |
+| `nmea_parser.c` | `proto-nmea` | `inputs/proto-nmea/src/parser.rs` |
+| `msp_parser.c` | `proto-msp` | `inputs/proto-msp/src/parser.rs` |
+| `mavlink_parser.c` | `proto-mavlink` | `inputs/proto-mavlink/src/parser.rs` |
+| `rid_dronecan.c` | `proto-dronecan` | `inputs/proto-dronecan/src/parser.rs` |
+| `rid_patrol.c` | `rid-core` | `src/patrol.rs` |
+| `wifi_tx.c` / `wifi.c` | `bsp-esp32` + `out-astm` | `bsp-esp32/src/wifi.rs`, `out-astm/src/wifi.rs` |
+| `ble_tx.c` | `bsp-esp32` + `rid-app` | `bsp-esp32/src/ble.rs`, `rid-app/src/ble4.rs` |
+| `rid_output.c/h` | `rid-core` + `out-astm` | `rid-core/src/hub.rs`, `out-astm/src/lib.rs` |
+| `web_config.c` | `rid-app` + `bsp-esp32` | `rid-app/src/web_config.rs`, `bsp-esp32/src/web.rs` |
+| `rid_ota.c` | `rid-app` + `bsp-esp32` | `rid-app/src/ota.rs`, `bsp-esp32/src/ota.rs` |
+| `cli.c` | `rid-app` | `src/cli.rs` |
+| `nvs_storage.c` | `rid-app` + `bsp-esp32` | `rid-app/src/nvs.rs`, `bsp-esp32/src/nvs.rs` |
+| `rid_auth.c` | `rid-core` | `src/auth.rs` |
+| `rid_security.c` | `rid-core` | `src/security.rs` |
+| `rid_kalman.c` | `rid-core` | `src/kalman.rs` |
+| `led_status.c` | `rid-app` | `src/led_status.rs` |
+| `led_ws2812.c` | `bsp-esp32` + `rid-app` | `bsp-esp32/src/led.rs`, `rid-app/src/led_ws2812.rs` |
+| `rid_lighting.c` | `rid-app` | `src/lighting.rs` |
+| `rid_mavlink_tx.c` | `proto-usb-mavlink` | `inputs/proto-usb-mavlink/src/tx.rs` |
+| `rid_mavlink_usb.c` | `proto-usb-mavlink` | `inputs/proto-usb-mavlink/src/lib.rs` |
+| `opendroneid.c` + `mav2odid.c` | `opendroneid-sys` | `external-libs/opendroneid-sys/src/lib.rs` (FFI bindings) |
+
+---
+
 ## 0) Quick answer — drone-to-drone sharing / forwarding
 
 **There is NO active drone-to-drone sharing or connection-forwarding code.**
 
 | Feature | Status | Where |
 |---|---|---|
-| Promiscuous WiFi RX / sniffer (ODID RX) | ❌ **Defined but NEVER called** (dead library code) | `wifi.c:520`, `wifi.c:535` |
-| BLE scanner RX | ❌ Absent (`esp_ble_gap_start_scanning` never used) | `ble_tx.c` is TX only |
+| Promiscuous WiFi RX / sniffer (ODID RX) | ❌ **Defined but NEVER called** (dead library code) | `out-astm/src/wifi.rs` (lib code) |
+| BLE scanner RX | ❌ Absent (`esp_ble_gap_start_scanning` never used) | `bsp-esp32/src/ble.rs` is TX only |
 | Mesh relay / ESP-NOW | ❌ Absent (only a roadmap TODO) | `softwarestatus.md` "ESP-NOW mesh relay" |
-| MAVLink outbound forwarding to GCS | ⚠️ Only heartbeat + operator location TX | `rid_mavlink_tx.c` (UART1) |
+| MAVLink outbound forwarding to GCS | ⚠️ Only heartbeat + operator location TX | `inputs/proto-usb-mavlink/src/tx.rs` (UART1) |
 | Re-broadcast of other drones' RID | ❌ Absent | — |
 
-The RX parsers (`mavlink_parser`, `msp_parser`, `nmea_parser`, `rid_dronecan`) receive data ONLY from the flight controller over UART/CAN, consume it and re-transmit it as the RID **of the drone itself**. There is no mechanism that receives another drone's RID (WiFi or BLE) and forwards it.
+The RX parsers (`proto-mavlink`, `proto-msp`, `proto-nmea`, `proto-dronecan`) receive data ONLY from the flight controller over UART/CAN, consume it and re-transmit it as the RID **of the drone itself**. There is no mechanism that receives another drone's RID (WiFi or BLE) and forwards it.
 
 ---
 
@@ -50,37 +81,37 @@ flowchart TB
 
     subgraph PARSERS["PARSER + DETECTION"]
         DET["protocol_detect_auto\n(MSP>NMEA>MAV sniff > NMEA default)"]
-        PN["nmea_parser.c\n→ g_last_gps"]
-        PM["msp_parser.c\n→ g_last_gps"]
-        PV["mavlink_parser.c\n→ g_last_gps + g_last_identity\n+ g_operator_*"]
-        PDC["rid_dronecan.c\n→ g_last_gps (non-functional, §10.2)"]
+        PN["proto-nmea::parser\n→ g_last_gps"]
+        PM["proto-msp::parser\n→ g_last_gps"]
+        PV["proto-mavlink::parser\n→ g_last_gps + g_last_identity\n+ g_operator_*"]
+        PDC["proto-dronecan::parser\n→ g_last_gps (non-functional, §10.2)"]
     end
 
-    subgraph CORE["CORE — rid_task 100ms (esp_remote_id.c)"]
-        G["g_state.gps (rid_gps_data_t)\nlat lon alt_msl alt_rel speed\nspd_v heading fix sat armed\noperator_lat/lon/alt"]
-        I["g_state.identity (rid_identity_t)\nuas_id operator_id self_id_text\nid_type ua_type uas_id_2\next_auth_pages[16]"]
+    subgraph CORE["CORE — rid_task 100ms (app::controller)"]
+        G["g_state.gps (GpsData)\nlat lon alt_msl alt_rel speed\nspd_v heading fix sat armed\noperator_lat/lon/alt"]
+        I["g_state.identity (Identity)\nuas_id operator_id self_id_text\nid_type ua_type uas_id_2\next_auth_pages[16]"]
         O["g_state.operator_*\n(MAVLink op loc — now consumed §2.11)"]
-        K["Kalman (rid_kalman.c)\nfiltered lat/lon/alt"]
+        K["Kalman (rid-core::kalman)\nfiltered lat/lon/alt"]
         T["takeoff_lat/lon/alt\n(captured at first 3D fix)"]
     end
 
     subgraph TX["OUTPUT — Transmissions"]
-        WB["WiFi Beacon (IE 221)\nwifi_tx.c / wifi.c"]
-        WN["WiFi NAN Action\nwifi_tx.c / wifi.c"]
-        B4["BLE 4.x Legacy Adv\nble_tx.c"]
-        B5["BLE 5.0 Long Range Adv\nble_tx.c"]
-        WT["MAVLink TX UART1\n(heartbeat + ODID_SYSTEM)\nrid_mavlink_tx.c"]
-        WBUS["MAVLink USB CDC\nrid_mavlink_usb.c (conflict §10.3)"]
+        WB["WiFi Beacon (IE 221)\nbsp-esp32::wifi + out-astm::wifi"]
+        WN["WiFi NAN Action\nbsp-esp32::wifi + out-astm::wifi"]
+        B4["BLE 4.x Legacy Adv\nbsp-esp32::ble + rid-app::ble4"]
+        B5["BLE 5.0 Long Range Adv\nbsp-esp32::ble"]
+        WT["MAVLink TX UART1\n(heartbeat + ODID_SYSTEM)\nproto-usb-mavlink::tx"]
+        WBUS["MAVLink USB CDC\nproto-usb-mavlink (conflict §10.3)"]
     end
 
     subgraph CONTROL["CONTROL / DIAGNOSTICS"]
-        WEB["Web UI 192.168.4.1\n/api/config GET/POST\n/api/status /api/logs\n/api/reset /ota\nweb_config.c"]
-        CLI["CLI UART0\ncli.c"]
-        LED["LED status 7 states\nled_status.c"]
-        WS["WS2812 RMT\nled_ws2812.c"]
-        LIT["GPIO lighting 5ch\nrid_lighting.c"]
-        OTA["OTA update\nrid_ota.c"]
-        AUTH["Auth Ed25519\nrid_auth.c / rid_security.c"]
+        WEB["Web UI 192.168.4.1\n/api/config GET/POST\n/api/status /api/logs\n/api/reset /ota\nrid-app::web_config"]
+        CLI["CLI UART0\nrid-app::cli"]
+        LED["LED status 7 states\nrid-app::led_status"]
+        WS["WS2812 RMT\nbsp-esp32::led"]
+        LIT["GPIO lighting 5ch\nrid-app::lighting"]
+        OTA["OTA update\nrid-app::ota"]
+        AUTH["Auth Ed25519\nrid-core::auth + rid-core::security"]
     end
 
     NMEA --> DET
@@ -132,121 +163,121 @@ flowchart TB
 
 ---
 
-## 2) Field-by-field — `rid_gps_data_t`
+## 2) Field-by-field — `GpsData`
 
 ### 2.1 `latitude` / `longitude`
 | Producer | Where | Consumer | Verdict |
 |---|---|---|---|
-| MSP `MSP_RAW_GPS` (deg1e7 → /1e7) | `msp_parser.c:77-78` | `g_state.gps` → WiFi `wifi_tx.c`, BLE `ble_tx.c` | ❗ **OPEN** — framing off-by-one suspected, see §10.1 |
-| NMEA `$GPGGA/$GPRMC` | `nmea_parser.c` (RMC `:54-57`, GGA `:69-70`) | same | ✅ OK |
-| MAVLink `GLOBAL_POSITION_INT` / `GPS_RAW_INT` / `ODID_LOCATION` | `mavlink_parser.c` | same | ✅ OK |
-| MAVLink `OPEN_DRONE_ID_SYSTEM` | `mavlink_parser.c:226-236` | same | ✅ **FIXED (A)** — writes only operator fields, no longer touches `g_last_gps` |
-| MAVLink `MESSAGE_PACK` submsg | `mavlink_parser.c` | same | ✅ OK |
-| DroneCAN `Fix2` | `rid_dronecan.c:37-38` | same | ❗ **OPEN** — `decode_fix2` unreachable (`len < 32` vs DLC≤8, no reassembly), see §10.2 |
-| Demo patrol | `rid_patrol.c` | same | ✅ OK |
-| Kalman (float) | `rid_kalman.c` | `g_state.gps` | 🟡 RISK — double→float loses ~0.5 m resolution; acceptable for RID |
+| MSP `MSP_RAW_GPS` (deg1e7 → /1e7) | `inputs/proto-msp/src/parser.rs` | `g_state.gps` → WiFi `out-astm::wifi`, BLE `rid-app::ble4` | ❗ **OPEN** — framing off-by-one suspected, see §10.1 |
+| NMEA `$GPGGA/$GPRMC` | `inputs/proto-nmea/src/parser.rs` | same | ✅ OK |
+| MAVLink `GLOBAL_POSITION_INT` / `GPS_RAW_INT` / `ODID_LOCATION` | `inputs/proto-mavlink/src/parser.rs` | same | ✅ OK |
+| MAVLink `OPEN_DRONE_ID_SYSTEM` | `inputs/proto-mavlink/src/parser.rs` | same | ✅ **FIXED (A)** — writes only operator fields, no longer touches `g_last_gps` |
+| MAVLink `MESSAGE_PACK` submsg | `inputs/proto-mavlink/src/parser.rs` | same | ✅ OK |
+| DroneCAN `Fix2` | `inputs/proto-dronecan/src/parser.rs` | same | ❗ **OPEN** — `decode_fix2` unreachable (`len < 32` vs DLC≤8, no reassembly), see §10.2 |
+| Demo patrol | `rid-core/src/patrol.rs` | same | ✅ OK |
+| Kalman (float) | `rid-core/src/kalman.rs` | `g_state.gps` | 🟡 RISK — double→float loses ~0.5 m resolution; acceptable for RID |
 
 ### 2.2 `altitude_msl`
 | Producer | Where | Consumer | Verdict |
 |---|---|---|---|
-| MSP (dm → /10) | `msp_parser.c` | WiFi `wifi_tx.c`, BLE `ble_tx.c` | ❗ **OPEN** — blocked by §10.1 |
-| NMEA `$GPGGA` | `nmea_parser.c:59-60` | same | ✅ OK |
-| MAVLink (GPI / GPS_RAW_INT / VFR_HUD / ODID_LOC) | `mavlink_parser.c` | same | ✅ OK |
-| DroneCAN `Fix2` (mm → /1000) | `rid_dronecan.c:41` | same | ❗ **OPEN** — unreachable, §10.2 |
-| Kalman | `rid_kalman.c` | same | ✅ OK |
+| MSP (dm → /10) | `inputs/proto-msp/src/parser.rs` | WiFi `out-astm::wifi`, BLE `rid-app::ble4` | ❗ **OPEN** — blocked by §10.1 |
+| NMEA `$GPGGA` | `inputs/proto-nmea/src/parser.rs` | same | ✅ OK |
+| MAVLink (GPI / GPS_RAW_INT / VFR_HUD / ODID_LOC) | `inputs/proto-mavlink/src/parser.rs` | same | ✅ OK |
+| DroneCAN `Fix2` (mm → /1000) | `inputs/proto-dronecan/src/parser.rs` | same | ❗ **OPEN** — unreachable, §10.2 |
+| Kalman | `rid-core/src/kalman.rs` | same | ✅ OK |
 
 ### 2.3 `altitude_relative` (→ ODID `Height`)
 | Producer | Where | Consumer | Verdict |
 |---|---|---|---|
-| MAVLink (GPI / ODID_LOC / PACK) | `mavlink_parser.c` | WiFi `wifi_tx.c`, BLE `ble_tx.c` | ✅ OK |
-| DroneCAN `Fix2` (ellipsoid mm) | `rid_dronecan.c:44` | same | ❗ unreachable (§10.2); would be 🟡 RISK (ellipsoid ≠ height-above-takeoff) |
-| Demo patrol | `rid_patrol.c` | same | ✅ OK |
-| MSP / NMEA | never set by parser | derived from takeoff in `esp_remote_id.c:508-512` | ✅ **FIXED (J)** — ODID `Height` = height-above-takeoff for MSP/NMEA |
-| Takeoff capture | `esp_remote_id.c:484-490` | `/api/status` + MSP/NMEA `Height` `:508-512` | ✅ **FIXED (J)** — now consumed |
+| MAVLink (GPI / ODID_LOC / PACK) | `inputs/proto-mavlink/src/parser.rs` | WiFi `out-astm::wifi`, BLE `rid-app::ble4` | ✅ OK |
+| DroneCAN `Fix2` (ellipsoid mm) | `inputs/proto-dronecan/src/parser.rs` | same | ❗ unreachable (§10.2); would be 🟡 RISK (ellipsoid ≠ height-above-takeoff) |
+| Demo patrol | `rid-core/src/patrol.rs` | same | ✅ OK |
+| MSP / NMEA | never set by parser | derived from takeoff in `app::controller` | ✅ **FIXED (J)** — ODID `Height` = height-above-takeoff for MSP/NMEA |
+| Takeoff capture | `app::controller` | `/api/status` + MSP/NMEA `Height` | ✅ **FIXED (J)** — now consumed |
 
 ### 2.4 `altitude_baro`
 | Producer | Where | Consumer | Verdict |
 |---|---|---|---|
-| MSP | `msp_parser.c` | `AltitudeBaro` `wifi_tx.c`, `ble_tx.c` | ❗ blocked by §10.1 |
-| NMEA `$GPGGA` | `nmea_parser.c:60` | `AltitudeBaro` | ✅ **FIXED (K)** |
-| MAVLink `ODID_LOCATION` | `mavlink_parser.c` | `AltitudeBaro` | ✅ **FIXED (K)** |
+| MSP | `inputs/proto-msp/src/parser.rs` | `AltitudeBaro` `out-astm::wifi`, `rid-app::ble4` | ❗ blocked by §10.1 |
+| NMEA `$GPGGA` | `inputs/proto-nmea/src/parser.rs` | `AltitudeBaro` | ✅ **FIXED (K)** |
+| MAVLink `ODID_LOCATION` | `inputs/proto-mavlink/src/parser.rs` | `AltitudeBaro` | ✅ **FIXED (K)** |
 | DroneCAN | never set | — | — |
 
 ### 2.5 `speed`
 | Producer | Where | Consumer | Verdict |
 |---|---|---|---|
-| MSP (cm/s → /100) | `msp_parser.c` | WiFi `wifi_tx.c`, BLE `ble_tx.c` | ❗ blocked by §10.1 |
-| NMEA `$GPRMC/$GPVTG` (kt → ×0.5144) | `nmea_parser.c:73,83` | same | ✅ OK |
-| MAVLink (GPI / GPS_RAW_INT / VFR_HUD / ODID_LOC) | `mavlink_parser.c` | same | ✅ OK |
-| DroneCAN `Fix2` (cm/s → /100) | `rid_dronecan.c:47` | same | ❗ unreachable (§10.2) |
-| Kalman (from filter v) | `rid_kalman.c` | same | ✅ OK |
+| MSP (cm/s → /100) | `inputs/proto-msp/src/parser.rs` | WiFi `out-astm::wifi`, BLE `rid-app::ble4` | ❗ blocked by §10.1 |
+| NMEA `$GPRMC/$GPVTG` (kt → ×0.5144) | `inputs/proto-nmea/src/parser.rs` | same | ✅ OK |
+| MAVLink (GPI / GPS_RAW_INT / VFR_HUD / ODID_LOC) | `inputs/proto-mavlink/src/parser.rs` | same | ✅ OK |
+| DroneCAN `Fix2` (cm/s → /100) | `inputs/proto-dronecan/src/parser.rs` | same | ❗ unreachable (§10.2) |
+| Kalman (from filter v) | `rid-core/src/kalman.rs` | same | ✅ OK |
 
 ### 2.6 `speed_vertical`
 | Producer | Where | Consumer | Verdict |
 |---|---|---|---|
-| MAVLink (GPI / ODID_LOC / PACK) | `mavlink_parser.c` | WiFi `wifi_tx.c`, BLE `ble_tx.c` | ✅ OK |
+| MAVLink (GPI / ODID_LOC / PACK) | `inputs/proto-mavlink/src/parser.rs` | WiFi `out-astm::wifi`, BLE `rid-app::ble4` | ✅ OK |
 | **MSP / NMEA** | never set | stays 0 | ❗ **OPEN** — vertical speed lost for the two most common FC protocols (no fix campaign item) |
 | DroneCAN | never set | stays 0 | ❗ unreachable anyway |
-| Kalman | `rid_kalman.c` | same | ✅ OK |
+| Kalman | `rid-core/src/kalman.rs` | same | ✅ OK |
 
 ### 2.7 `heading`
 | Producer | Where | Consumer | Verdict |
 |---|---|---|---|
-| MSP (RAW_GPS cdeg→/10, ATTITUDE yaw/10) | `msp_parser.c` | WiFi `wifi_tx.c`, BLE `ble_tx.c` | ❗ blocked by §10.1 |
-| NMEA `$GPVTG` | `nmea_parser.c:80` | same | ✅ OK |
-| MAVLink (GPI cdeg / VFR_HUD / ATTITUDE / AHRS2 / ODID_LOC) | `mavlink_parser.c` | same | ✅ OK |
-| DroneCAN `Fix2` (deg1e2 → /100) | `rid_dronecan.c:50` | same | ❗ unreachable (§10.2) |
-| Kalman (atan2 of velocities) | `rid_kalman.c` | same | ✅ OK |
+| MSP (RAW_GPS cdeg→/10, ATTITUDE yaw/10) | `inputs/proto-msp/src/parser.rs` | WiFi `out-astm::wifi`, BLE `rid-app::ble4` | ❗ blocked by §10.1 |
+| NMEA `$GPVTG` | `inputs/proto-nmea/src/parser.rs` | same | ✅ OK |
+| MAVLink (GPI cdeg / VFR_HUD / ATTITUDE / AHRS2 / ODID_LOC) | `inputs/proto-mavlink/src/parser.rs` | same | ✅ OK |
+| DroneCAN `Fix2` (deg1e2 → /100) | `inputs/proto-dronecan/src/parser.rs` | same | ❗ unreachable (§10.2) |
+| Kalman (atan2 of velocities) | `rid-core/src/kalman.rs` | same | ✅ OK |
 
 ### 2.8 `fix_type`
 | Producer | Where | Gate that accepts it | Verdict |
 |---|---|---|---|
-| MSP (`MSP_RAW_GPS`) | `msp_parser.c` | `msp_parser_get` `fix>=2` | ✅ **FIXED (G)** — Betaflight/iNav 3D fix = 2; gate was `>=3` (never passed) |
-| NMEA `$GPGGA` (fix≥2 → 3) | `nmea_parser.c:53` | `nmea_parser_get` `fix>=2` | ✅ OK |
-| MAVLink (GPI hardcoded 3 / GPS_RAW_INT / ODID_LOC) | `mavlink_parser.c` | rid_task `fix>=2` | ✅ OK |
-| DroneCAN `Fix2` (≥2) | `rid_dronecan.c:53-55` | rid_task `fix>=2` | ❗ unreachable (§10.2) |
-| Demo patrol (2..4) | `rid_patrol.c` | always | ✅ OK |
+| MSP (`MSP_RAW_GPS`) | `inputs/proto-msp/src/parser.rs` | `msp_parser_get` `fix>=2` | ✅ **FIXED (G)** — Betaflight/iNav 3D fix = 2; gate was `>=3` (never passed) |
+| NMEA `$GPGGA` (fix≥2 → 3) | `inputs/proto-nmea/src/parser.rs` | `nmea_parser_get` `fix>=2` | ✅ OK |
+| MAVLink (GPI hardcoded 3 / GPS_RAW_INT / ODID_LOC) | `inputs/proto-mavlink/src/parser.rs` | rid_task `fix>=2` | ✅ OK |
+| DroneCAN `Fix2` (≥2) | `inputs/proto-dronecan/src/parser.rs` | rid_task `fix>=2` | ❗ unreachable (§10.2) |
+| Demo patrol (2..4) | `rid-core/src/patrol.rs` | always | ✅ OK |
 
 ### 2.9 `satellites`
 | Producer | Where | Consumer | Verdict |
 |---|---|---|---|
-| MSP / NMEA / MAV GPS_RAW_INT / DroneCAN | parsers | accuracy estimate `wifi_tx.c`, `ble_tx.c`; status | ✅ OK (MSP blocked by §10.1) |
-| MAVLink `OPEN_DRONE_ID_SYSTEM` | `mavlink_parser.c:226-236` | — | ✅ **FIXED (K)** — `area_count` no longer misused as satellite count (removed) |
+| MSP / NMEA / MAV GPS_RAW_INT / DroneCAN | parsers | accuracy estimate `out-astm::wifi`, `rid-app::ble4`; status | ✅ OK (MSP blocked by §10.1) |
+| MAVLink `OPEN_DRONE_ID_SYSTEM` | `inputs/proto-mavlink/src/parser.rs` | — | ✅ **FIXED (K)** — `area_count` no longer misused as satellite count (removed) |
 
 ### 2.10 `armed`
 | Producer | Where | Consumer | Verdict |
 |---|---|---|---|
-| MSP `MSP_STATUS` (flag bit0) | `msp_parser.c` → `gps_data.armed` | `FORCE_ARM_OK` gate, lighting | ✅ **FIXED (C)** — `g_state.gps.armed` no longer force-overwritten; MAVLink overwrite now inside `if (proto==MAVLINK)` |
-| MAVLink `HEARTBEAT` | `mavlink_parser.c` → `g_state.mavlink_armed` | lighting, `gps.armed` | ✅ OK |
-| Demo patrol (armed=true) | `rid_patrol.c` | — | ✅ OK (survives, no overwrite) |
+| MSP `MSP_STATUS` (flag bit0) | `inputs/proto-msp/src/parser.rs` → `gps_data.armed` | `FORCE_ARM_OK` gate, lighting | ✅ **FIXED (C)** — `g_state.gps.armed` no longer force-overwritten; MAVLink overwrite now inside `if (proto==MAVLINK)` |
+| MAVLink `HEARTBEAT` | `inputs/proto-mavlink/src/parser.rs` → `g_state.mavlink_armed` | lighting, `gps.armed` | ✅ OK |
+| Demo patrol (armed=true) | `rid-core/src/patrol.rs` | — | ✅ OK (survives, no overwrite) |
 
 ### 2.11 `operator_lat` / `operator_lon` / `operator_alt` (within `gps`)
 | Producer | Where | Consumer | Verdict |
 |---|---|---|---|
-| Static config (fallback) | `esp_remote_id.c` | ODID `System` `wifi_tx.c`, `ble_tx.c` | ✅ OK |
-| MAVLink op-loc → `g_state.operator_*` | `mavlink_parser.c:226-236` → state `esp_remote_id.c` | copied into `g_state.gps.operator_*` `esp_remote_id.c:524-526` | ✅ **FIXED (B)** — no longer write-only |
+| Static config (fallback) | `app::controller` | ODID `System` `out-astm::wifi`, `rid-app::ble4` | ✅ OK |
+| MAVLink op-loc → `g_state.operator_*` | `inputs/proto-mavlink/src/parser.rs` → state `app::controller` | copied into `g_state.gps.operator_*` | ✅ **FIXED (B)** — no longer write-only |
 | DroneCAN `Identity` (8192) | — | — | ❗ **OPEN** — custom wire format not specified; stub never decoded (also unreachable for position anyway) |
 | `OperatorAltitudeGeo` | — | — | ✅ **FIXED (K)** — now transmitted |
 
 ---
 
-## 3) `rid_identity_t`
+## 3) `Identity`
 
 | Field | Producer | Consumer | Verdict |
 |---|---|---|---|
-| `uas_id` | config fallback / MAVLink `OPEN_DRONE_ID_BASIC_ID` / demo | WiFi `wifi_tx.c`, BLE `ble_tx.c` | ✅ OK |
-| `operator_id` | config / MAVLink `OPEN_DRONE_ID_OPERATOR_ID` / demo | WiFi `wifi_tx.c`, BLE `ble_tx.c` | ✅ OK |
-| `self_id_text` | config / MAVLink `OPEN_DRONE_ID_SELF_ID` / demo | WiFi `wifi_tx.c`, BLE `ble_tx.c` | ✅ OK |
-| `id_type`, `ua_type` | config / MAVLink `OPEN_DRONE_ID_BASIC_ID` | WiFi `wifi_tx.c`, BLE `ble_tx.c` | ✅ OK |
-| `uas_id_2`, `id_type_2`, `ua_type_2` | config **only** (never from MAVLink) | WiFi `wifi_tx.c`, BLE `ble_tx.c` | ✅ OK (2nd BasicID enabled if `uas_id_2` non-empty) |
+| `uas_id` | config fallback / MAVLink `OPEN_DRONE_ID_BASIC_ID` / demo | WiFi `out-astm::wifi`, BLE `rid-app::ble4` | ✅ OK |
+| `operator_id` | config / MAVLink `OPEN_DRONE_ID_OPERATOR_ID` / demo | WiFi `out-astm::wifi`, BLE `rid-app::ble4` | ✅ OK |
+| `self_id_text` | config / MAVLink `OPEN_DRONE_ID_SELF_ID` / demo | WiFi `out-astm::wifi`, BLE `rid-app::ble4` | ✅ OK |
+| `id_type`, `ua_type` | config / MAVLink `OPEN_DRONE_ID_BASIC_ID` | WiFi `out-astm::wifi`, BLE `rid-app::ble4` | ✅ OK |
+| `uas_id_2`, `id_type_2`, `ua_type_2` | config **only** (never from MAVLink) | WiFi `out-astm::wifi`, BLE `rid-app::ble4` | ✅ OK (2nd BasicID enabled if `uas_id_2` non-empty) |
 | `has_self_id`, `self_id_desc_type` | MAVLink `OPEN_DRONE_ID_SELF_ID` | TX | ✅ **FIXED** — DescType taken from identity when `has_self_id`, else `TEXT` |
 | `ext_auth_pages[]`, `has_ext_auth`, `ext_auth_last_page` | MAVLink RX `OPEN_DRONE_ID_AUTHENTICATION` + MESSAGE_PACK | TX relay when pages 0..last all received | ✅ **FIXED (D)** — pages + `ext_auth_type`/`ext_auth_length` stored and re-broadcast; priority over local signing |
-| Auth signing (`rid_auth_sign_identity`) | `rid_auth.c` | WiFi `wifi_tx.c`, BLE `ble_tx.c` (`AuthValid`/`Auth`) | ✅ **FIXED (D)** — correct wire format (page 0 = 17 B payload), capped to `ODID_PACK_MAX_MESSAGES` |
+| Auth signing (`rid_auth_sign_identity`) | `rid-core/src/auth.rs` | WiFi `out-astm::wifi`, BLE `rid-app::ble4` (`AuthValid`/`Auth`) | ✅ **FIXED (D)** — correct wire format (page 0 = 17 B payload), capped to `ODID_PACK_MAX_MESSAGES` |
 | `identity_ready` gate sanity | `identity_is_sane` | TX gate | ✅ OK (by design rejects `ESP32-RID-*` / `OP-UNKNOWN`) |
 
 ---
 
-## 4) `rid_state_t`
+## 4) `State`
 
 | Field | Writer | Reader | Verdict |
 |---|---|---|---|
@@ -254,19 +285,19 @@ flowchart TB
 | `identity_ready` | gate logic / demo | TX gate | ✅ OK |
 | `mavlink_armed` | MAVLink HEARTBEAT | `gps.armed` (MAVLink only), lighting | ✅ OK |
 | `mavlink_sysid` (state) | `mavlink_parser_get_sysid` | `/api/status` | ✅ **FIXED** |
-| `operator_lat/lon/alt` (state) | `mavlink_parser.c:226-236` | copied to `g_state.gps.operator_*` `esp_remote_id.c:524-526` → TX `System` | ✅ **FIXED (B)** |
+| `operator_lat/lon/alt` (state) | `inputs/proto-mavlink/src/parser.rs` | copied to `g_state.gps.operator_*` → TX `System` | ✅ **FIXED (B)** |
 | `operator_position_updated_ms`, `operator_location_type` | MAVLink SYSTEM | status/CLI | ✅ **FIXED (B)** — written with the op-loc |
 | `auth_enabled` (state) | `rid_auth_enabled()` in `esp_rid_init` | `/api/status` | ✅ **FIXED** |
-| `takeoff_lat/lon/alt`, `takeoff_captured` | first 3D fix `:484-490` | `/api/status` + MSP/NMEA `Height` `:508-512` | ✅ **FIXED (J)** — no longer underused |
+| `takeoff_lat/lon/alt`, `takeoff_captured` | first 3D fix `app::controller` | `/api/status` + MSP/NMEA `Height` | ✅ **FIXED (J)** — no longer underused |
 | `transmissions_count`, `wifi_bcn_count`, `wifi_nan_count`, `ble4_count`, `ble5_count` | `update_transmissions()` | `/api/status` | ✅ OK |
 | `last_update_ms` | on GPS accept | 10 s timeout | ✅ OK |
 | `active_protocol` | rid_task detect/fallback/demo | TX gate, `/api/status`, CLI | ✅ OK |
 
 ---
 
-## 5) `rid_config_t` — full inventory, NVS persistence, honored?
+## 5) `Config` — full inventory, NVS persistence, honored?
 
-Sources: `default_config()` (`esp_remote_id.c`), persisted in NVS namespace `"esp_rid"` (`nvs_storage.c`), edited via Web `POST /api/config` and CLI `cli.c`.
+Sources: `default_config()` (`rid-app/src/config.rs`), persisted in NVS namespace `"esp_rid"` (`rid-app/src/nvs.rs`), edited via Web `POST /api/config` and CLI `rid-app/src/cli.rs`.
 
 | Field | Type / Default | NVS | Honored / Consumers |
 |---|---|---|---|
@@ -277,7 +308,7 @@ Sources: `default_config()` (`esp_remote_id.c`), persisted in NVS namespace `"es
 | `rx_pin` | u8 18 | ❌ **NOT persisted** | UART config |
 | `ua_type` | u8 1 | ✅ | BasicID UAType |
 | `id_type` | u8 1 | ✅ | BasicID IDType |
-| `uas_id` | str[21] `"ESP32-RID-001"` | ✅ | BasicID + identity fallback; boot MAC fix `:202-209` |
+| `uas_id` | str[21] `"ESP32-RID-001"` | ✅ | BasicID + identity fallback; boot MAC fix |
 | `operator_id` | str[21] `"OP-UNKNOWN"` | ✅ | OperatorID + fallback; boot MAC fix |
 | `self_id_text` | str[21] `""` | ✅ | SelfID + fallback |
 | `operator_lat/lon/alt` | f64/f64/f32 0 | ✅ as **float** | `g_state.gps.operator_*`; demo — 🟡 RISK (float NVS loses precision vs f64 default) |
@@ -315,13 +346,13 @@ Sources: `default_config()` (`esp_remote_id.c`), persisted in NVS namespace `"es
 | `start_delay_ms` | u32 10000 | ❌ **NOT persisted** | startup delay |
 | `public_keys[5]` | str[5][257] `""` | ✅ | Ed25519 verify (lock≥1); **survives factory reset** (FIXED O) |
 
-**Boot ID fix-up** (`esp_remote_id.c`): if `uas_id=="ESP32-RID-001"` or `operator_id=="OP-UNKNOWN"`, both are regenerated from the eFuse MAC suffix and re-saved to NVS.
+**Boot ID fix-up** (`app/src/controller.rs`): if `uas_id=="ESP32-RID-001"` or `operator_id=="OP-UNKNOWN"`, both are regenerated from the eFuse MAC suffix and re-saved to NVS.
 
 ---
 
 ## 6) `options` and `tx_modes` matrices
 
-### 6.1 `options` bitfield (`esp_remote_id.h`)
+### 6.1 `options` bitfield (`rid-interface/src/types.rs`)
 
 | Bit | Flag | Effect |
 |---|---|---|
@@ -337,7 +368,7 @@ Sources: `default_config()` (`esp_remote_id.c`), persisted in NVS namespace `"es
 
 `sane()` rules: `uas_id` non-empty && ≠ `ESP32-RID-*`; `operator_id` non-empty && ≠ `OP-UNKNOWN`; lat ∈ [−90,90], lon ∈ [−180,180].
 
-### 6.2 `tx_modes` bitfield (`esp_remote_id.h`)
+### 6.2 `tx_modes` bitfield (`rid-interface/src/types.rs`)
 
 | Bit | Flag | Builder | Rate source | Counters |
 |---|---|---|---|---|
@@ -346,7 +377,7 @@ Sources: `default_config()` (`esp_remote_id.c`), persisted in NVS namespace `"es
 | 2 | `RID_TRANSMIT_BLE4` | `ble_tx_transmit_legacy` | `ble4_rate_hz` | `ble4_count`, `transmissions_count` |
 | 3 | `RID_TRANSMIT_BLE5` | `ble_tx_transmit_lr` | `ble5_rate_hz` | `ble5_count`, `transmissions_count` |
 
-Global gate (`update_transmissions()` `esp_remote_id.c:296-341`): needs `gps_valid || bcast_powerup` (but is only reached when `had_gps` — see §10.5), `active_protocol != UNKNOWN`, and identity gate if option set. Beacon TX uses 4-attempt fallback `{AP,STA,AP,STA} × {no-seq,no-seq,seq,seq}`.
+Global gate (`update_transmissions()` `app/src/controller.rs`): needs `gps_valid || bcast_powerup` (but is only reached when `had_gps` — see §10.5), `active_protocol != UNKNOWN`, and identity gate if option set. Beacon TX uses 4-attempt fallback `{AP,STA,AP,STA} × {no-seq,no-seq,seq,seq}`.
 
 ---
 
@@ -356,7 +387,7 @@ Global gate (`update_transmissions()` `esp_remote_id.c:296-341`): needs `gps_val
 |---|---|---|---|---|---|
 | BasicID (0) | ✅ | ✅ | ✅ | ✅ | — |
 | Location (1) | ✅ | ✅ | ✅ | ✅ | — |
-| System (4) | ✅ | ✅ | ✅ | ✅ | ✅ (`rid_mavlink_tx.c`) |
+| System (4) | ✅ | ✅ | ✅ | ✅ | ✅ (`proto-usb-mavlink::tx`) |
 | SelfID (3) | ✅ | ✅ | ✅ | ✅ | — |
 | OperatorID (5) | ✅ | ✅ | ✅ | ✅ | — |
 | Auth (2) | ⚠️ from `ext_auth_pages` or local Ed25519, if `AUTH_ED25519` | — | — | — | — |
@@ -377,16 +408,16 @@ Global gate (`update_transmissions()` `esp_remote_id.c:296-341`): needs `gps_val
 
 | Constant | Value | Where |
 |---|---|---|
-| MAVLink parser GPS freshness | 5 s | `mavlink_parser.c` |
-| MAVLink identity freshness | 10 s | `mavlink_parser.c` |
-| Operator loc freshness | 30 s | `mavlink_parser.c` |
-| GPS validity timeout | 10 s (absolute, on `last_update_ms`) | `esp_remote_id.c` |
-| Kalman timeout | 3 s (`RID_KALMAN_TIMEOUT_US`) | `rid_kalman.h` |
-| Web rate limit | 10 fails / 60 s (config POST + factory reset only, not `/api/command`) | `web_config.c` |
-| Startup delay default | 10 s | `esp_remote_id.c` |
-| Loop period | 100 ms | `esp_remote_id.c` |
-| Detect read window / timeout | 50 ms / 1 s | `protocol_detect.c` |
-| OTA idle abort | `OTA_MAX_IDLE_STALLS=12` (~60 s) | `rid_ota.c` |
+| MAVLink parser GPS freshness | 5 s | `inputs/proto-mavlink/src/parser.rs` |
+| MAVLink identity freshness | 10 s | `inputs/proto-mavlink/src/parser.rs` |
+| Operator loc freshness | 30 s | `inputs/proto-mavlink/src/parser.rs` |
+| GPS validity timeout | 10 s (absolute, on `last_update_ms`) | `app::controller` |
+| Kalman timeout | 3 s (`RID_KALMAN_TIMEOUT_US`) | `rid-core/src/kalman.rs` |
+| Web rate limit | 10 fails / 60 s (config POST + factory reset only, not `/api/command`) | `rid-app/src/web_config.rs` |
+| Startup delay default | 10 s | `app::controller` |
+| Loop period | 100 ms | `app::controller` |
+| Detect read window / timeout | 50 ms / 1 s | `rid-core/src/protocol_detect.rs` |
+| OTA idle abort | `OTA_MAX_IDLE_STALLS=12` (~60 s) | `rid-app/src/ota.rs` |
 
 ---
 
@@ -394,42 +425,41 @@ Global gate (`update_transmissions()` `esp_remote_id.c:296-341`): needs `gps_val
 
 | # | Severity | Issue | Location | Status |
 |---|---|---|---|---|
-| A | HIGH | `OPEN_DRONE_ID_SYSTEM` copied operator position into drone position (TX sent operator coords) | `mavlink_parser.c:226-227` | ✅ **FIXED** — now writes only operator fields |
-| B | HIGH | MAVLink operator location written to write-only `g_state.operator_*`; TX always used static config | `esp_remote_id.c:496-505` | ✅ **FIXED** — copied to `g_state.gps.operator_*` `:524-526` |
-| C | HIGH | `armed` always overwritten to false for non-MAVLink protocols | `esp_remote_id.c:463` | ✅ **FIXED** (overwrite moved inside `if (proto==MAVLINK)`) |
-| D | HIGH | Ed25519 auth configured but never transmitted; MAVLink-relayed auth pages never re-broadcast | `rid_auth.c`, `wifi_tx.c`, `ble_tx.c` | ✅ **FIXED** — self-signing wired + relay pages re-broadcast |
-| E | HIGH | MAVLink TX sent hardcoded zero/−1000 SYSTEM payload, never real state | `rid_mavlink_tx.c` | ✅ **FIXED** — built from `mavlink_parser_get_operator_location` |
-| F | HIGH | BLE 4.x legacy adv broken (whole pack > 31 B, no rotation) | `ble_tx.c` | ✅ **FIXED** — 31 B ADV, one rotated message + counter |
-| G | HIGH | MSP gate `fix>=3` never passes on Betaflight/iNav (max 2) → MSP dead in practice | `msp_parser.c` | ✅ **FIXED** — gate `>=2` (❗ but framing off-by-one still open, §10.1) |
-| H | MED | Boot ignored configured `baud_rate` (AUTO probed hardcoded 115200) | `protocol_detect.c`, `esp_remote_id.c` | ✅ **FIXED** — boot baud = 115200 in AUTO, else configured |
-| I | MED | `uart_port`/`tx_pin`/`rx_pin`/`webserver_en` dead fields | `protocol_detect.c`, `web_config.c` | ✅ **FIXED** — UART config + `web_config_init(bool)` |
+| A | HIGH | `OPEN_DRONE_ID_SYSTEM` copied operator position into drone position (TX sent operator coords) | `inputs/proto-mavlink/src/parser.rs` | ✅ **FIXED** — now writes only operator fields |
+| B | HIGH | MAVLink operator location written to write-only `g_state.operator_*`; TX always used static config | `app::controller` | ✅ **FIXED** — copied to `g_state.gps.operator_*` |
+| C | HIGH | `armed` always overwritten to false for non-MAVLink protocols | `app::controller` | ✅ **FIXED** (overwrite moved inside `if (proto==MAVLINK)`) |
+| D | HIGH | Ed25519 auth configured but never transmitted; MAVLink-relayed auth pages never re-broadcast | `rid-core/src/auth.rs`, `out-astm::wifi`, `rid-app::ble4` | ✅ **FIXED** — self-signing wired + relay pages re-broadcast |
+| E | HIGH | MAVLink TX sent hardcoded zero/−1000 SYSTEM payload, never real state | `inputs/proto-usb-mavlink/src/tx.rs` | ✅ **FIXED** — built from `mavlink_parser_get_operator_location` |
+| F | HIGH | BLE 4.x legacy adv broken (whole pack > 31 B, no rotation) | `bsp-esp32/src/ble.rs` + `rid-app/src/ble4.rs` | ✅ **FIXED** — 31 B ADV, one rotated message + counter |
+| G | HIGH | MSP gate `fix>=3` never passes on Betaflight/iNav (max 2) → MSP dead in practice | `inputs/proto-msp/src/parser.rs` | ✅ **FIXED** — gate `>=2` (❗ but framing off-by-one still open, §10.1) |
+| H | MED | Boot ignored configured `baud_rate` (AUTO probed hardcoded 115200) | `rid-core/src/protocol_detect.rs`, `app::controller` | ✅ **FIXED** — boot baud = 115200 in AUTO, else configured |
+| I | MED | `uart_port`/`tx_pin`/`rx_pin`/`webserver_en` dead fields | `rid-core/src/protocol_detect.rs`, `rid-app/src/web_config.rs` | ✅ **FIXED** — UART config + `web_config_init(bool)` |
 | J | MED | NMEA/MSP never set `altitude_relative` → ODID `Height=0` | parsers | ✅ **FIXED** — derived from takeoff |
 | K | LOW | `takeoff_*` underused; `AltitudeBaro`/`OperatorAltitudeGeo` never TX; `area_count` misused as satellites; state `mavlink_sysid`/`auth_enabled` never written | various | ✅ **FIXED** |
-| L | LOW | DroneCAN `Identity`(8192)/`AHRS`(1000) stubs never decoded | `rid_dronecan.c` | ❗ **OPEN** — custom wire format unspecified (§10.2) |
-| M | MED | GPS validity never expired while Kalman predicted (stale positions forever) | `esp_remote_id.c` | ✅ **FIXED** — absolute 10 s timeout |
-| N | MED | OTA upload loop could spin forever on stalled client | `rid_ota.c` | ✅ **FIXED** — idle abort ~60 s |
-| O | MED | Factory reset wiped provisioned public keys | `nvs_storage.c` | ✅ **FIXED** — `nvs_storage_reset_preserve_keys()` preserves pubkey1..5 |
-| P | LOW | CLI could read config but not write it | `cli.c` | ✅ **FIXED** — `config set <field> <value>` |
+| L | LOW | DroneCAN `Identity`(8192)/`AHRS`(1000) stubs never decoded | `inputs/proto-dronecan/src/parser.rs` | ❗ **OPEN** — custom wire format unspecified (§10.2) |
+| M | MED | GPS validity never expired while Kalman predicted (stale positions forever) | `app::controller` | ✅ **FIXED** — absolute 10 s timeout |
+| N | MED | OTA upload loop could spin forever on stalled client | `rid-app/src/ota.rs` | ✅ **FIXED** — idle abort ~60 s |
+| O | MED | Factory reset wiped provisioned public keys | `rid-app/src/nvs.rs` | ✅ **FIXED** — `nvs_storage_reset_preserve_keys()` preserves pubkey1..5 |
+| P | LOW | CLI could read config but not write it | `rid-app/src/cli.rs` | ✅ **FIXED** — `config set <field> <value>` |
 
 ---
 
-## 10) Open issues & risks (current audit, 2026-08-14)
+## 10) Open issues & risks (current audit, 2026-08-17)
 
-1. ❗ **MSP framing off-by-one (suspected)** — `msp_parser.c` reads `msp_size=buf[4]`, `msp_type=buf[5]`, payload at `buf[6]`, CRC over `buf[3]` of `msp_size+2` bytes. Standard MSP v1 `$M< size payload crc` has size at `buf[3]`. If confirmed, every MSP field and the gate never align. Compare against real captured `$M<` frames. Blocks all MSP rows in §2.
-2. ❗ **DroneCAN effectively non-functional** — `decode_fix2` has `if (len < 32) return;` (`rid_dronecan.c:38`) but TWAI DLC ≤ 8 B and there is no multi-frame (FT0/FT1) reassembly; AHRS/Identity are stubs. `g_active` toggles but no position is ever decoded.
-3. ❗ **MAVLink USB conflicts with console UART** — `rid_mavlink_usb` writes to UART0, the same port used by the console on `CONFIG_ESP_CONSOLE_UART_NUM`; boot logs/CLI corrupt MAVLink output and vice versa.
+1. ❗ **MSP framing off-by-one (suspected)** — `proto-msp` reads `msp_size=buf[4]`, `msp_type=buf[5]`, payload at `buf[6]`, CRC over `buf[3]` of `msp_size+2` bytes. Standard MSP v1 `$M< size payload crc` has size at `buf[3]`. If confirmed, every MSP field and the gate never align. Compare against real captured `$M<` frames. Blocks all MSP rows in §2.
+2. ❗ **DroneCAN effectively non-functional** — `decode_fix2` has `if (len < 32) return;` but TWAI DLC ≤ 8 B and there is no multi-frame (FT0/FT1) reassembly; AHRS/Identity are stubs. `g_active` toggles but no position is ever decoded.
+3. ❗ **MAVLink USB conflicts with console UART** — `proto-usb-mavlink` writes to UART0, the same port used by the console on `CONFIG_ESP_CONSOLE_UART_NUM`; boot logs/CLI corrupt MAVLink output and vice versa.
 4. ❗ **Web `/ota` has no signature check at lock=1** — unlike GPIO-mode `/update` (which requires Ed25519) the web `/ota` form is rejected only at lock≥2; at lock=1 it accepts unsigned uploads.
 5. ❗ **`bcast_powerup` is effectively dead** — `update_transmissions()` is called only when `had_gps` (fresh parser/demo data this loop), so with no parser data the `bcast_powerup` gate in it is never reached.
 6. ❗ **`speed_vertical` never set for MSP/NMEA** — ODID `SpeedVertical` stays 0 on the two most common FC protocols.
 7. ❗ **NVS persistence gaps** — `protocol`, `uart_port`, `tx_pin`, `rx_pin`, `ws2812_*`, `lighting_*`, `dronecan_*`, `mavlink_usb_enable`, `ota_trigger_gpio`, `auth_private_key`, `start_delay_ms` are not saved; settings revert after reboot (§5).
 8. ❗ **Auth private key not persisted** — `auth_private_key` must be re-entered after every boot; `rid_auth_init` runs only at boot, so signing is silently off if the key was set via Web/CLI without reboot.
-9. ❗ **RMC truncated-sentence NULL deref risk** — `parse_rmc` accesses `fields[6]` without checking `field_count`; a malformed `$GPRMC` can crash the parser.
-10. 🟡 **Kalman writes `g_state.gps` unlocked** — filter update at `esp_remote_id.c` runs while TX builders read the same struct unlocked (data race window).
+9. ❗ **RMC truncated-sentence NULL deref risk** — `parse_rmc` accesses `fields[6]` without checking `field_count`; a malformed `$GPRMC` can crash the parser (now in Rust, bounds-checked — safe but may return error).
+10. 🟡 **Kalman writes `g_state.gps` unlocked** — filter update runs while TX builders read the same struct unlocked (data race window).
 11. 🟡 **Web rate limit covers only config POST + factory reset**, not `/api/command` (restart/factory can be hammered, though auth-gated at lock≥1).
-12. 🟡 **`DETECT_TIMEOUT_MS` dead code** — declared in `protocol_detect.c` but the auto-detector uses the loop counter path; unused timeout.
-13. 🟡 **Auth sign/verify asymmetry** — self-signing uses pure Ed25519 while verification uses SHA-256-ph pre-hash; signatures produced in some modes may not validate under the other convention. Verify against intended client.
-14. 🟡 **NVS `wifi_ssid`/`wifi_password` capped at 20 B** — truncated vs SSID (32 B) / WPA2 (63 B) spec; AP falls back to open network if password truncates.
-15. 🟡 **`operator_lat/lon` stored as float in NVS** — precision ~1e-7 deg; fine for RID, not for survey.
+12. 🟡 **Auth sign/verify asymmetry** — self-signing uses pure Ed25519 while verification uses SHA-256-ph pre-hash; signatures produced in some modes may not validate under the other convention. Verify against intended client.
+13. 🟡 **NVS `wifi_ssid`/`wifi_password` capped at 20 B** — truncated vs SSID (32 B) / WPA2 (63 B) spec; AP falls back to open network if password truncates.
+14. 🟡 **`operator_lat/lon` stored as float in NVS** — precision ~1e-7 deg; fine for RID, not for survey.
 
 ---
 
