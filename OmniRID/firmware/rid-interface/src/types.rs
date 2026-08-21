@@ -8,7 +8,7 @@ use crate::region::Region;
 use crate::region::Standard;
 
 /// `ESP_RID_MAX_STR_LEN` from the C header.
-pub const MAX_STR_LEN: usize = 20;
+pub const MAX_STR_LEN: usize = 32;
 /// `ESP_RID_MAX_KEY_LEN` from the C header.
 pub const MAX_KEY_LEN: usize = 256;
 /// `ESP_RID_NUM_KEYS` from the C header.
@@ -278,6 +278,33 @@ impl Default for Config {
     }
 }
 
+/// Diagnostic counters exposed via `/api/status`.
+///
+/// Tracks firmware health: TX counts (already on `State`), parse errors,
+/// signature verification results, and scheduler uptime.  The counters are
+/// monotonically increasing (unsigned) so they survive JSON polling gaps.
+#[derive(Clone, Copy, PartialEq, Debug, Default)]
+pub struct Stats {
+    /// Total scheduler `tick()` invocations since boot.
+    pub ticks: u32,
+    /// GPS samples successfully ingested (fix_type >= 2).
+    pub gps_updates: u32,
+    /// GPS samples discarded (fix_type < 2 or lat == 0).
+    pub gps_discarded: u32,
+    /// Total parse errors across all protocol parsers (bad CRC, framing, etc.).
+    pub parse_errors: u32,
+    /// Ed25519 signature verifications attempted.
+    pub signatures_total: u32,
+    /// Ed25519 signature verifications that passed.
+    pub signatures_ok: u32,
+    /// WiFi beacon/NAN TX attempts that the hardware reported as failed.
+    pub wifi_tx_fail: u32,
+    /// BLE TX attempts that the hardware reported as failed.
+    pub ble_tx_fail: u32,
+    /// Successful OTA updates.
+    pub ota_count: u32,
+}
+
 /// Runtime state, port of `rid_state_t`.
 #[derive(Clone, PartialEq, Debug)]
 pub struct State {
@@ -312,6 +339,8 @@ pub struct State {
     pub takeoff_lon: f64,
     pub takeoff_alt: f32,
     pub takeoff_captured: bool,
+    /// Diagnostic counters (see [`Stats`]).
+    pub stats: Stats,
 }
 
 impl Default for State {
@@ -344,6 +373,7 @@ impl Default for State {
             takeoff_lon: 0.0,
             takeoff_alt: 0.0,
             takeoff_captured: false,
+            stats: Stats::default(),
         }
     }
 }

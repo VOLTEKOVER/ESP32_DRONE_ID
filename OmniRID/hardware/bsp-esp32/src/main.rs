@@ -121,45 +121,54 @@ mod imp {
             }
         };
 
-        // 8. Main loop.
-        let mut tx = bsp_esp32::EspTx;
-        let mut last_led_update_ms: u32 = 0;
+        // 8. Spawn the scheduler loop on Core 1 (Application Core).
+        //
+        // The scheduler loop handles GPS polling, output encoding, and
+        // transmission scheduling.  Pinning it to Core 1 ensures that
+        // WiFi beacon/NAN TX (which ESP-IDF routes to Core 0) and BLE
+        // radio callbacks never block on scheduler work.
+        {
+            let state_clone = Arc::clone(&state);
+            bsp_esp32::core::spawn_scheduler(move || {
+                let mut tx = bsp_esp32::EspTx;
+                let mut last_led_update_ms: u32 = 0;
 
-        loop {
-            let now_ms = tick_ms();
-            let now_us = tick_us();
+                loop {
+                    let now_ms = tick_ms();
+                    let now_us = tick_us();
 
-            // Build an empty input sample (no UART connected yet).
-            let input = rid_interface::InputSample::new(now_ms, now_us);
+                    let input = rid_interface::InputSample::new(now_ms, now_us);
 
-            // Run scheduler tick.
-            {
-                let mut lock = state.ctl.lock();
-                let outcome = lock.ctl.step(&input, &mut tx);
+                    {
+                        let mut lock = state_clone.ctl.lock();
+                        let outcome = lock.ctl.step(&input, &mut tx);
 
-                // Update status LED (every 200 ms).
-                if now_ms.wrapping_sub(last_led_update_ms) >= 200 {
-                    last_led_update_ms = now_ms;
+                        if now_ms.wrapping_sub(last_led_update_ms) >= 200 {
+                            last_led_update_ms = now_ms;
+                            let color = match outcome.led {
+                                rid_core::scheduler::LedState::GpsOk => [0u8, 255, 0],
+                                rid_core::scheduler::LedState::NoGps => [255, 128, 0],
+                                rid_core::scheduler::LedState::Locked => [255, 0, 0],
+                                rid_core::scheduler::LedState::Demo => [0, 128, 255],
+                            };
+                            let max = 8191u32;
+                            let r = (color[0] as u32 * max) / 255;
+                            let g = (color[1] as u32 * max) / 255;
+                            let b = (color[2] as u32 * max) / 255;
+                            bsp_esp32::led::set_rgb(r, g, b);
+                        }
+                    }
 
-                    // Map scheduler LED state to a color.
-                    let color = match outcome.led {
-                        rid_core::scheduler::LedState::GpsOk => [0u8, 255, 0],   // green
-                        rid_core::scheduler::LedState::NoGps => [255, 128, 0],  // amber
-                        rid_core::scheduler::LedState::Locked => [255, 0, 0],   // red
-                        rid_core::scheduler::LedState::Demo => [0, 128, 255],   // cyan
-                    };
-                    let max = 8191u32;
-                    let r = (color[0] as u32 * max) / 255;
-                    let g = (color[1] as u32 * max) / 255;
-                    let b = (color[2] as u32 * max) / 255;
-                    bsp_esp32::led::set_rgb(r, g, b);
+                    unsafe { esp_idf_sys::vTaskDelay(1); }
                 }
-            }
+            });
+        }
 
-            // Yield to FreeRTOS scheduler.
-            unsafe {
-                esp_idf_sys::vTaskDelay(1);
-            }
+        // 9. app_main keeps running on Core 1 (lower priority).
+        //    If the scheduler task is the only high-priority work,
+        //    app_main idles and yields to FreeRTOS.
+        loop {
+            unsafe { esp_idf_sys::vTaskDelay(100); }
         }
     }
 }

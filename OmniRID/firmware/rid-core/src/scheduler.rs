@@ -162,6 +162,7 @@ impl Scheduler {
         let proto = input.proto;
 
         self.state.active_protocol = proto;
+        self.state.stats.ticks = self.state.stats.ticks.wrapping_add(1);
 
         // Primary parser, then DroneCAN as secondary input.
         let mut sample = input.gps;
@@ -183,6 +184,7 @@ impl Scheduler {
                     self.state.gps = gd;
                     self.state.gps_valid = true;
                     self.state.last_update_ms = input.now_ms;
+                    self.state.stats.gps_updates += 1;
 
                     // MAVLink arm status.
                     if proto == Protocol::Mavlink {
@@ -245,7 +247,11 @@ impl Scheduler {
                     }
 
                     readiness::update_identity_ready(&mut self.state, cfg_opts, config.region);
+                } else {
+                    self.state.stats.gps_discarded += 1;
                 }
+            } else {
+                self.state.stats.gps_discarded += 1;
             }
         } else if cfg_opts & OPT_DEMO_MODE != 0 {
             // Demo mode: synthesize a patrol trajectory.

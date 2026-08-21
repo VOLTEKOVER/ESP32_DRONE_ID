@@ -23,6 +23,8 @@ pub trait NvsStore {
     fn set_u32(&mut self, key: &str, value: u32);
     fn get_f32(&mut self, key: &str) -> Option<f32>;
     fn set_f32(&mut self, key: &str, value: f32);
+    fn get_f64(&mut self, key: &str) -> Option<f64>;
+    fn set_f64(&mut self, key: &str, value: f64);
     fn erase_all(&mut self);
 }
 
@@ -85,8 +87,8 @@ pub fn save(cfg: &BspConfig, nvs: &mut impl NvsStore) {
     nvs.set_f32("bt5_rate", cfg.ble5_rate_hz);
     nvs.set_f32("bt5_pwr", cfg.ble5_power_dbm);
 
-    nvs.set_f32("op_lat", cfg.operator_lat as f32);
-    nvs.set_f32("op_lon", cfg.operator_lon as f32);
+    nvs.set_f64("op_lat", cfg.operator_lat);
+    nvs.set_f64("op_lon", cfg.operator_lon);
     nvs.set_f32("op_alt", cfg.operator_alt);
 
     for (i, key) in cfg.public_keys.iter().enumerate() {
@@ -177,11 +179,11 @@ pub fn load(cfg: &mut BspConfig, nvs: &mut impl NvsStore) {
         cfg.ble5_power_dbm = v;
     }
 
-    if let Some(v) = nvs.get_f32("op_lat") {
-        cfg.operator_lat = v as f64;
+    if let Some(v) = nvs.get_f64("op_lat") {
+        cfg.operator_lat = v;
     }
-    if let Some(v) = nvs.get_f32("op_lon") {
-        cfg.operator_lon = v as f64;
+    if let Some(v) = nvs.get_f64("op_lon") {
+        cfg.operator_lon = v;
     }
     if let Some(v) = nvs.get_f32("op_alt") {
         cfg.operator_alt = v;
@@ -236,6 +238,7 @@ mod tests {
         I8(i8),
         U32(u32),
         F32(f32),
+        F64(f64),
     }
 
     /// In-memory `NvsStore` for tests, with the ESP-IDF string semantics
@@ -297,6 +300,15 @@ mod tests {
         fn set_f32(&mut self, key: &str, value: f32) {
             self.0.insert(key.to_string(), Value::F32(value));
         }
+        fn get_f64(&mut self, key: &str) -> Option<f64> {
+            match self.0.get(key) {
+                Some(Value::F64(v)) => Some(*v),
+                _ => None,
+            }
+        }
+        fn set_f64(&mut self, key: &str, value: f64) {
+            self.0.insert(key.to_string(), Value::F64(value));
+        }
         fn erase_all(&mut self) {
             self.0.clear();
         }
@@ -342,10 +354,6 @@ mod tests {
 
         let mut out = BspConfig::default();
         load(&mut out, &mut nvs);
-
-        // operator_* round-trip through f32 exactly like the C store.
-        cfg.operator_lat = cfg.operator_lat as f32 as f64;
-        cfg.operator_lon = cfg.operator_lon as f32 as f64;
         assert_eq!(out, cfg);
     }
 
@@ -453,7 +461,7 @@ mod tests {
         load(&mut cfg, &mut nvs);
         // MAX_STR_LEN bytes + NUL.
         assert_eq!(cfg.uas_id.len(), rid_interface::MAX_STR_LEN + 1);
-        assert_eq!(&cfg.uas_id[..20], b"XXXXXXXXXXXXXXXXXXXX");
-        assert_eq!(cfg.uas_id[20], 0);
+        assert_eq!(&cfg.uas_id[..32], b"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
+        assert_eq!(cfg.uas_id[32], 0);
     }
 }

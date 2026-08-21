@@ -500,22 +500,25 @@ impl MavlinkParser {
                 self.gps.fix_type = 3;
             }
             MSG_ID_OPEN_DRONE_ID_BASIC_ID => {
-                self.identity.uas_id[..MAX_STR_LEN].copy_from_slice(&self.payload[24..24 + MAX_STR_LEN]);
-                self.identity.uas_id[MAX_STR_LEN] = 0;
+                let n = MAX_STR_LEN.min(self.len as usize - 24);
+                self.identity.uas_id[..n].copy_from_slice(&self.payload[24..24 + n]);
+                self.identity.uas_id[n..].fill(0);
                 self.identity.id_type = rd_u8(&self.payload, 22);
                 self.identity.ua_type = rd_u8(&self.payload, 23);
                 self.last_identity_update = now_ms;
             }
             MSG_ID_OPEN_DRONE_ID_OPERATOR_ID => {
-                self.identity.operator_id[..MAX_STR_LEN]
-                    .copy_from_slice(&self.payload[23..23 + MAX_STR_LEN]);
-                self.identity.operator_id[MAX_STR_LEN] = 0;
+                let n = MAX_STR_LEN.min(self.len as usize - 23);
+                self.identity.operator_id[..n]
+                    .copy_from_slice(&self.payload[23..23 + n]);
+                self.identity.operator_id[n..].fill(0);
                 self.last_identity_update = now_ms;
             }
             MSG_ID_OPEN_DRONE_ID_SELF_ID => {
-                self.identity.self_id_text[..MAX_STR_LEN]
-                    .copy_from_slice(&self.payload[23..23 + MAX_STR_LEN]);
-                self.identity.self_id_text[MAX_STR_LEN] = 0;
+                let n = MAX_STR_LEN.min(self.len as usize - 23);
+                self.identity.self_id_text[..n]
+                    .copy_from_slice(&self.payload[23..23 + n]);
+                self.identity.self_id_text[n..].fill(0);
                 self.identity.self_id_desc_type = rd_u8(&self.payload, 22);
                 self.identity.has_self_id = true;
                 self.last_identity_update = now_ms;

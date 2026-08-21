@@ -189,7 +189,7 @@ try{var t=localStorage.getItem('rid_theme');if(t==='dark'){document.documentElem
 </div>
 
 <label class="form-label" for="uas_id">UAS ID</label>
-<input class="form-control" id="uas_id" maxlength="20" placeholder="e.g. RID-12345678 or serial number">
+<input class="form-control" id="uas_id" maxlength="32" placeholder="e.g. RID-12345678 or serial number">
 <div class="hint">Max 20 chars. Serial number (recommended) or CAA registration.</div>
 
 <div class="grid2">
@@ -217,10 +217,10 @@ try{var t=localStorage.getItem('rid_theme');if(t==='dark'){document.documentElem
 </div>
 
 <label class="form-label" for="op_id">Operator ID</label>
-<input class="form-control" id="op_id" maxlength="20" placeholder="e.g. OP-MARIO-12345">
+<input class="form-control" id="op_id" maxlength="32" placeholder="e.g. OP-MARIO-12345">
 
 <label class="form-label" for="self_id_text">Self-ID Description</label>
-<input class="form-control" id="self_id_text" maxlength="23" placeholder="e.g. Camera drone, DOY1234">
+<input class="form-control" id="self_id_text" maxlength="32" placeholder="e.g. Camera drone, DOY1234">
 <div class="hint">Free-form text (max 23 chars). Broadcast to receivers with Self-ID message.</div>
 
 <div class="sec-div">Operator Position (separate from drone)</div>
@@ -233,7 +233,7 @@ try{var t=localStorage.getItem('rid_theme');if(t==='dark'){document.documentElem
 <fieldset>
 <legend>Second Basic ID &#x1f4cb; <span style="font-weight:400;color:var(--text-muted)">optional</span></legend>
 <div class="grid2">
-<div><label class="form-label" for="uas_id2">UAS ID 2</label><input class="form-control" id="uas_id2" maxlength="20" placeholder="Secondary ID"><div id="id2-hint" class="hint" style="color:#c62828;display:none;margin-top:2px"></div></div>
+<div><label class="form-label" for="uas_id2">UAS ID 2</label><input class="form-control" id="uas_id2" maxlength="32" placeholder="Secondary ID"><div id="id2-hint" class="hint" style="color:#c62828;display:none;margin-top:2px"></div></div>
 <div><label class="form-label" for="id_type2">ID Type 2</label><select class="form-select" id="id_type2"><option value="0">None</option><option value="1">Serial</option><option value="2">CAA</option><option value="3">UTM</option><option value="4">Session</option></select></div>
 </div>
 <label class="form-label" for="ua_type2">UA Type 2</label>
@@ -324,11 +324,11 @@ try{var t=localStorage.getItem('rid_theme');if(t==='dark'){document.documentElem
 </div>
 
 <label class="form-label" for="wifi_ssid">WiFi SSID</label>
-<input class="form-control" id="wifi_ssid" maxlength="20" value="ESP-RID">
+<input class="form-control" id="wifi_ssid" maxlength="32" value="ESP-RID">
 <div class="hint">Network name for the configuration access point.</div>
 
 <label class="form-label" for="wifi_pass">WiFi Password</label>
-<input class="form-control" id="wifi_pass" type="password" maxlength="20" placeholder="Leave empty for open network">
+<input class="form-control" id="wifi_pass" type="password" maxlength="63" placeholder="Leave empty for open network">
 <div style="margin:8px 0"><button class="btn-sm" type="button" id="toggle-pass" data-tip="Show / hide password">Show Password</button></div>
 
 <div class="form-check mb-2">

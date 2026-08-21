@@ -2,7 +2,7 @@
 //! `state_to_json()` from `web_config.c` (the `/api/status` response).
 
 use alloc::string::String;
-use rid_interface::{GpsData, Identity, Protocol, Standard};
+use rid_interface::{GpsData, Identity, Protocol, Standard, Stats};
 use serde_json::{Map, Value};
 
 use crate::json::{num1, num6};
@@ -38,6 +38,7 @@ pub struct State {
     pub takeoff_lon: f64,
     pub takeoff_alt: f32,
     pub takeoff_captured: bool,
+    pub stats: Stats,
 }
 
 /// Same names as `g_standard_names` in `rid_output.c`, in `rid_standard_t` order.
@@ -75,6 +76,15 @@ pub fn state_to_json(s: &State) -> String {
     m.insert("takeoff_lon".into(), num6(s.takeoff_lon));
     m.insert("takeoff_alt".into(), num1(s.takeoff_alt as f64));
     m.insert("uptime_ms".into(), Value::from(s.last_update_ms));
+    m.insert("ticks".into(), Value::from(s.stats.ticks));
+    m.insert("gps_updates".into(), Value::from(s.stats.gps_updates));
+    m.insert("gps_discarded".into(), Value::from(s.stats.gps_discarded));
+    m.insert("parse_errors".into(), Value::from(s.stats.parse_errors));
+    m.insert("signatures_total".into(), Value::from(s.stats.signatures_total));
+    m.insert("signatures_ok".into(), Value::from(s.stats.signatures_ok));
+    m.insert("wifi_tx_fail".into(), Value::from(s.stats.wifi_tx_fail));
+    m.insert("ble_tx_fail".into(), Value::from(s.stats.ble_tx_fail));
+    m.insert("ota_count".into(), Value::from(s.stats.ota_count));
 
     serde_json::to_string(&Value::Object(m)).expect("State serialization")
 }
@@ -98,6 +108,11 @@ mod tests {
         assert!(out.contains("\"tx_total\":0"), "{}", out);
         assert!(out.contains("\"heading\":0"), "{}", out);
         assert!(out.contains("\"uptime_ms\":0"), "{}", out);
+        assert!(out.contains("\"ticks\":0"), "{}", out);
+        assert!(out.contains("\"gps_updates\":0"), "{}", out);
+        assert!(out.contains("\"parse_errors\":0"), "{}", out);
+        assert!(out.contains("\"wifi_tx_fail\":0"), "{}", out);
+        assert!(out.contains("\"ota_count\":0"), "{}", out);
         assert!(out.ends_with('}'), "{}", out);
     }
 
@@ -125,6 +140,15 @@ mod tests {
         s.takeoff_lon = 12.5;
         s.takeoff_alt = 99.5;
         s.last_update_ms = 123456;
+        s.stats.ticks = 500;
+        s.stats.gps_updates = 480;
+        s.stats.gps_discarded = 20;
+        s.stats.parse_errors = 3;
+        s.stats.signatures_total = 10;
+        s.stats.signatures_ok = 9;
+        s.stats.wifi_tx_fail = 1;
+        s.stats.ble_tx_fail = 0;
+        s.stats.ota_count = 2;
 
         let out = state_to_json(&s);
         assert!(out.contains("\"protocol\":1"), "{}", out);
@@ -148,6 +172,14 @@ mod tests {
         assert!(out.contains("\"takeoff_lon\":12.500000"), "{}", out);
         assert!(out.contains("\"takeoff_alt\":99.5"), "{}", out);
         assert!(out.contains("\"uptime_ms\":123456"), "{}", out);
+        assert!(out.contains("\"ticks\":500"), "{}", out);
+        assert!(out.contains("\"gps_updates\":480"), "{}", out);
+        assert!(out.contains("\"gps_discarded\":20"), "{}", out);
+        assert!(out.contains("\"parse_errors\":3"), "{}", out);
+        assert!(out.contains("\"signatures_total\":10"), "{}", out);
+        assert!(out.contains("\"signatures_ok\":9"), "{}", out);
+        assert!(out.contains("\"wifi_tx_fail\":1"), "{}", out);
+        assert!(out.contains("\"ota_count\":2"), "{}", out);
 
         // Always valid JSON, parseable back.
         let v: Value = serde_json::from_str(&out).unwrap();

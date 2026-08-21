@@ -618,7 +618,7 @@ esptool.py --chip esp32c6 --port COM3 write_flash 0x0 target/riscv32imc-unknown-
 <div class="table-responsive">
 <table>
 <tr><th>Step</th><th>Action</th><th>Details</th></tr>
-<tr><td>1</td><td>Set UAS ID</td><td>Navigate to <b>Identity</b> tab. Enter your drone's serial number or CAA registration in the UAS ID field (max 20 characters). Example: <code>RID-A1B2C3D4</code>.</td></tr>
+<tr><td>1</td><td>Set UAS ID</td><td>Navigate to <b>Identity</b> tab. Enter your drone's serial number or CAA registration in the UAS ID field (max 32 characters). Example: <code>RID-A1B2C3D4</code>.</td></tr>
 <tr><td>2</td><td>Set ID Type</td><td>Choose <b>Serial Number (1)</b> for ANSI/CTA-2063 serial numbers, or <b>CAA Registration (2)</b> for national authority IDs.</td></tr>
 <tr><td>3</td><td>Set UA Type</td><td>Select your aircraft type. <b>Multirotor (2)</b> is correct for most quadcopters and hexacopters.</td></tr>
 <tr><td>4</td><td>Set Operator ID</td><td>Enter your operator registration number if required. Format varies by country (e.g., <code>OP-MARIO-12345</code>).</td></tr>
@@ -657,7 +657,7 @@ esptool.py --chip esp32c6 --port COM3 write_flash 0x0 target/riscv32imc-unknown-
 <p>Configure the management WiFi network and UART connection to your flight controller.</p>
 <ul>
 <li><b>SSID:</b> The name of the ESP32's WiFi network. Default: <code>ESP-RID</code>.</li>
-<li><b>Password:</b> Optional password (max 20 chars). Empty = open network.</li>
+<li><b>Password:</b> Optional password (max 63 chars). Empty = open network.</li>
 <li><b>Baud Rate:</b> Must match your flight controller's serial port speed. Common: 57600, 115200.</li>
 <li><b>MAVLink SysID:</b> Set to 0 for auto-detect, or enter a specific system ID to filter messages.</li>
 </ul>
@@ -1142,7 +1142,7 @@ cat public.pem</pre>
 <table>
 <tr><th>NVS Key</th><th>Type</th><th>Parameter</th></tr>
 <tr><td colspan="3"><i>Strings</i></td></tr>
-<tr><td><code>uas_id</code></td><td>string</td><td>UAS ID (max 20 chars)</td></tr>
+<tr><td><code>uas_id</code></td><td>string</td><td>UAS ID (max 32 chars)</td></tr>
 <tr><td><code>op_id</code></td><td>string</td><td>Operator ID</td></tr>
 <tr><td><code>self_id</code></td><td>string</td><td>Self-ID text (max 23 chars)</td></tr>
 <tr><td><code>uas_id2</code></td><td>string</td><td>Secondary UAS ID</td></tr>

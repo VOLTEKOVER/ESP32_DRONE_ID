@@ -442,7 +442,7 @@ mod tests {
         let mut c = BspConfig::default();
         let long = "x".repeat(50);
         assert!(apply_json(&mut c, &format!(r#"{{"uas_id":"{}"}}"#, long)));
-        assert_eq!(cstr(&c.uas_id), "x".repeat(20));
+        assert_eq!(cstr(&c.uas_id), "x".repeat(32));
     }
 
     #[test]

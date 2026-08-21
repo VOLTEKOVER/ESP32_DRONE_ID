@@ -105,6 +105,20 @@ impl NvsStore for EspNvsStorage {
         }
     }
 
+    fn get_f64(&mut self, key: &str) -> Option<f64> {
+        let h = self.open().ok()?;
+        let mut buf = [0u8; 8];
+        h.get_blob(key, &mut buf).ok()?;
+        Some(f64::from_le_bytes(buf))
+    }
+
+    fn set_f64(&mut self, key: &str, value: f64) {
+        if let Ok(h) = self.open() {
+            let _ = h.set_blob(key, &value.to_le_bytes());
+            let _ = h.commit();
+        }
+    }
+
     fn erase_all(&mut self) {
         if let Ok(h) = self.open() {
             let _ = h.erase_all();

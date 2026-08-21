@@ -5,8 +5,8 @@
 > The C firmware audit and fix campaign findings (A–P, §9 of `dataflow.md`)
 > remain as historical reference for the port.
 
-Last updated: 2026-08-17
-Tests: 312 passing | Clippy: clean | Edition: 2024
+Last updated: 2026-08-20
+Tests: 316 passing | Clippy: clean | Edition: 2024
 
 ---
 
@@ -52,8 +52,8 @@ OmniRID/
 - [x] Parser isolation (each proto-* is a separate crate, no shared UART)
 - [x] Populate UAS data dedup (out-astm::build_uas)
 - [x] GPS staleness detection (rid-core::scheduler)
+- [x] **Dual-core pinning** — Core 0 (WiFi TX) / Core 1 (Scheduler+BLE+UI) via `bsp_esp32::core`
 - [ ] **Release binary / build matrix ESP32** — CI workflow for cross-compilation when bsp-esp32 is complete
-- [ ] **Dual-core pinning** — Core 0 (WiFi TX) / Core 1 (BLE+UI) in bsp-esp32
 
 ### 🟠 FEATURES — Future
 
@@ -63,7 +63,7 @@ OmniRID/
 - [ ] **SD Card + geofence logging** — flight log recovery (~4d)
 - [ ] **CLI command history** — circular buffer last 10 cmds
 - [ ] **Kalman covariance export** — diagnostic API
-- [ ] **Stats tracking** — TX failures, parse errors, signatures
+- [x] **Stats tracking** — ticks, GPS updates/discards, parse errors, signatures, TX fails, OTA count (`rid_interface::Stats`, serialized in `/api/status`)
 
 ### 🔵 CI/CD & Auto-Update
 
@@ -78,7 +78,7 @@ OmniRID/
 - Single workspace with glob members, `exclude = ["hardware"]`
 - `rid-interface` trait contracts (no_std, zero deps)
 - `bsp-esp32` isolated in `hardware/`, standalone workspace, host-compilable
-- 312 tests passing across all crates
+- 316 tests passing across all crates
 - Clippy clean (`-D warnings`)
 
 ### Firmware Core (Fase 0–5)
@@ -100,6 +100,7 @@ OmniRID/
 ### Hardware (bsp-esp32)
 - WiFi beacon/NAN injection, BLE 4.x/5.0 LR, NVS, USB CDC, LED (LEDC/RMT), web server, OTA
 - Capability matrix per chip (esp32/s3/c6)
+- Dual-core pinning: Core 0 (WiFi TX) / Core 1 (Scheduler+BLE+UI)
 - Feature-gated: `#[cfg(feature = "hardware")]`
 
 ### CI/CD (7 workflows)
@@ -149,12 +150,11 @@ OmniRID/
 |------|---------|--------|--------|
 | P0 | Non-ASTM encoders (CN 42590, FRDID) | ~5d | Future |
 | P1 | Release binary / ESP32 build matrix CI | ~1d | Future |
-| P1 | Dual-core pinning (WiFi/BLE split) | ~1d | Future |
 | P1 | ESP-NOW mesh relay | ~4d | Future |
 | P1 | LoRa SX1262 backup | ~6d | Future |
 | P2 | Flash encryption (eFuse AES-256) | ~2d | Future |
 | P2 | SD Card + geofence logging | ~4d | Future |
-| P3 | Kalman covariance export + stats | ~2d | Future |
+| P3 | Kalman covariance export | ~1d | Future |
 
 ## 🖥️ Ground Tools Roadmap
 

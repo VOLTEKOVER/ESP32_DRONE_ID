@@ -16,11 +16,15 @@
   <img src="docs/images/inav_logo.png" height="28" alt="INAV">
 </p>
 
-<p align="center">
-  Open Drone ID transmitter compliant with <b>ASTM F3411-22a</b> / <b>ASD-STAN prEN 4709-002</b> / <b>GB 42590-2023</b>.<br>
-  Parses <b>MAVLink · MSP · NMEA · DroneCAN</b> from any flight controller.<br>
-  Broadcasts via <b>WiFi Beacon + NAN + BLE 4.0/5.0</b>, with Kalman filtering, Ed25519 signing, and SHA-256-verified OTA updates.<br>
-  Written in <b>Rust</b> (<code>no_std</code> core, <code>esp-idf-sys</code> glue for hardware access).
+<p>
+  Omnirid is a Open Source Drone ID transmitter compatible with all protocols for now supporting 
+  
+  <b>ASTM F3411-22a</b> / <b>ASD-STAN prEN 4709-002</b> / <b>GB 42590-2023</b> in output .<br>
+  and in input <b>MAVLink · MSP · NMEA · DroneCAN</b> from any flight controller.<br>
+
+  Broadcasts via <b>WiFi Beacon + NAN + BLE 4.0/5.0</b>,
+
+  Written in <b>Rust🦀</b>
 </p>
 
 <p align="center">
@@ -62,6 +66,43 @@
 ---
 
 ## Quick Start
+
+
+## Features
+
+### Input (GPS from flight controller)
+
+| Protocol | Format | Details |
+|---|---|---|
+| **MAVLink v2** | ArduPilot/PX4 | `GPS_RAW_INT`, `GLOBAL_POSITION_INT`, `HEARTBEAT`, `OPEN_DRONE_ID_*` |
+| **MSP** | Betaflight/iNAV | `MSP_RAW_GPS` (106), `MSP_ATTITUDE` (108), `MSP_STATUS` (101) |
+| **NMEA 0183** | Direct GPS module | `$GPGGA`, `$GNGGA`, `$GPRMC`, `$GNRMC`, `$GPVTG`, `$GNVTG` |
+| **DroneCAN** | CAN bus | `uavcan.equipment.gnss.Fix2` (TWAI decode) |
+
+### Output (RID broadcast)
+
+| Medium | Standard | Range |
+|---|---|---|
+| **WiFi Beacon** | IEEE 802.11 Mgmt | ~100 m (typical) |
+| **WiFi NAN** | Service Discovery | ~100 m |
+| **BLE 4.0** | Legacy advertising | ~50 m |
+| **BLE 5.0** | Coded PHY (S3/C6) | ~200+ m (LR mode) |
+|**LoRa**|(to-do)for advanced applications|~1000 m|
+
+## WEB UI
+
+<p align="center">
+  <img src="docs/images/dashboard.png" alt="RID Hub Dashboard" width="820">
+</p>
+
+### CLI commands (after flashing)
+
+```
+> status              # Show GPS, TX rates, identity state
+> config get uas_id   # Check config
+> transmit 10         # Force 10 packets
+> patrol              # Start demo GPS patrol
+```
 
 > No hardware yet? Try the **[offline demo](https://VOLTEKOVER.github.io/OmniRID-Universal-Drone-ID/config(demo).html)** first — full simulation, no ESP32 required.
 
@@ -116,29 +157,7 @@ cargo +esp build --target riscv32imc-esp-none-elf   --manifest-path firmware/Car
 | **Hardening** | Safe JSON parsing, rate limiting (10 failed attempts/60s), bounded strings, `psa_crypto_init()` |
 | **Configuration** | 70+ parameters: UAS ID, rates, power, public keys, auth, lock, lighting |
 
-### User interface
-
-| Feature | Details |
-|---|---|
-| **Web UI** | Built-in WiFi AP at `192.168.4.1` + REST API + live telemetry |
-| **CLI** | UART REPL (14 commands: status, config, restart, patrol, transmit, etc.) |
-| **Storage** | Persistent NVS configuration, eFuse tamper detection |
-| **Dashboard** | Dark/light mode, responsive (mobile/tablet/desktop) |
-
-<p align="center">
-  <img src="docs/images/dashboard.png" alt="RID Hub Dashboard" width="820">
-</p>
-
-### Hardware & lighting
-
-| Feature | Details |
-|---|---|
-| **Status LED** | RGB PWM (LEDC), 7 states + TX flash (configurable GPIO) |
-| **Addressable LED** | WS2812 RGB (RMT driver), HSV/RGB control with brightness |
-| **GPIO lighting** | 5-channel patterns (OFF/SOLID/BLINK_SLOW/BLINK_FAST/ARMED/GPS_FLASH) with phase offsets |
-| **Demo mode** | Simulated GPS patrol (Colosseum, 200 m radius, 6 m/s) |
-
-### Ground station (RID Hub)
+# Ground station (RID Hub)
 
 | Component | Stack |
 |---|---|
@@ -146,37 +165,6 @@ cargo +esp build --target riscv32imc-esp-none-elf   --manifest-path firmware/Car
 | **Tracker** | Device tracking with 500-point trail, CSV/KML export |
 | **Capture** | WiFi monitor mode + BLE scan + Serial USB (optional npm modules) |
 | **UI** | React 19 + Ant Design 6 + Vite 8 + Leaflet |
-
----
-
-## Communication
-
-### Input (GPS from flight controller)
-
-| Protocol | Format | Details |
-|---|---|---|
-| **MAVLink v2** | ArduPilot/PX4 | `GPS_RAW_INT`, `GLOBAL_POSITION_INT`, `HEARTBEAT`, `OPEN_DRONE_ID_*` |
-| **MSP** | Betaflight/iNAV | `MSP_RAW_GPS` (106), `MSP_ATTITUDE` (108), `MSP_STATUS` (101) |
-| **NMEA 0183** | Direct GPS module | `$GPGGA`, `$GNGGA`, `$GPRMC`, `$GNRMC`, `$GPVTG`, `$GNVTG` |
-| **DroneCAN** | CAN bus | `uavcan.equipment.gnss.Fix2` (TWAI decode) |
-
-### Output (RID broadcast)
-
-| Medium | Standard | Range |
-|---|---|---|
-| **WiFi Beacon** | IEEE 802.11 Mgmt | ~100 m (typical) |
-| **WiFi NAN** | Service Discovery | ~100 m |
-| **BLE 4.0** | Legacy advertising | ~50 m |
-| **BLE 5.0** | Coded PHY (S3/C6) | ~200+ m (LR mode) |
-
-### Configuration & control
-
-| Channel | Type | Access |
-|---|---|---|
-| **Web UI** | HTTP REST API | `192.168.4.1` (AP mode) |
-| **CLI** | UART REPL | UART0 @ 115200 baud |
-| **NVS** | Flash storage | Persistent config |
-| **GPIO** | Lighting outputs | 5 configurable channels |
 
 ---
 
@@ -311,51 +299,7 @@ OmniRID-Universal-Drone-ID/
 ├── LICENSE                          # Apache 2.0
 └── README.md
 ```
-
 ---
-
-## Development Status
-
-The legacy C firmware (`ESP32_DRONE_REMOTE_ID_Firmware/`) has been **removed**. All functionality has been ported to Rust. The old repository was fully replaced by this Rust workspace on 2026-08-17.
-
-| Component | Status |
-|---|:---:|
-| Workspace structure | ✅ 4 crates + standalone BSP crate |
-| Firmware core | ✅ Main orchestrator, NVS, CLI, web server |
-| WiFi Beacon + NAN TX | ✅ Implemented (esp-idf-sys bindings) |
-| BLE 4.0/5.0 TX | ✅ Implemented (dual instance on S3/C6) |
-| MAVLink v2 parser | ✅ Implemented (MESSAGE_PACK, ARM_STATUS, 6 ODID submessages) |
-| MSP parser | ✅ Implemented |
-| NMEA parser | ✅ Implemented |
-| DroneCAN (TWAI) | ✅ Implemented |
-| Kalman filter | ✅ 1D × 3 with velocity prediction |
-| Ed25519 auth | ✅ ASTM F3411-22a compliant, 4 pages/cycle |
-| OTA updates | ✅ SHA-256 + Ed25519 verification, dual-partition rollback |
-| Security hardening | ✅ Safe JSON, rate limiting, bounded strings |
-| WS2812 RGB LED | ✅ RMT driver, HSV/RGB |
-| GPIO lighting | ✅ 5-channel patterns with phase offsets |
-| Demo patrol | ✅ Simulated GPS (Colosseum) |
-| CI | ✅ Host tests + ESP32-C6 cross-build on GitHub Actions |
-
----
-
-## Testing
-
-### Firmware tests (Rust)
-
-```bash
-cargo test --workspace                       # 312 tests, all passing
-cargo clippy --workspace -- -D warnings      # zero warnings
-```
-
-### CLI commands (after flashing)
-
-```
-> status              # Show GPS, TX rates, identity state
-> config get uas_id   # Check config
-> transmit 10         # Force 10 packets
-> patrol              # Start demo GPS patrol
-```
 
 ### Ground station (RID Hub)
 
@@ -423,7 +367,7 @@ Live demo at [config(demo).html](https://VOLTEKOVER.github.io/OmniRID-Universal-
 
 1. Use Rust edition 2024 and follow `rustfmt` defaults
 2. Run `cargo test --workspace` and `cargo clippy --workspace -- -D warnings` before submitting
-3. Test on at least one target (ESP32 / S3 / C6)
+3. Test on at least one target
 4. Update documentation for significant changes
 5. Open a PR with a description and hardware test notes
 
@@ -443,29 +387,8 @@ Copyright (C) 2019-2023 Intel Corporation
 Licensed under the Apache License, Version 2.0.
 See the LICENSE file for details.
 ```
-
-| Project | Purpose | Status |
-|---|---|---|
-| **opendroneid-sys** | OpenDroneID FFI bindings (ASTM F3411 encoder/decoder) | Vendored in repo |
-| **ESP-IDF** | ESP32 SDK | v6.0.1+ |
-| **proto-mavlink** | MAVLink v2 parser (pure Rust) | In-repo crate |
-| **proto-nmea** | NMEA parser (pure Rust) | In-repo crate |
-| **proto-msp** | MSP parser (pure Rust) | In-repo crate |
-| **mbedTLS** | Crypto (Ed25519, ECDSA) | Built into ESP-IDF |
-| **OmniRID-Desktop** | Ground station (Electron) | Standalone app |
-
----
-
-## Next Steps
-
-1. **Try the demo**: [offline config UI](https://VOLTEKOVER.github.io/OmniRID-Universal-Drone-ID/config(demo).html)
-2. **Build locally**: clone the repo, `cargo build --workspace`, flash to an ESP32
-3. **Connect**: WiFi **ESP-RID** → `192.168.4.1`
-4. **Check the docs**: [Wiki](https://VOLTEKOVER.github.io/OmniRID-Universal-Drone-ID/guide.html)
-5. **Report issues**: [GitHub Issues](https://github.com/VOLTEKOVER/OmniRID-Universal-Drone-ID/issues)
-
 ---
 
 <p align="center">
-  Made with care by <a href="https://github.com/VOLTEKOVER">VOLTEKOVER</a>
+  Made with ❤️ by <a href="https://github.com/VOLTEKOVER">VOLTEKOVER</a>
 </p>

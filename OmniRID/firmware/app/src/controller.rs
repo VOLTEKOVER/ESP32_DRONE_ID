@@ -194,6 +194,7 @@ fn state_snapshot(state: &State) -> rid_app::state::State {
         takeoff_lon: state.takeoff_lon,
         takeoff_alt: state.takeoff_alt,
         takeoff_captured: state.takeoff_captured,
+        stats: state.stats,
     }
 }
 
