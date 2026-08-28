@@ -77,9 +77,9 @@ mod tests {
         payload[10..12].copy_from_slice(&1234i16.to_le_bytes());
         payload[12..14].copy_from_slice(&5432i16.to_le_bytes());
         payload[14..16].copy_from_slice(&1800i16.to_le_bytes());
-        let mut f = [b'$', b'M', b'<', 0x00, 16, 106].to_vec();
+        let mut f = [b'$', b'M', b'<', 16, 106].to_vec();
         f.extend_from_slice(&payload);
-        let crc = f[3..].iter().fold(0u8, |c, &b| c ^ b);
+        let crc = f[5..].iter().fold(0u8, |c, &b| c ^ b);
         f.push(crc);
         f
     }

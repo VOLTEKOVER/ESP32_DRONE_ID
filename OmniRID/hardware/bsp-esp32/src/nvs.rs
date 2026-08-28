@@ -119,6 +119,24 @@ impl NvsStore for EspNvsStorage {
         }
     }
 
+    fn get_blob(&mut self, key: &str, out: &mut [u8]) -> bool {
+        let h = match self.open() {
+            Ok(h) => h,
+            Err(_) => return false,
+        };
+        match h.get_blob(key, out) {
+            Ok(true) => true,
+            _ => false,
+        }
+    }
+
+    fn set_blob(&mut self, key: &str, value: &[u8]) {
+        if let Ok(h) = self.open() {
+            let _ = h.set_blob(key, value);
+            let _ = h.commit();
+        }
+    }
+
     fn erase_all(&mut self) {
         if let Ok(h) = self.open() {
             let _ = h.erase_all();

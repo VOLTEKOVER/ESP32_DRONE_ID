@@ -225,17 +225,28 @@ impl Scheduler {
                         readiness::derive_relative_altitude(&mut self.state);
                     }
 
-                    // Operator location: fresh MAVLink, else config.
-                    if let Some(op) = input.mavlink_operator_location {
-                        self.state.operator_lat = op.lat;
-                        self.state.operator_lon = op.lon;
-                        self.state.operator_alt = op.alt;
-                        self.state.operator_position_updated_ms = input.now_ms;
-                        self.state.operator_location_type = 1;
-                        self.state.gps.operator_lat = op.lat;
-                        self.state.gps.operator_lon = op.lon;
-                        self.state.gps.operator_alt = op.alt;
+                    // Operator location: fresh MAVLink (only when MAVLink is
+                    // the active protocol, issue #24), else config.
+                    if proto == Protocol::Mavlink {
+                        if let Some(op) = input.mavlink_operator_location {
+                            self.state.operator_lat = op.lat;
+                            self.state.operator_lon = op.lon;
+                            self.state.operator_alt = op.alt;
+                            self.state.operator_position_updated_ms = input.now_ms;
+                            self.state.operator_location_type = 1;
+                            self.state.gps.operator_lat = op.lat;
+                            self.state.gps.operator_lon = op.lon;
+                            self.state.gps.operator_alt = op.alt;
+                        } else {
+                            self.state.gps.operator_lat = config.operator_lat;
+                            self.state.gps.operator_lon = config.operator_lon;
+                            self.state.gps.operator_alt = config.operator_alt;
+                        }
                     } else {
+                        // Non-MAVLink protocols (MSP/NMEA/None/Auto): the
+                        // 30 s MAVLink freshness window could feed stale
+                        // operator coordinates, so only the configured
+                        // operator position is used.
                         self.state.gps.operator_lat = config.operator_lat;
                         self.state.gps.operator_lon = config.operator_lon;
                         self.state.gps.operator_alt = config.operator_alt;
@@ -306,11 +317,11 @@ impl Scheduler {
             gps_stale = true;
         }
 
-        let tx_fired = if had_gps {
-            self.update_transmissions(config, input.now_us, out)
-        } else {
-            false
-        };
+        // `update_transmissions()` runs unconditionally each tick: the
+        // `bcast_powerup` gate inside decides whether to transmit without a
+        // GPS fix. This fixes the C bug where `bcast_powerup` never fired
+        // because the call was gated behind `had_gps`.
+        let tx_fired = self.update_transmissions(config, input.now_us, out);
 
         let led = if config.lock_level >= 2 {
             LedState::Locked
@@ -439,13 +450,36 @@ mod tests {
     #[test]
     fn no_data_no_tx_no_gps() {
         let mut s = Scheduler::new();
-        let cfg = Config::default();
+        // `bcast_powerup` defaults to true; disable it to verify that without
+        // GPS (and without the power-up gate) nothing is transmitted.
+        let cfg = Config {
+            bcast_powerup: false,
+            ..Config::default()
+        };
         let mut rec = Recorder::default();
         let out = s.tick(&sample(1000, None), &cfg, &mut rec);
         assert!(!out.had_gps);
         assert!(!out.tx_fired);
         assert!(!s.state.gps_valid);
         assert_eq!(out.led, LedState::NoGps);
+    }
+
+    #[test]
+    fn bcast_powerup_transmits_without_gps() {
+        // Regression test for the C bug (#21): `bcast_powerup` must fire even
+        // with no GPS data because `update_transmissions()` now runs every
+        // tick instead of only when `had_gps` is true.
+        let mut s = Scheduler::new();
+        let cfg = Config {
+            bcast_powerup: true,
+            ..Config::default()
+        };
+        let mut rec = Recorder::default();
+        let out = s.tick(&sample(1000, None), &cfg, &mut rec);
+        assert!(!out.had_gps);
+        assert!(!s.state.gps_valid);
+        assert!(out.tx_fired);
+        assert_eq!(rec.bcn, 1);
     }
 
     #[test]
@@ -559,6 +593,46 @@ mod tests {
         assert_eq!(s.state.operator_location_type, 1);
         assert_eq!(s.state.gps.operator_lat, 44.0);
         assert_eq!(s.state.operator_position_updated_ms, 1000);
+    }
+
+    #[test]
+    fn non_mavlink_protocol_ignores_mavlink_operator_location() {
+        // Issue #24: the MAVLink operator location (30 s freshness window)
+        // must only be applied when MAVLink is the active protocol. For
+        // MSP/NMEA etc. the configured operator position is used instead,
+        // so a stale MAVLink coordinate can't leak into the transmission.
+        let mut s = Scheduler::new();
+        let cfg = Config {
+            operator_lat: 40.5,
+            operator_lon: 9.25,
+            operator_alt: 12.0,
+            ..Config::default()
+        };
+        let mut rec = Recorder::default();
+        let mut inp = sample(1000, Some(fix()));
+        inp.proto = Protocol::Msp;
+        inp.mavlink_operator_location = Some(OperatorLocation {
+            lat: 44.0,
+            lon: 8.0,
+            alt: 5.0,
+        });
+        s.tick(&inp, &cfg, &mut rec);
+        // Fresh fix so the operator branch above ran.
+        assert!(s.state.gps_valid);
+        // MAVLink location must NOT be applied for MSP.
+        assert_eq!(s.state.gps.operator_lat, 40.5);
+        assert_eq!(s.state.gps.operator_lon, 9.25);
+        assert_eq!(s.state.operator_location_type, 0);
+        assert_eq!(s.state.operator_position_updated_ms, 0);
+
+        // Same input with MAVLink active: MAVLink location is applied.
+        let mut s2 = Scheduler::new();
+        let mut rec2 = Recorder::default();
+        inp.proto = Protocol::Mavlink;
+        s2.tick(&inp, &cfg, &mut rec2);
+        assert_eq!(s2.state.gps.operator_lat, 44.0);
+        assert_eq!(s2.state.operator_location_type, 1);
+        assert_eq!(s2.state.operator_position_updated_ms, 1000);
     }
 
     #[test]

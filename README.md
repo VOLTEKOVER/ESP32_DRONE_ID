@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/images/logo%20con%20scritta.svg" alt="OmniRID" width="420">
+  <img src="docs/images/logo_with_text.svg" alt="OmniRID" width="420">
 </p>
 
 <p align="center">

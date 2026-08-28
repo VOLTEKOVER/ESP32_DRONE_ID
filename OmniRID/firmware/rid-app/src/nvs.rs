@@ -6,7 +6,7 @@
 
 use rid_interface::{MAX_KEY_LEN, NUM_KEYS};
 
-use crate::config::{BspConfig, clamp_region, cstr};
+use crate::config::{BspConfig, NUM_LIGHTING_PINS, clamp_region, cstr};
 
 /// Abstract non-volatile key/value store, mirroring the ESP-IDF NVS subset
 /// used by `nvs_storage.c`.
@@ -25,7 +25,55 @@ pub trait NvsStore {
     fn set_f32(&mut self, key: &str, value: f32);
     fn get_f64(&mut self, key: &str) -> Option<f64>;
     fn set_f64(&mut self, key: &str, value: f64);
+    /// Returns the stored raw bytes (`false` when the key is absent or the
+    /// stored blob does not fit `out`; `out` is left unmodified on failure).
+    fn get_blob(&mut self, key: &str, out: &mut [u8]) -> bool;
+    fn set_blob(&mut self, key: &str, value: &[u8]);
     fn erase_all(&mut self);
+}
+
+/// Loads a `[i16; N]` blob; on a missing/mismatched blob `out` is left
+/// untouched matching the C `if (nvs_get_...)` guard.
+fn load_blob_i16(nvs: &mut impl NvsStore, key: &str, out: &mut [i16]) {
+    let n = core::mem::size_of_val(out);
+    let mut buf = [0u8; NUM_LIGHTING_PINS * 2];
+    if buf.len() < n || !nvs.get_blob(key, &mut buf[..n]) {
+        return;
+    }
+    for (i, slot) in out.iter_mut().enumerate() {
+        let mut b = [0u8; 2];
+        b.copy_from_slice(&buf[i * 2..i * 2 + 2]);
+        *slot = i16::from_le_bytes(b);
+    }
+}
+
+/// Saves a `[i16; N]` as a little-endian blob.
+fn save_blob_i16(nvs: &mut impl NvsStore, key: &str, value: &[i16]) {
+    let n = core::mem::size_of_val(value);
+    let mut buf = [0u8; NUM_LIGHTING_PINS * 2];
+    if buf.len() < n {
+        return;
+    }
+    for (i, v) in value.iter().enumerate() {
+        buf[i * 2..i * 2 + 2].copy_from_slice(&v.to_le_bytes());
+    }
+    nvs.set_blob(key, &buf[..n]);
+}
+
+/// Reinterprets a `[i8; N]` slice as its byte representation.
+fn i8_bytes(v: &[i8]) -> &[u8] {
+    // SAFETY: `i8` and `u8` have identical size/alignment and there is no
+    // padding, so viewing as bytes is well-defined.
+    unsafe {
+        core::slice::from_raw_parts(v.as_ptr() as *const u8, v.len())
+    }
+}
+
+/// Reinterprets a byte slice as `[i8; N]` (byte-identical layout).
+fn bytes_i8(v: &[u8]) -> &[i8] {
+    unsafe {
+        core::slice::from_raw_parts(v.as_ptr() as *const i8, v.len())
+    }
 }
 
 /// Builds the `pubkey%d` NVS key (1-based, like the C `snprintf`).
@@ -76,6 +124,38 @@ pub fn save(cfg: &BspConfig, nvs: &mut impl NvsStore) {
     nvs.set_i8("led_r", cfg.led_r_gpio);
     nvs.set_i8("led_g", cfg.led_g_gpio);
     nvs.set_i8("led_b", cfg.led_b_gpio);
+
+    // Input transport.
+    nvs.set_u8("protocol", cfg.protocol as u8);
+    nvs.set_u8("uart_port", cfg.uart_port);
+    nvs.set_u8("tx_pin", cfg.tx_pin);
+    nvs.set_u8("rx_pin", cfg.rx_pin);
+
+    // WS2812.
+    nvs.set_i8("ws2812_gpio", cfg.ws2812_gpio);
+    nvs.set_u8("ws2812_br", cfg.ws2812_brightness);
+
+    // External lighting.
+    nvs.set_blob("light_pins", i8_bytes(&cfg.lighting_pins));
+    nvs.set_blob("light_pat", &cfg.lighting_patterns);
+    save_blob_i16(nvs, "light_phase", &cfg.lighting_phase_offsets);
+
+    // DroneCAN.
+    nvs.set_i8("dronecan_rx", cfg.dronecan_rx_gpio);
+    nvs.set_i8("dronecan_tx", cfg.dronecan_tx_gpio);
+    nvs.set_u32("dronecan_br", cfg.dronecan_bitrate);
+
+    // MAVLink USB transport.
+    nvs.set_u8("mav_usb", cfg.mavlink_usb_enable as u8);
+
+    // OTA trigger GPIO.
+    nvs.set_i8("ota_trig", cfg.ota_trigger_gpio);
+
+    // Auth private key (persisted so it survives reboot).
+    nvs.set_blob("auth_key", &cfg.auth_private_key);
+
+    // Startup delay.
+    nvs.set_u32("start_delay", cfg.start_delay_ms);
 
     nvs.set_u32("baud", cfg.baud_rate);
 
@@ -153,6 +233,75 @@ pub fn load(cfg: &mut BspConfig, nvs: &mut impl NvsStore) {
         cfg.led_b_gpio = v;
     }
 
+    // Input transport.
+    if let Some(v) = nvs.get_u8("protocol") {
+        // The C maps 1..=4 to MAVLINK/MSP/NMEA/NONE, everything else to AUTO.
+        cfg.protocol = match v {
+            1 => rid_interface::Protocol::Mavlink,
+            2 => rid_interface::Protocol::Msp,
+            3 => rid_interface::Protocol::Nmea,
+            4 => rid_interface::Protocol::None,
+            _ => rid_interface::Protocol::Auto,
+        };
+    }
+    if let Some(v) = nvs.get_u8("uart_port") {
+        cfg.uart_port = v;
+    }
+    if let Some(v) = nvs.get_u8("tx_pin") {
+        cfg.tx_pin = v;
+    }
+    if let Some(v) = nvs.get_u8("rx_pin") {
+        cfg.rx_pin = v;
+    }
+
+    // WS2812.
+    if let Some(v) = nvs.get_i8("ws2812_gpio") {
+        cfg.ws2812_gpio = v;
+    }
+    if let Some(v) = nvs.get_u8("ws2812_br") {
+        cfg.ws2812_brightness = v;
+    }
+
+    // External lighting.
+    {
+        let mut buf = [0u8; NUM_LIGHTING_PINS];
+        if nvs.get_blob("light_pins", &mut buf) {
+            cfg.lighting_pins.copy_from_slice(bytes_i8(&buf));
+        }
+    }
+    {
+        let mut buf = [0u8; NUM_LIGHTING_PINS];
+        if nvs.get_blob("light_pat", &mut buf) {
+            cfg.lighting_patterns = buf;
+        }
+    }
+    load_blob_i16(nvs, "light_phase", &mut cfg.lighting_phase_offsets);
+
+    // DroneCAN.
+    if let Some(v) = nvs.get_i8("dronecan_rx") {
+        cfg.dronecan_rx_gpio = v;
+    }
+    if let Some(v) = nvs.get_i8("dronecan_tx") {
+        cfg.dronecan_tx_gpio = v;
+    }
+    if let Some(v) = nvs.get_u32("dronecan_br") {
+        cfg.dronecan_bitrate = v;
+    }
+
+    // MAVLink USB transport.
+    if let Some(v) = nvs.get_u8("mav_usb") {
+        cfg.mavlink_usb_enable = v != 0;
+    }
+
+    // OTA trigger GPIO.
+    if let Some(v) = nvs.get_i8("ota_trig") {
+        cfg.ota_trigger_gpio = v;
+    }
+
+    if let Some(v) = nvs.get_u32("start_delay") {
+        cfg.start_delay_ms = v;
+    }
+
     if let Some(v) = nvs.get_u32("baud") {
         cfg.baud_rate = v;
     }
@@ -188,6 +337,9 @@ pub fn load(cfg: &mut BspConfig, nvs: &mut impl NvsStore) {
     if let Some(v) = nvs.get_f32("op_alt") {
         cfg.operator_alt = v;
     }
+
+    // Auth private key (persisted for the auth lifecycle).
+    nvs.get_blob("auth_key", &mut cfg.auth_private_key);
 
     for (i, key) in cfg.public_keys.iter_mut().enumerate() {
         let k = pubkey_key(i);
@@ -230,6 +382,7 @@ mod tests {
     use super::*;
     use crate::config::BspConfig;
     use std::collections::HashMap;
+    use std::vec::Vec;
     use std::string::{String, ToString};
 
     enum Value {
@@ -239,6 +392,7 @@ mod tests {
         U32(u32),
         F32(f32),
         F64(f64),
+        Blob(Vec<u8>),
     }
 
     /// In-memory `NvsStore` for tests, with the ESP-IDF string semantics
@@ -309,6 +463,18 @@ mod tests {
         fn set_f64(&mut self, key: &str, value: f64) {
             self.0.insert(key.to_string(), Value::F64(value));
         }
+        fn get_blob(&mut self, key: &str, out: &mut [u8]) -> bool {
+            match self.0.get(key) {
+                Some(Value::Blob(b)) if b.len() <= out.len() => {
+                    out[..b.len()].copy_from_slice(b);
+                    true
+                }
+                _ => false,
+            }
+        }
+        fn set_blob(&mut self, key: &str, value: &[u8]) {
+            self.0.insert(key.to_string(), Value::Blob(value.to_vec()));
+        }
         fn erase_all(&mut self) {
             self.0.clear();
         }
@@ -347,6 +513,41 @@ mod tests {
         cfg.operator_lat = 45.304;
         cfg.operator_lon = 11.9537;
         cfg.operator_alt = 100.5;
+
+        // Input transport.
+        cfg.protocol = rid_interface::Protocol::Msp;
+        cfg.uart_port = 2;
+        cfg.tx_pin = 21;
+        cfg.rx_pin = 22;
+
+        // WS2812.
+        cfg.ws2812_gpio = 8;
+        cfg.ws2812_brightness = 42;
+
+        // External lighting.
+        cfg.lighting_pins = [3, -1, 5, -1, 7];
+        cfg.lighting_patterns = [1, 2, 3, 4, 5];
+        cfg.lighting_phase_offsets = [100, 200, -50, 400, 500];
+
+        // DroneCAN.
+        cfg.dronecan_rx_gpio = 13;
+        cfg.dronecan_tx_gpio = 14;
+        cfg.dronecan_bitrate = 250000;
+
+        // MAVLink USB transport.
+        cfg.mavlink_usb_enable = true;
+
+        // OTA trigger GPIO.
+        cfg.ota_trigger_gpio = 9;
+
+        // Startup delay.
+        cfg.start_delay_ms = 15000;
+
+        // Auth private key.
+        cfg.auth_private_key[0] = b'M';
+        cfg.auth_private_key[1] = b'Y';
+        cfg.auth_private_key[2] = b'K';
+
         cfg.public_keys[0] = rid_interface::key_str("AB");
 
         let mut nvs = MemNvs::new();
@@ -355,6 +556,62 @@ mod tests {
         let mut out = BspConfig::default();
         load(&mut out, &mut nvs);
         assert_eq!(out, cfg);
+    }
+
+    #[test]
+    fn persisted_arrays_and_blobs_roundtrip_fully() {
+        // Guards the newly-added BSP-only persistence (issue #25): every field
+        // that used to silently revert on reboot must survive a save/load.
+        let mut cfg = BspConfig::default();
+        cfg.protocol = rid_interface::Protocol::Nmea;
+        cfg.uart_port = 3;
+        cfg.tx_pin = 30;
+        cfg.rx_pin = 31;
+        cfg.ws2812_gpio = 4;
+        cfg.ws2812_brightness = 99;
+        cfg.lighting_pins = [1, 2, 3, 4, 5];
+        cfg.lighting_patterns = [9, 8, 7, 6, 5];
+        cfg.lighting_phase_offsets = [-1, -2, -3, -4, -5];
+        cfg.dronecan_rx_gpio = 15;
+        cfg.dronecan_tx_gpio = 16;
+        cfg.dronecan_bitrate = 500000;
+        cfg.mavlink_usb_enable = false;
+        cfg.ota_trigger_gpio = -1;
+        cfg.start_delay_ms = 0;
+        cfg.auth_private_key[..4].copy_from_slice(b"abcd");
+
+        let mut nvs = MemNvs::new();
+        save(&cfg, &mut nvs);
+        let mut out = BspConfig::default();
+        load(&mut out, &mut nvs);
+        assert_eq!(out, cfg);
+    }
+
+    #[test]
+    fn missing_new_fields_keep_defaults_on_load() {
+        // A store written by the legacy C doesn't contain the new keys; load
+        // must leave the BSP-only defaults intact.
+        let mut cfg = BspConfig::default();
+        // Overwrite some defaults so we can tell they are kept.
+        cfg.protocol = rid_interface::Protocol::Msp;
+        cfg.uart_port = 2;
+        cfg.ws2812_gpio = 8;
+        cfg.lighting_pins = [3, 3, 3, 3, 3];
+        cfg.dronecan_bitrate = 999;
+        cfg.start_delay_ms = 12345;
+
+        let mut nvs = MemNvs::new();
+        load(&mut cfg, &mut nvs);
+
+        assert_eq!(cfg.protocol, rid_interface::Protocol::Msp);
+        assert_eq!(cfg.uart_port, 2);
+        assert_eq!(cfg.ws2812_gpio, 8);
+        assert_eq!(cfg.lighting_pins, [3, 3, 3, 3, 3]);
+        assert_eq!(cfg.dronecan_bitrate, 999);
+        assert_eq!(cfg.start_delay_ms, 12345);
+        // Fields not touched keep their pre-load defaults.
+        assert_eq!(cfg.lighting_patterns, [0; 5]);
+        assert_eq!(cfg.lighting_phase_offsets, [0; 5]);
     }
 
     #[test]

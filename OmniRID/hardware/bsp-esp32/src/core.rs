@@ -17,6 +17,9 @@
 //! insufficient (e.g. a high-priority scheduler task that must not be
 //! preempted by web server handlers).
 
+use alloc::boxed::Box;
+use core::ffi::c_void;
+
 /// Core 0: Protocol/radio (WiFi TX, BLE controller).
 pub const CORE_WIFI: u8 = 0;
 
@@ -49,10 +52,15 @@ where
     }
 
     let boxed = Box::new(f);
-    let arg = Box::into_raw(boxed) as *mut core::ffi::c_void;
+    let arg = Box::into_raw(boxed) as *mut c_void;
 
     let mut handle: esp_idf_sys::TaskHandle_t = core::ptr::null_mut();
-    unsafe {
+    // Issue #26: `xTaskCreatePinnedToCore` returns `pdPASS` (1) on success;
+    // on failure (e.g. not enough heap for the stack) it returns
+    // `pdFAIL`/`errCOULD_NOT_ALLOCATE_REQUIRED_MEMORY`. A task that fails to
+    // spawn leaves the system unusable (missing scheduler/web/CLI task), so we
+    // fail fast rather than silently running partially initialised.
+    let ret = unsafe {
         esp_idf_sys::xTaskCreatePinnedToCore(
             Some(trampoline::<F>),
             name.as_ptr() as *const _,
@@ -61,8 +69,13 @@ where
             priority as i32,
             &mut handle,
             core as i32,
-        );
+        )
+    };
+    if ret != 1 {
+        let name_str = core::str::from_utf8(name).unwrap_or("<unnamed>");
+        panic!("xTaskCreatePinnedToCore failed for {name_str} (ret={ret})");
     }
+    debug_assert!(!handle.is_null());
 }
 
 /// Spawn the scheduler loop task pinned to Core 1.

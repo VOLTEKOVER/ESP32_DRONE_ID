@@ -12,9 +12,10 @@
 extern crate alloc;
 
 pub mod caps;
-pub mod core;
 
 // ESP-IDF glue modules — only compiled when building for real hardware.
+#[cfg(feature = "hardware")]
+pub mod core;
 #[cfg(feature = "hardware")]
 pub mod ble;
 #[cfg(feature = "hardware")]
