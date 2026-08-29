@@ -49,7 +49,7 @@ jobs:
           git push origin "${branch}"
           BODY=$(cat <<'EOF'
           Automated update of the vendored OpenDroneID C library.
-
+          
           The layout-parity tests in `opendroneid-sys` and the byte-exact tests in `out-astm` gate this PR: if the C struct layout or encoder behaviour changed, update the FFI mirror in `external-libs/opendroneid-sys/src/lib.rs` in this same PR.
           EOF
           )
