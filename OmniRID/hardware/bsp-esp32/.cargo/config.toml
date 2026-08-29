@@ -1,0 +1,10 @@
+# ESP-IDF (std) toolchain config for the ESP32-C6 cross-build.
+#
+# These settings only take effect when building for the `riscv32imac-esp-espidf`
+# target with the Espressif Rust toolchain installed by espup (see the
+# esp32-build workflow). The host workspace build/test/clippy steps run against
+# the stable toolchain in `OmniRID/` and are unaffected by this file.
+
+[target.riscv32imac-esp-espidf]
+linker = "ldproxy"
+rustflags = [ "--cfg", "espidf_time64", "-C", "link-arg=-Tesp32c6.ld" ]
