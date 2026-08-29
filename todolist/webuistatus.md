@@ -3,7 +3,7 @@
 > Embedded web UI served by `bsp-esp32` from flash (`include_str!`).
 > Desktop app: Electron + React 19 + Ant Design 6 + Vite 8.
 > Documentation: README.md + docs/index.html + docs/guide.html
-> Last updated: 2026-08-17
+> Last updated: 2026-08-28
 
 ---
 

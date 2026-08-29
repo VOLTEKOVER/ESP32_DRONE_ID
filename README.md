@@ -16,19 +16,14 @@
   <img src="docs/images/inav_logo.png" height="28" alt="INAV">
 </p>
 
-<p>
-  Omnirid is a Open Source Drone ID transmitter compatible with all protocols for now supporting 
-  
-  <b>ASTM F3411-22a</b> / <b>ASD-STAN prEN 4709-002</b> / <b>GB 42590-2023</b> in output .<br>
-  and in input <b>MAVLink · MSP · NMEA · DroneCAN</b> from any flight controller.<br>
+OmniRID is an **open-source Drone ID transmitter** for ESP32 that turns any flight controller into a standards-compliant Remote ID beacon. It is written in **Rust 🦀**.
 
-  Broadcasts via <b>WiFi Beacon + NAN + BLE 4.0/5.0</b>,
-
-  Written in <b>Rust🦀</b>
-</p>
+- **Input** from any flight controller or direct GPS module: **MAVLink · MSP · NMEA · DroneCAN**
+- **Output** to the Remote ID standards: **ASTM F3411-22a / ASD-STAN prEN 4709-002 / GB 42590-2023**
+- **Broadcast** via **WiFi Beacon + NAN + BLE 4.0/5.0**
 
 <p align="center">
-  <a href="https://VOLTEKOVER.github.io/OmniRID-Universal-Drone-ID/"><b>Wiki & Demo</b></a>&nbsp;&nbsp;
+  <a href="https://VOLTEKOVER.github.io/OmniRID-Universal-Drone-ID/"><b>Wiki &amp; Demo</b></a>&nbsp;&nbsp;
   <a href="https://VOLTEKOVER.github.io/OmniRID-Universal-Drone-ID/config(demo).html"><b>Live Demo</b></a>
 </p>
 
@@ -51,22 +46,29 @@
 
 1. [Quick Start](#quick-start)
 2. [Features](#features)
-3. [Communication](#communication)
-4. [Hardware](#hardware)
-5. [Build](#build)
-6. [Project Structure](#project-structure)
-7. [Development Status](#development-status)
-8. [Testing](#testing)
-9. [Documentation](#documentation)
-10. [Security](#security)
-11. [Contributing](#contributing)
-12. [License & Ecosystem](#license--ecosystem)
-13. [Next Steps](#next-steps)
+3. [Ground Station (RID Hub)](#ground-station-rid-hub)
+4. [Web UI & Demo](#web-ui--demo)
+5. [Hardware](#hardware)
+6. [Build](#build)
+7. [Project Structure](#project-structure)
+8. [Documentation](#documentation)
+9. [Security](#security)
+10. [Contributing](#contributing)
+11. [License & Ecosystem](#license--ecosystem)
 
 ---
 
 ## Quick Start
 
+The fastest way to evaluate OmniRID is the **offline demo** — no hardware required:
+
+1. Open the [Live Demo](https://VOLTEKOVER.github.io/OmniRID-Universal-Drone-ID/config(demo).html) (full simulation: GPS, battery, logs).
+2. Flash the firmware to your ESP32 (see [Hardware](#hardware) and [Build](#build)).
+3. Connect to the WiFi network **ESP-RID**.
+4. Open `http://192.168.4.1` to configure the device.
+5. Run `rid-hub` for the ground station dashboard.
+
+---
 
 ## Features
 
@@ -79,7 +81,7 @@
 | **NMEA 0183** | Direct GPS module | `$GPGGA`, `$GNGGA`, `$GPRMC`, `$GNRMC`, `$GPVTG`, `$GNVTG` |
 | **DroneCAN** | CAN bus | `uavcan.equipment.gnss.Fix2` (TWAI decode) |
 
-### Output (RID broadcast)
+### Output (Remote ID broadcast)
 
 | Medium | Standard | Range |
 |---|---|---|
@@ -87,56 +89,7 @@
 | **WiFi NAN** | Service Discovery | ~100 m |
 | **BLE 4.0** | Legacy advertising | ~50 m |
 | **BLE 5.0** | Coded PHY (S3/C6) | ~200+ m (LR mode) |
-|**LoRa**|(to-do)for advanced applications|~1000 m|
-
-## WEB UI
-
-<p align="center">
-  <img src="docs/images/dashboard.png" alt="RID Hub Dashboard" width="820">
-</p>
-
-### CLI commands (after flashing)
-
-```
-> status              # Show GPS, TX rates, identity state
-> config get uas_id   # Check config
-> transmit 10         # Force 10 packets
-> patrol              # Start demo GPS patrol
-```
-
-> No hardware yet? Try the **[offline demo](https://VOLTEKOVER.github.io/OmniRID-Universal-Drone-ID/config(demo).html)** first — full simulation, no ESP32 required.
-
-### Host build (Linux / macOS / Windows)
-
-```bash
-git clone https://github.com/VOLTEKOVER/OmniRID-Universal-Drone-ID.git
-cd OmniRID-Universal-Drone-ID
-cargo build --workspace          # builds all crates for the host
-cargo test --workspace           # runs 312 tests
-```
-
-### ESP32 cross-build
-
-Requires Rust nightly with the ESP32 target + the ESP-IDF SDK:
-
-```bash
-cargo +esp build --target xtensa-esp32-none-elf    --manifest-path firmware/Cargo.toml
-cargo +esp build --target xtensa-esp32s3-none-elf  --manifest-path firmware/Cargo.toml
-cargo +esp build --target riscv32imc-esp-none-elf   --manifest-path firmware/Cargo.toml
-```
-
-### Flash & connect
-
-| Step | Action |
-|:---:|---|
-| 1 | Flash the firmware to your ESP32 via USB |
-| 2 | Connect to WiFi network **ESP-RID** |
-| 3 | Open `http://192.168.4.1` to configure |
-| 4 | Run `rid-hub` for the ground station dashboard |
-
----
-
-## Features
+| **LoRa** | (planned) | ~1000 m |
 
 ### Radio & protocols
 
@@ -154,10 +107,12 @@ cargo +esp build --target riscv32imc-esp-none-elf   --manifest-path firmware/Car
 | **Authentication** | Ed25519 signing (ASTM F3411-22a compliant), 4 pages per broadcast cycle |
 | **Lock levels** | 3 tiers: Normal / Ed25519 signed / eFuse permanent |
 | **OTA updates** | WiFi AP with client-side SHA-256 verification (Web Crypto) + Ed25519 signature |
-| **Hardening** | Safe JSON parsing, rate limiting (10 failed attempts/60s), bounded strings, `psa_crypto_init()` |
+| **Hardening** | Safe JSON parsing, rate limiting (10 failed attempts/60 s), bounded strings |
 | **Configuration** | 70+ parameters: UAS ID, rates, power, public keys, auth, lock, lighting |
 
-# Ground station (RID Hub)
+---
+
+## Ground Station (RID Hub)
 
 | Component | Stack |
 |---|---|
@@ -165,6 +120,33 @@ cargo +esp build --target riscv32imc-esp-none-elf   --manifest-path firmware/Car
 | **Tracker** | Device tracking with 500-point trail, CSV/KML export |
 | **Capture** | WiFi monitor mode + BLE scan + Serial USB (optional npm modules) |
 | **UI** | React 19 + Ant Design 6 + Vite 8 + Leaflet |
+
+```bash
+cd OmniRID-Desktop
+npm install
+npm run dev            # http://localhost:5173
+npm run build           # Production build
+npm start               # Launch Electron
+```
+
+---
+
+## Web UI & Demo
+
+<p align="center">
+  <img src="docs/images/dashboard.png" alt="RID Hub Dashboard" width="820">
+</p>
+
+A live configuration demo is available that simulates GPS, battery, counters and logs — no hardware required. Try it at [config(demo).html](https://VOLTEKOVER.github.io/OmniRID-Universal-Drone-ID/config(demo).html).
+
+### CLI commands (after flashing)
+
+```
+> status              # Show GPS, TX rates, identity state
+> config get uas_id   # Check config
+> transmit 10         # Force 10 packets
+> patrol              # Start demo GPS patrol
+```
 
 ---
 
@@ -202,16 +184,22 @@ Full BOM & pinout: [`docs/prototype_bom.md`](docs/prototype_bom.md)
 
 ### Online (no toolchain)
 
-Every push to `main` triggers automatic CI for all targets via GitHub Actions.
-See [latest builds](https://github.com/VOLTEKOVER/OmniRID-Universal-Drone-ID/actions/workflows/rid-rust-ci.yml).
+Every push to `main` triggers automatic CI for all targets via GitHub Actions (host tests + ESP32 cross-builds). See the [latest builds](https://github.com/VOLTEKOVER/OmniRID-Universal-Drone-ID/actions/workflows/rid-rust-ci.yml).
 
-### Host build
+### Host build (Linux / macOS / Windows)
 
 ```bash
-cargo build --workspace
+git clone https://github.com/VOLTEKOVER/OmniRID-Universal-Drone-ID.git
+cd OmniRID-Universal-Drone-ID/OmniRID
+
+cargo build --workspace          # builds all crates for the host
+cargo test --workspace           # runs 319 tests
+cargo clippy --workspace -- -D warnings
 ```
 
-### ESP32 cross-build (nightly + ESP-IDF)
+### ESP32 cross-build
+
+Requires Rust nightly with the ESP32 target + the ESP-IDF SDK:
 
 ```bash
 cargo +esp build --target xtensa-esp32-none-elf    --manifest-path firmware/Cargo.toml
@@ -219,101 +207,72 @@ cargo +esp build --target xtensa-esp32s3-none-elf  --manifest-path firmware/Carg
 cargo +esp build --target riscv32imc-esp-none-elf   --manifest-path firmware/Cargo.toml
 ```
 
-### Run tests
+### Flash & connect
 
-```bash
-cargo test --workspace       # 312 tests, all passing, clippy clean
-```
+| Step | Action |
+|:---:|---|
+| 1 | Flash the firmware to your ESP32 via USB |
+| 2 | Connect to WiFi network **ESP-RID** |
+| 3 | Open `http://192.168.4.1` to configure |
+| 4 | Run `rid-hub` for the ground station dashboard |
 
 ---
 
 ## Project Structure
 
+Rust workspace (members: `firmware/*`, `inputs/*`, `outputs/*`, `external-libs/*`); the ESP32 BSP lives outside as a standalone crate with its own target triple.
+
 ```
 OmniRID-Universal-Drone-ID/
-├── OmniRID/                         # Rust workspace root
-│   ├── Cargo.toml                   # Workspace manifest
+├── OmniRID/                      # Rust workspace root
+│   ├── Cargo.toml                # Workspace manifest
 │   │
-│   ├── firmware/                    # Core firmware (no_std, esp-idf-sys glue)
-│   │   └── src/
-│   │       ├── main.rs              # Entry point
-│   │       ├── beacon.rs            # WiFi Beacon + NAN TX
-│   │       ├── ble.rs               # BLE 4.0/5.0 TX
-│   │       ├── kalman.rs            # 1D x 3 Kalman filter
-│   │       ├── auth.rs              # Ed25519 signing
-│   │       ├── ota.rs               # OTA update (SHA-256 + Ed25519)
-│   │       ├── security.rs          # Shared crypto module
-│   │       ├── web_server.rs        # HTTP server + REST API
-│   │       ├── cli.rs               # UART CLI REPL
-│   │       ├── nvs.rs               # NVS persistence
-│   │       ├── led.rs               # Status LED + WS2812 + GPIO
-│   │       └── patrol.rs            # Demo GPS patrol
+│   ├── firmware/                 # Firmware crates
+│   │   ├── app/                  # Binary entry point
+│   │   ├── rid-core/             # Core logic (no_std, alloc)
+│   │   ├── rid-app/              # Application layer (+ web UI)
+│   │   ├── rid-interface/        # Shared traits/interfaces
+│   │   └── bsp-sim/              # Simulated board support (host tests)
 │   │
-│   ├── inputs/                      # Protocol parsers
-│   │   ├── mavlink/
-│   │   ├── msp/
-│   │   ├── nmea/
-│   │   └── dronecan/
+│   ├── inputs/                   # Protocol parsers
+│   │   ├── proto-mavlink/
+│   │   ├── proto-msp/
+│   │   ├── proto-nmea/
+│   │   ├── proto-dronecan/
+│   │   └── proto-usb-mavlink/
 │   │
-│   ├── outputs/                     # Broadcast backends
-│   │   ├── wifi_beacon/
-│   │   ├── wifi_nan/
-│   │   └── ble_advertise/
+│   ├── outputs/
+│   │   └── out-astm/             # ASTM F3411-22a output
 │   │
 │   ├── external-libs/
-│   │   └── opendroneid-sys/         # OpenDroneID C FFI bindings (vendored)
+│   │   └── opendroneid-sys/      # OpenDroneID C FFI bindings (vendored)
 │   │
-│   └── hardware/bsp-esp32/          # Board support package (standalone crate)
+│   ├── hardware/
+│   │   └── bsp-esp32/            # ESP32 board support (standalone workspace)
+│   │
+│   └── scripts/                  # Build/helper scripts
 │
-├── OmniRID-Desktop/                 # Ground station (Electron)
+├── OmniRID-Desktop/              # Ground station (Electron)
 │   ├── main.js
 │   ├── preload.js
-│   ├── src/
-│   │   ├── decoder.js               # ASTM F3411-22a decoder
-│   │   ├── tracker.js               # Device tracking + CSV/KML
-│   │   └── capture.js               # WiFi/BLE/Serial capture
-│   └── renderer/src/
-│       ├── App.tsx
-│       ├── components/
-│       │   ├── DashboardTab.tsx
-│       │   ├── DevicesTab.tsx
-│       │   ├── MapTab.tsx
-│       │   ├── TimelineTab.tsx
-│       │   └── CaptureTab.tsx
-│       └── hooks/useRidApi.ts
+│   ├── src/                      # decoder / tracker / capture
+│   └── renderer/src/             # React UI (App.tsx, components/, hooks/)
 │
-├── docs/                            # GitHub Pages
+├── docs/                         # GitHub Pages
 │   ├── index.html
 │   ├── guide.html
 │   ├── config(demo).html
 │   ├── prototype_bom.md
 │   └── images/
 │
-├── .github/workflows/
-│   ├── rid-rust-ci.yml              # Host tests + ESP32-C6 cross-build
-│   ├── release.yml
-│   ├── rid-hub-ci.yml
-│   └── dependabot.yml
+├── todolist/                     # Status & planning docs
+├── 3D_FILES/                     # Enclosure/casing 3D models
+├── .github/workflows/            # CI (rid-rust-ci, release, rid-hub-ci, dependabot)
 │
 ├── SECURITY.md
-├── LICENSE                          # Apache 2.0
+├── LICENSE                       # Apache 2.0
 └── README.md
 ```
----
-
-### Ground station (RID Hub)
-
-```bash
-cd OmniRID-Desktop
-npm install
-npm run dev            # http://localhost:5173
-npm run build           # Production build
-npm start                # Launch Electron
-```
-
-### Web UI demo (no hardware)
-
-Live demo at [config(demo).html](https://VOLTEKOVER.github.io/OmniRID-Universal-Drone-ID/config(demo).html), with simulated GPS, battery, counters, and logs.
 
 ---
 
@@ -352,7 +311,6 @@ Live demo at [config(demo).html](https://VOLTEKOVER.github.io/OmniRID-Universal-
 - **Safe JSON parsing** — all web API inputs are validated (no unsafe `cJSON` in Rust)
 - **Rate limiting** — 10 failed signature attempts per 60 s sliding window
 - **Bounded strings** — all string fields use stack-allocated or length-bounded types
-- **`psa_crypto_init()`** — PSA Crypto API initialized at boot for ESP-IDF v5+
 - **No unsafe in hot paths** — memory safety enforced by Rust's type system at compile time
 
 ### Key storage
@@ -365,11 +323,11 @@ Live demo at [config(demo).html](https://VOLTEKOVER.github.io/OmniRID-Universal-
 
 ## Contributing
 
-1. Use Rust edition 2024 and follow `rustfmt` defaults
-2. Run `cargo test --workspace` and `cargo clippy --workspace -- -D warnings` before submitting
-3. Test on at least one target
-4. Update documentation for significant changes
-5. Open a PR with a description and hardware test notes
+1. Use Rust edition 2024 and follow `rustfmt` defaults.
+2. Run `cargo test --workspace` and `cargo clippy --workspace -- -D warnings` before submitting.
+3. Test on at least one target.
+4. Update documentation for significant changes.
+5. Open a PR with a description and hardware test notes.
 
 Full checklist: [`PULL_REQUEST_TEMPLATE.md`](.github/PULL_REQUEST_TEMPLATE.md)
 
@@ -387,6 +345,7 @@ Copyright (C) 2019-2023 Intel Corporation
 Licensed under the Apache License, Version 2.0.
 See the LICENSE file for details.
 ```
+
 ---
 
 <p align="center">

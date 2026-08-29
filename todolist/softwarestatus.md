@@ -5,8 +5,19 @@
 > The C firmware audit and fix campaign findings (A–P, §9 of `dataflow.md`)
 > remain as historical reference for the port.
 
-Last updated: 2026-08-20
-Tests: 316 passing | Clippy: clean | Edition: 2024
+Last updated: 2026-08-28
+Tests: 319 passing | Clippy: clean | Edition: 2024
+
+> Session fixes (2026-08-28): [#18] MSP framing off-by-one → MSP v1 standard;
+> [#24] operator-location gate (MAVLink op location ignored by other protocols);
+> [#25] NVS persistence for full config + auth lifecycle;
+> [#26] xTaskCreatePinnedToCore return check + hardware-gated module;
+> [#34] `speed_vertical` derived from altitude deltas for MSP/NMEA (Kalman off).
+>
+> Audit correction: [#19] DroneCAN reassembly, [#20] OTA signature at lock≥1 and
+> [#21] `bcast_powerup` were already implemented in the Rust code (the
+> `dataflow.md`/`processes.md` §10 "open" rows described the old C port). They
+> were closed again on GitHub with pointers to the code.
 
 ---
 
@@ -78,7 +89,7 @@ OmniRID/
 - Single workspace with glob members, `exclude = ["hardware"]`
 - `rid-interface` trait contracts (no_std, zero deps)
 - `bsp-esp32` isolated in `hardware/`, standalone workspace, host-compilable
-- 316 tests passing across all crates
+ - 319 tests passing across all crates
 - Clippy clean (`-D warnings`)
 
 ### Firmware Core (Fase 0–5)
@@ -111,6 +122,12 @@ OmniRID/
 ### Documentation & Desktop
 - guide.html, index.html, config(demo).html — all updated for Rust
 - OmniRID-Desktop: Electron + React 19 + Ant Design 6 + Vite 8
+
+### Audit Fixes (session 2026-08-28)
+- [#18] MSP framing corrected: replaced the replicated C off-by-one quirk with standard MSP v1 framing (`buf[3]=size, buf[4]=type, payload=buf[5..]`). Unblocks §10.1 / dataflow section-2 "blocked by §10.1" rows.
+- [#24] Operator-location gate: non-MAVLink protocols ignore MAVLink operator location unless explicitly selected (`non_mavlink_protocol_ignores_mavlink_operator_location`).
+- [#25] NVS persistence: full config now persisted (protocol, uart_port, tx_pin, rx_pin, ws2812_*, lighting_*, dronecan_*, mavlink_usb_enable, ota_trigger_gpio, auth_private_key, start_delay_ms) via get_blob/set_blob + auth lifecycle. Closes dataflow §5/§10.7/§10.8 and processes §6.12 gaps.
+- [#26] xTaskCreatePinnedToCore return-checked; task module hardware-gated.
 
 ---
 

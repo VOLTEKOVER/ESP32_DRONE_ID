@@ -5,7 +5,7 @@
 > Same FreeRTOS task architecture (rid_task loop, CLI task, web server) but organized as Rust crates.
 > The same logical processes and gate chains apply.
 
-Last updated: 2026-08-17 (audited against `OmniRID/firmware/` and `OmniRID/inputs/outputs/` Rust sources).
+Last updated: 2026-08-28 (audited against `OmniRID/firmware/` and `OmniRID/inputs/outputs/` Rust sources).
 Scope: every concurrent context, task, callback, logical process and data path in the Rust firmware.
 Use this file when a feature "does not work correctly": find the process, check its gates, then its output.
 Companion files: `todolist/dataflow.md` (field-by-field chains), `todolist/softwarestatus.md` (open todos).
@@ -182,7 +182,7 @@ Period 100 ms (`vTaskDelay`), WDT reset. `g_running` toggled by `esp_rid_start/s
 ### 6.5 DroneCAN — `inputs/proto-dronecan/src/parser.rs`
 - Init: TWAI install/start, RX queue 10, bitrate 1M/500k/250k.
 - `rid_dronecan_get`: drains queue; sets `g_active=true` on **any** received message.
-- **Effectively non-functional**: `decode_fix2` requires `len >= 32` but classic CAN DLC ≤ 8 (no reassembly); AHRS/Identity decoders are empty stubs. So DroneCAN never yields GPS. `g_active` only toggles whether the fallback is attempted at all.
+- **FIXED [#19]**: `decode_fix2` is now reachable thanks to full multi-frame (FT0/FT1) transfer reassembly (`TransferReceiver`, TID/toggle/timeout/CRC) in `inputs/proto-dronecan/src/parser.rs`; Fix2 position is decoded and tested. AHRS/Identity wire-format stubs remain a separate backlog item.
 
 ### 6.6 Demo patrol — `rid-core/src/patrol.rs`
 - Synthetic circle: home 41.9028/12.4964, radius 0.003°, `angle += 0.018 rad`/tick (~35 s lap), alt 50±20 m, speed 6±2 m/s, fix 2-4, sats 6-16, `armed=true`. Only active in DEMO mode (phase O).
@@ -223,7 +223,7 @@ Period 100 ms (`vTaskDelay`), WDT reset. `g_running` toggled by `esp_rid_start/s
 
 ### 6.12 NVS — `rid-app/src/nvs.rs` + `bsp-esp32/src/nvs.rs`
 - Namespace `esp_rid`. Persisted: uas_id, op_id, self_id, uas_id_2, wifi_ssid, wifi_pass, ua_type, id_type, ua_type_2, id_type_2, wifi_ch, websrv_en, mav_sysid, bcast_pwr, tx_modes, **region**, options, lock_lvl, led_r/g/b, baud, wifi_pwr/bcn/nan, bt4_rate/pwr, bt5_rate/pwr, op_lat/lon/alt, pubkey1..5.
-- **NOT persisted** (lost on reboot): `protocol`, `uart_port`, `tx_pin`, `rx_pin`, `ws2812_gpio`, `ws2812_brightness`, `lighting_*`, `dronecan_*`, `mavlink_usb_enable`, `ota_trigger_gpio`, `auth_private_key`, `start_delay_ms` (tracked in `softwarestatus.md`).
+- **FIXED [#25]** — `protocol`, `uart_port`, `tx_pin`, `rx_pin`, `ws2812_gpio`, `ws2812_brightness`, `lighting_*`, `dronecan_*`, `mavlink_usb_enable`, `ota_trigger_gpio`, `auth_private_key`, `start_delay_ms` are now persisted via get_blob/set_blob; no longer lost on reboot (see `softwarestatus.md`).
 - `operator_lat/lon` stored as **float** in NVS although the fields are double → precision loss at ~1 cm.
 - `nvs_storage_reset_preserve_keys`: erase-all then re-write pubkey1..5.
 
@@ -296,8 +296,8 @@ Debug: find which gate blocks — that is usually the answer.
 | BLE4 nothing received | legacy 31 B rotation | `ble4_count` increments? power; ext-adv instance 2 |
 | BLE5 nothing received | ext adv only compiled on S3/C6 | target support; `ble5_count` |
 | Web UI unreachable | `webserver_en=0` or eFuse lock | boot log; AP SSID visible? |
-| Config reverts after reboot | §6.12 NVS gaps | `nvs_storage_save/load` missing fields |
-| Auth pages missing | `rid_auth_init` at boot only + key not persisted | re-enter key, reboot; check bitlen 256 |
+| Config reverts after reboot | ~~§6.12 NVS gaps~~ → **FIXED #25** | all config fields now persisted via get_blob/set_blob |
+| Auth pages missing | `rid_auth_init` at boot only + key not persisted (**FIXED #25**) | key persisted in NVS; reboot not needed; check bitlen 256 |
 | OTA page loads but stalls | OTA idle counter | ~60 s stall timeout |
 | Watchdog reset loop | `rid_task` blocked on `g_lock` `portMAX_DELAY` | who holds the lock (web/CLI/NVS)? |
 | LED always NO_GPS | `gps_valid` never set | §5 phases E/G; parser gates |
@@ -310,11 +310,12 @@ Debug: find which gate blocks — that is usually the answer.
 
 - AUTO-mode UART starvation / default-NMEA misclassification (urgent).
 - `g_config` / `g_state` races; `portMAX_DELAY` in `rid_task`; WDT add unchecked.
-- NVS persistence gaps (protocol, pins, ws2812, lighting, dronecan, mavlink_usb, ota_gpio, auth key, start_delay_ms).
-- **⚠ MSP framing off-by-one** (verify with real traffic).
-- **⚠ `rid_mavlink_usb` likely conflicts with console UART** (verify at runtime).
-- Web `/ota` has **no signature check** at lock=1 (unlike GPIO-mode `/update`).
-- DroneCAN `decode_fix2` unreachable (no multi-frame reassembly).
-- `bcast_powerup` effectively dead (TX only when `had_gps`).
+- ~~NVS persistence gaps (protocol, pins, ws2812, lighting, dronecan, mavlink_usb, ota_gpio, auth key, start_delay_ms)~~ → **FIXED [#25]** — full config persisted via get_blob/set_blob.
+- ~~MSP framing off-by-one~~ → **FIXED [#18]** — standard MSP v1 framing.
+- **⚠ `rid_mavlink_usb` vs console** — Rust port uses the USB-Serial/JTAG peripheral (`bsp-esp32/src/usb.rs`), not UART0 as in C, so the original UART0 clash is gone architecturally; on C3/C6 the same USB peripheral may carry console output — **verify at runtime/CI** — **OPEN #22**.
+- ~~Web `/ota` has no signature check at lock=1~~ → **FIXED [#20]** — `ota.rs` requires `X-Signature` (Ed25519) at lock≥1, rejects at lock≥2.
+- ~~DroneCAN `decode_fix2` unreachable (no multi-frame reassembly)~~ → **FIXED [#19]** — full `TransferReceiver` reassembly implemented + tested.
+- ~~`bcast_powerup` effectively dead (TX only when `had_gps`)~~ → **FIXED [#21]** — `update_transmissions()` runs every tick.
+- ~~`speed_vertical` never set for MSP/NMEA~~ → **FIXED [#34]** — derived from altitude deltas when Kalman off.
 - Parser split needed (pure `process_bytes` vs UART) → enables fuzz + host tests.
 - `operator_lat/lon` stored as float in NVS (precision).

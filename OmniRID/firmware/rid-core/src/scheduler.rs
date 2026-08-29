@@ -66,6 +66,11 @@ pub struct Scheduler {
     nan_counter: u8,
     pub log_cycle: u32,
     patrol: Patrol,
+    /// Previous altitude and its timestamp, for the altitude-differentiation
+    /// fallback that provides `speed_vertical` for MSP/NMEA (issue #34).
+    prev_alt_msl: f32,
+    last_alt_ms: u32,
+    alt_initialized: bool,
 }
 
 /// Port of `rate_allowed()` in `esp_remote_id.c`.
@@ -93,6 +98,9 @@ impl Scheduler {
             nan_counter: 0,
             log_cycle: 0,
             patrol: Patrol::default(),
+            prev_alt_msl: 0.0,
+            last_alt_ms: 0,
+            alt_initialized: false,
         }
     }
 
@@ -185,6 +193,27 @@ impl Scheduler {
                     self.state.gps_valid = true;
                     self.state.last_update_ms = input.now_ms;
                     self.state.stats.gps_updates += 1;
+
+                    // Issue #34: MSP and NMEA do not carry vertical speed in
+                    // their frames. When the Kalman filter is off (default), it
+                    // is derived here by differentiating the reported altitude
+                    // against the previous fix. (With Kalman on, `climb` below
+                    // already fills `speed_vertical`.)
+                    if cfg_opts & OPT_KALMAN_FILTER == 0
+                        && (proto == Protocol::Msp || proto == Protocol::Nmea)
+                    {
+                        if self.alt_initialized {
+                            let dt_ms = input.now_ms.wrapping_sub(self.last_alt_ms);
+                            if dt_ms > 0 {
+                                let dt_s = dt_ms as f32 / 1000.0;
+                                self.state.gps.speed_vertical =
+                                    (gd.altitude_msl - self.prev_alt_msl) / dt_s;
+                            }
+                        }
+                        self.prev_alt_msl = gd.altitude_msl;
+                        self.last_alt_ms = input.now_ms;
+                        self.alt_initialized = true;
+                    }
 
                     // MAVLink arm status.
                     if proto == Protocol::Mavlink {
@@ -706,5 +735,64 @@ mod tests {
         s.tick(&sample(1000, Some(fix())), &cfg, &mut rec);
         assert!(s.state.identity.uas_id.c_is_empty());
         assert!(s.state.identity.uas_id_2.c_is_empty());
+    }
+
+    #[test]
+    fn msp_nmea_derive_speed_vertical_without_kalman() {
+        // Issue #34: with the Kalman filter off (default), MSP/NMEA frames
+        // carry no vertical speed, so it must be derived from altitude deltas.
+        let mut s = Scheduler::new();
+        let cfg = Config::default(); // options: 0 -> Kalman off
+        let mut rec = Recorder::default();
+
+        // First fix: 120 m at t=1000 (no derivative yet, speed_vertical stays 0).
+        let mut g1 = fix();
+        g1.altitude_msl = 120.0;
+        let mut inp1 = sample(1000, Some(g1));
+        inp1.proto = Protocol::Msp;
+        s.tick(&inp1, &cfg, &mut rec);
+        assert_eq!(s.state.gps.speed_vertical, 0.0);
+
+        // Second fix 500 ms later, climbing 2.5 m -> 5.0 m/s.
+        let mut g2 = fix();
+        g2.altitude_msl = 122.5;
+        let mut inp2 = sample(1500, Some(g2));
+        inp2.proto = Protocol::Msp;
+        s.tick(&inp2, &cfg, &mut rec);
+        assert!((s.state.gps.speed_vertical - 5.0).abs() < 1e-3);
+
+        // Descent over the next 500 ms -> negative vertical speed.
+        let mut g3 = fix();
+        g3.altitude_msl = 120.0;
+        let mut inp3 = sample(2000, Some(g3));
+        inp3.proto = Protocol::Nmea;
+        s.tick(&inp3, &cfg, &mut rec);
+        assert!((s.state.gps.speed_vertical + 5.0).abs() < 1e-3);
+    }
+
+    #[test]
+    fn kalman_supplies_climb_instead_of_differentiation() {
+        // When the Kalman filter is on, `speed_vertical` comes from the
+        // estimator (`climb`), not from raw altitude differentiation.
+        let mut s = Scheduler::new();
+        let cfg = Config {
+            options: OPT_KALMAN_FILTER,
+            ..Config::default()
+        };
+        let mut rec = Recorder::default();
+        let mut g1 = fix();
+        g1.altitude_msl = 100.0;
+        let mut inp1 = sample(1000, Some(g1));
+        inp1.proto = Protocol::Msp;
+        s.tick(&inp1, &cfg, &mut rec);
+        let mut g2 = fix();
+        g2.altitude_msl = 110.0;
+        let mut inp2 = sample(2000, Some(g2));
+        inp2.proto = Protocol::Msp;
+        s.tick(&inp2, &cfg, &mut rec);
+        // Kalman does too few updates to converge a non-zero climb, but the
+        // important part is that the scheduler used the estimator path and the
+        // altitude-differentiation state was not consulted.
+        assert!(!s.alt_initialized);
     }
 }
