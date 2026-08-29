@@ -75,4 +75,4 @@ jobs:
         working-directory: OmniRID/hardware/bsp-esp32
         run: |
           source ~/export-esp.sh
-          cargo build --features esp32c6,hardware --target riscv32imac-esp-espidf
+          cargo build -Z build-std=std,panic_abort --features esp32c6,hardware --target riscv32imac-esp-espidf
