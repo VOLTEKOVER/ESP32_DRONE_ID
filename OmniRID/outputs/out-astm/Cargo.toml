@@ -3,6 +3,7 @@ name = "out-astm"
 version = "0.1.0"
 edition = "2021"
 description = "ASTM F3411-22a broadcast encoder (port of odid_common.c, Fase 3)"
+license = "MIT"
 
 [dependencies]
 rid-core = { path = "../../firmware/rid-core" }

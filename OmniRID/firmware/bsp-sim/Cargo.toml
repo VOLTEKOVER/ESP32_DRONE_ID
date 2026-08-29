@@ -3,6 +3,7 @@ name = "bsp-sim"
 version = "0.1.0"
 edition = "2021"
 description = "Host simulator for the Remote ID firmware (no hardware required)"
+license = "MIT"
 
 [dependencies]
 rid-core = { path = "../rid-core" }

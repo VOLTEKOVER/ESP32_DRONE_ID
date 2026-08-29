@@ -3,6 +3,7 @@ name = "proto-usb-mavlink"
 version = "0.1.0"
 edition = "2021"
 description = "MAVLink v2 TX telemetry over USB CDC (port of rid_mavlink_usb.c + rid_mavlink_tx.c): heartbeat + OPEN_DRONE_ID_SYSTEM frame packing and periodic writer"
+license = "MIT"
 
 [dependencies]
 rid-interface = { path = "../../firmware/rid-interface" }

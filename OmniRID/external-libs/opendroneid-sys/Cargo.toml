@@ -3,6 +3,7 @@ name = "opendroneid-sys"
 version = "0.1.0"
 edition = "2021"
 description = "Bindings to the official Open Drone ID C encoder (vendored, Fase 3)"
+license = "MIT"
 links = "opendroneid"
 build = "build.rs"
 

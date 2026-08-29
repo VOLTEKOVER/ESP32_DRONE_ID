@@ -3,6 +3,7 @@ name = "proto-mavlink"
 version = "0.1.0"
 edition = "2021"
 description = "MAVLink v1/v2 parser input (port of mavlink_parser.c), implements the rid-interface GpsSource contract"
+license = "MIT"
 
 [dependencies]
 rid-interface = { path = "../../firmware/rid-interface" }

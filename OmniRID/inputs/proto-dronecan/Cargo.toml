@@ -3,6 +3,7 @@ name = "proto-dronecan"
 version = "0.1.0"
 edition = "2021"
 description = "DroneCAN/UAVCAN v0 input parser with multi-frame transfer reassembly (port of rid_dronecan.c), implements the rid-interface GpsSource contract"
+license = "MIT"
 
 [dependencies]
 rid-interface = { path = "../../firmware/rid-interface" }

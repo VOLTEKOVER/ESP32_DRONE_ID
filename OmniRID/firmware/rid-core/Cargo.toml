@@ -3,6 +3,7 @@ name = "rid-core"
 version = "0.1.0"
 edition = "2021"
 description = "Central processing for the modular Remote ID firmware (hourglass hub, readiness, kalman, auth)"
+license = "MIT"
 
 [dependencies]
 rid-interface = { path = "../rid-interface" }

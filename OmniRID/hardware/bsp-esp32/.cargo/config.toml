@@ -8,3 +8,6 @@
 [target.riscv32imac-esp-espidf]
 linker = "ldproxy"
 rustflags = [ "--cfg", "espidf_time64", "-C", "link-arg=-Tesp32c6.ld" ]
+
+[unstable]
+build-std = ["std", "panic_abort"]
