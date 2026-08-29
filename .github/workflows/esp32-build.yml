@@ -38,7 +38,7 @@ jobs:
         run: cargo install espup
 
       - name: Install ESP-IDF Rust ecosystem
-        run: espup install --targets esp32c6
+        run: espup install --targets esp32c6 --std
 
       - name: Cache Cargo
         uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6
@@ -75,4 +75,4 @@ jobs:
         working-directory: OmniRID/hardware/bsp-esp32
         run: |
           source ~/export-esp.sh
-          cargo build -Z build-std=std,panic_abort --features esp32c6,hardware --target riscv32imac-esp-espidf
+          cargo build --features esp32c6,hardware --target riscv32imac-esp-espidf
