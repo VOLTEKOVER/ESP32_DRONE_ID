@@ -11,7 +11,7 @@ permissions:
   issues: write
 
 jobs:
-  # ── OpenDroneID C library ──────────────────────────────────────────────
+  # â”€â”€ OpenDroneID C library â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   opendroneid:
     name: OpenDroneID
     runs-on: ubuntu-latest
@@ -59,16 +59,16 @@ jobs:
             --title "Update vendored OpenDroneID to ${tag}" \
             --body "$BODY"
 
-  # ── MAVLink message IDs ────────────────────────────────────────────────
+  # â”€â”€ MAVLink message IDs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   mavlink:
     name: MAVLink
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
         with:
           python-version: "3.12"
 
@@ -173,13 +173,13 @@ jobs:
             --title "Update MAVLink message IDs from upstream" \
             --body "$BODY"
 
-  # ── DroneCAN DSDL ──────────────────────────────────────────────────────
+  # â”€â”€ DroneCAN DSDL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   dronecan:
     name: DroneCAN
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
 
       - name: Fetch upstream DSDL
         run: |
@@ -228,13 +228,13 @@ jobs:
             --label "protocol-update" \
             --body "DroneCAN DSDL change detected. Info: ${INFO}. Check https://github.com/DroneCAN/DSDL/blob/master/uavcan/equipment/gnss/Fix2.uavcan and update proto-dronecan/src/parser.rs if needed."
 
-  # ── ESP-IDF releases ───────────────────────────────────────────────────
+  # â”€â”€ ESP-IDF releases â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   esp-idf:
     name: ESP-IDF
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
 
       - name: Check crates.io for esp-idf-sys
         id: check
@@ -281,13 +281,13 @@ jobs:
             --label "protocol-update" \
             --body "New esp-idf-sys: ${CURRENT} -> ${LATEST}. Update bsp-esp32/Cargo.toml, run cargo check, check https://github.com/espressif/esp-idf/releases"
 
-  # ── Regulatory page changes ────────────────────────────────────────────
+  # â”€â”€ Regulatory page changes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   regulatory:
     name: Regulatory
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
 
       - name: Fetch and diff pages
         run: |
