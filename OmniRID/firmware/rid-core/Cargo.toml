@@ -9,7 +9,7 @@ rid-interface = { path = "../rid-interface" }
 libm = "0.2"
 sha2 = { version = "0.11", default-features = false }
 ed25519-dalek = { version = "2", default-features = false, features = ["fast", "alloc", "pkcs8", "zeroize"] }
-pkcs8 = { version = "0.11", default-features = false, features = ["alloc", "pem"] }
+pkcs8 = { version = "0.10", default-features = false, features = ["alloc", "pem"] }
 
 [dev-dependencies]
 pem-rfc7468 = "0.7"
