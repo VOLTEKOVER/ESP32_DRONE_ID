@@ -84,7 +84,7 @@ pub fn hex_to_bytes(hex: &[u8], out: &mut [u8]) -> bool {
     if hex.len() != out.len() * 2 {
         return false;
     }
-    for (i, chunk) in hex.chunks_exact(2).enumerate() {
+    for (i, chunk) in hex.chunks(2).enumerate() {
         let hi = chunk[0];
         let lo = chunk[1];
         let hi_v = match hi {
