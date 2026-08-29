@@ -333,20 +333,35 @@ pub fn config_to_json(c: &BspConfig) -> String {
     m.insert("dronecan_rx_gpio".into(), Value::from(c.dronecan_rx_gpio));
     m.insert("dronecan_tx_gpio".into(), Value::from(c.dronecan_tx_gpio));
     m.insert("dronecan_bitrate".into(), Value::from(c.dronecan_bitrate));
-    m.insert("mavlink_usb_enable".into(), Value::from(c.mavlink_usb_enable));
+    m.insert(
+        "mavlink_usb_enable".into(),
+        Value::from(c.mavlink_usb_enable),
+    );
     m.insert("ota_trigger_gpio".into(), Value::from(c.ota_trigger_gpio));
     m.insert("start_delay_ms".into(), Value::from(c.start_delay_ms));
     for i in 1..=NUM_KEYS {
-        m.insert(format!("public_key_{}", i), Value::from(cstr(&c.public_keys[i - 1])));
+        m.insert(
+            format!("public_key_{}", i),
+            Value::from(cstr(&c.public_keys[i - 1])),
+        );
     }
     for i in 0..NUM_LIGHTING_PINS {
-        m.insert(format!("lighting_pin_{}", i), Value::from(c.lighting_pins[i]));
+        m.insert(
+            format!("lighting_pin_{}", i),
+            Value::from(c.lighting_pins[i]),
+        );
     }
     for i in 0..NUM_LIGHTING_PINS {
-        m.insert(format!("lighting_pattern_{}", i), Value::from(c.lighting_patterns[i]));
+        m.insert(
+            format!("lighting_pattern_{}", i),
+            Value::from(c.lighting_patterns[i]),
+        );
     }
     for i in 0..NUM_LIGHTING_PINS {
-        m.insert(format!("lighting_phase_{}", i), Value::from(c.lighting_phase_offsets[i]));
+        m.insert(
+            format!("lighting_phase_{}", i),
+            Value::from(c.lighting_phase_offsets[i]),
+        );
     }
 
     serde_json::to_string(&Value::Object(m)).expect("BspConfig serialization")

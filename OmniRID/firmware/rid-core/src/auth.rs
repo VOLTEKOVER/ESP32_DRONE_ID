@@ -6,8 +6,8 @@
 use ed25519_dalek::{Signer, SigningKey};
 use pkcs8::DecodePrivateKey;
 use rid_interface::odid::{
-    AuthPack, AuthPage, AUTH_MAX_PAGES, AUTH_PAGE_NONZERO_DATA_SIZE,
-    AUTH_PAGE_ZERO_DATA_SIZE, AUTH_UAS_ID_SIGNATURE,
+    AuthPack, AuthPage, AUTH_MAX_PAGES, AUTH_PAGE_NONZERO_DATA_SIZE, AUTH_PAGE_ZERO_DATA_SIZE,
+    AUTH_UAS_ID_SIGNATURE,
 };
 
 /// `RID_AUTH_KEY_SIZE`
@@ -68,8 +68,8 @@ impl AuthSigner {
 
         let mut pages = 1u8;
         if sig_len > AUTH_PAGE_ZERO_DATA_SIZE {
-            pages += (sig_len - AUTH_PAGE_ZERO_DATA_SIZE)
-                .div_ceil(AUTH_PAGE_NONZERO_DATA_SIZE) as u8;
+            pages +=
+                (sig_len - AUTH_PAGE_ZERO_DATA_SIZE).div_ceil(AUTH_PAGE_NONZERO_DATA_SIZE) as u8;
         }
         if pages as usize > AUTH_MAX_PAGES {
             return None;
@@ -134,7 +134,9 @@ mod tests {
     #[test]
     fn init_rejects_non_ed25519_pem() {
         let mut s = AuthSigner::default();
-        assert!(!s.init(Some("-----BEGIN PRIVATE KEY-----\nnot a key\n-----END PRIVATE KEY-----\n")));
+        assert!(!s.init(Some(
+            "-----BEGIN PRIVATE KEY-----\nnot a key\n-----END PRIVATE KEY-----\n"
+        )));
         assert!(!s.enabled());
     }
 
@@ -162,8 +164,7 @@ mod tests {
                 AUTH_PAGE_NONZERO_DATA_SIZE
             };
             let n = (AUTH_SIG_SIZE - offset).min(cap);
-            sig_rebuilt[offset..offset + n]
-                .copy_from_slice(&page.auth_data[..n]);
+            sig_rebuilt[offset..offset + n].copy_from_slice(&page.auth_data[..n]);
             offset += n;
         }
         assert_eq!(offset, AUTH_SIG_SIZE);

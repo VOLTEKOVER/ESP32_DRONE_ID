@@ -242,8 +242,8 @@ mod tests {
     use opendroneid_sys::{decode_message_type, ODID_MESSAGETYPE_BASIC_ID, ODID_MESSAGE_SIZE};
     use rid_interface::fixed_str;
 
-    use crate::pack::{build_pack, MAX_PACK_LEN};
     use crate::build_uas_data;
+    use crate::pack::{build_pack, MAX_PACK_LEN};
     use rid_interface::types::{GpsData, Identity};
 
     /// UAS snapshot with a deterministic 4-message pack (basic/location/system/
@@ -306,9 +306,15 @@ mod tests {
         assert_eq!(u16::from_le_bytes(buf[34..36].try_into().unwrap()), 0x0420);
 
         // SSID IE, rates IE, vendor IE (221) with ASD-STAN OUI.
-        assert_eq!(&buf[36..45], &[0x00, 0x07, b'E', b'S', b'P', b'-', b'R', b'I', b'D']);
+        assert_eq!(
+            &buf[36..45],
+            &[0x00, 0x07, b'E', b'S', b'P', b'-', b'R', b'I', b'D']
+        );
         assert_eq!(&buf[45..48], &[0x01, 0x01, 0x8C]);
-        assert_eq!(&buf[48..54], &[0xDD, (3 + 1 + 1 + plen) as u8, 0xFA, 0x0B, 0xBC, 0x0D]);
+        assert_eq!(
+            &buf[48..54],
+            &[0xDD, (3 + 1 + 1 + plen) as u8, 0xFA, 0x0B, 0xBC, 0x0D]
+        );
 
         // Service info counter then the pack header at offset 55.
         assert_eq!(buf[54], 0x42);

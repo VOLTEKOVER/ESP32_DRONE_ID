@@ -14,5 +14,5 @@ extern crate std;
 pub mod parser;
 pub mod source;
 
-pub use parser::{MSP_BUF_SIZE, MspParser};
+pub use parser::{MspParser, MSP_BUF_SIZE};
 pub use source::MspSource;

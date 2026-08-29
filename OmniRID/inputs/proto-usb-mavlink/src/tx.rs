@@ -68,7 +68,14 @@ impl<W: UartWrite> MavlinkUsbTx<W> {
                 None => (0.0, 0.0, OP_ALT_UNKNOWN, 0),
             };
             let n = pack_open_drone_id_system(
-                &mut buf, self.tx_seq, TX_SYSID, TX_COMPID, lat, lon, alt, loc_type,
+                &mut buf,
+                self.tx_seq,
+                TX_SYSID,
+                TX_COMPID,
+                lat,
+                lon,
+                alt,
+                loc_type,
             );
             self.tx_seq = self.tx_seq.wrapping_add(1);
             if self.transport.write(&buf[..n]) == n {

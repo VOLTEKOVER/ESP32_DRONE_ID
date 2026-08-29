@@ -99,7 +99,15 @@ pub fn pack_heartbeat(buf: &mut [u8; MAX_FRAME_LEN], seq: u8, sysid: u8, compid:
     payload[6] = MAV_MODE_FLAG_CUSTOM_MODE_ENABLED;
     payload[7] = MAV_STATE_ACTIVE;
     payload[8] = 3; // mavlink_version
-    finalize(buf, seq, sysid, compid, MSG_ID_HEARTBEAT, &payload, HEARTBEAT_CRC_EXTRA)
+    finalize(
+        buf,
+        seq,
+        sysid,
+        compid,
+        MSG_ID_HEARTBEAT,
+        &payload,
+        HEARTBEAT_CRC_EXTRA,
+    )
 }
 
 /// Packs an OPEN_DRONE_ID_SYSTEM message with the same arguments as the
@@ -129,7 +137,15 @@ pub fn pack_open_drone_id_system(
     payload[16..20].copy_from_slice(&op_alt.to_le_bytes()); // operator_altitude_geo
     payload[24..26].copy_from_slice(&1u16.to_le_bytes()); // area_count
     payload[50] = op_loc_type; // operator_location_type
-    finalize(buf, seq, sysid, compid, MSG_ID_OPEN_DRONE_ID_SYSTEM, &payload, SYSTEM_CRC_EXTRA)
+    finalize(
+        buf,
+        seq,
+        sysid,
+        compid,
+        MSG_ID_OPEN_DRONE_ID_SYSTEM,
+        &payload,
+        SYSTEM_CRC_EXTRA,
+    )
 }
 
 #[cfg(test)]
@@ -243,7 +259,10 @@ mod tests {
     fn system_msgid_little_endian() {
         let mut buf = [0u8; MAX_FRAME_LEN];
         let n = pack_open_drone_id_system(&mut buf, 0, 0x41, 0x38, 0.0, 0.0, -1000.0, 0);
-        assert_eq!(u32::from_le_bytes([buf[7], buf[8], buf[9], 0]), MSG_ID_OPEN_DRONE_ID_SYSTEM);
+        assert_eq!(
+            u32::from_le_bytes([buf[7], buf[8], buf[9], 0]),
+            MSG_ID_OPEN_DRONE_ID_SYSTEM
+        );
         assert!(n > 30);
     }
 }

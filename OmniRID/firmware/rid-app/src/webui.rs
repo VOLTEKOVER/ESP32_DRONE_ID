@@ -71,11 +71,7 @@ mod tests {
     #[test]
     fn all_assets_are_non_empty() {
         for asset in ASSETS {
-            assert!(
-                !asset.data.is_empty(),
-                "asset {} is empty",
-                asset.path,
-            );
+            assert!(!asset.data.is_empty(), "asset {} is empty", asset.path,);
             assert!(
                 !asset.content_type.is_empty(),
                 "content-type for {} is empty",
@@ -105,7 +101,10 @@ mod tests {
     fn content_types_are_correct() {
         assert_eq!(lookup("/").unwrap().content_type, HTML_CONTENT_TYPE);
         assert_eq!(lookup("/style.css").unwrap().content_type, CSS_CONTENT_TYPE);
-        assert!(lookup("/app.js").unwrap().content_type.contains("javascript"));
+        assert!(lookup("/app.js")
+            .unwrap()
+            .content_type
+            .contains("javascript"));
     }
 
     #[test]

@@ -6,8 +6,8 @@
 //! live only here.
 
 use rid_interface::{
-    FixedKeyStr, FixedStr, Protocol, Region, TRANSMIT_WIFI_BCN, fixed_str, MAX_KEY_LEN,
-    MAX_STR_LEN, NUM_KEYS,
+    fixed_str, FixedKeyStr, FixedStr, Protocol, Region, MAX_KEY_LEN, MAX_STR_LEN, NUM_KEYS,
+    TRANSMIT_WIFI_BCN,
 };
 
 /// `auth_private_key[512]` from the C header.

@@ -21,7 +21,11 @@ pub struct Rgb {
 
 impl Rgb {
     pub const BLACK: Self = Self { r: 0, g: 0, b: 0 };
-    pub const WHITE: Self = Self { r: 255, g: 255, b: 255 };
+    pub const WHITE: Self = Self {
+        r: 255,
+        g: 255,
+        b: 255,
+    };
 }
 
 /// `rid_led_state_t`.
@@ -50,12 +54,48 @@ pub enum LedPattern {
 /// One entry of the C `state_table`: color, pattern and log name.
 pub fn led_state_entry(state: LedState) -> (Rgb, LedPattern, &'static str) {
     match state {
-        Boot => (Rgb { r: 40, g: 80, b: 255 }, LedPattern::Pulse, "BOOT"),
-        NoGps => (Rgb { r: 255, g: 200, b: 0 }, LedPattern::Blink1Hz, "NO_GPS"),
+        Boot => (
+            Rgb {
+                r: 40,
+                g: 80,
+                b: 255,
+            },
+            LedPattern::Pulse,
+            "BOOT",
+        ),
+        NoGps => (
+            Rgb {
+                r: 255,
+                g: 200,
+                b: 0,
+            },
+            LedPattern::Blink1Hz,
+            "NO_GPS",
+        ),
         GpsOk => (Rgb { r: 0, g: 255, b: 0 }, LedPattern::Solid, "GPS_OK"),
-        Demo => (Rgb { r: 180, g: 40, b: 255 }, LedPattern::Pulse, "DEMO"),
-        Locked => (Rgb { r: 255, g: 0, b: 0 }, LedPattern::BlinkDouble, "LOCKED"),
-        Ota => (Rgb { r: 255, g: 255, b: 255 }, LedPattern::Rainbow, "OTA"),
+        Demo => (
+            Rgb {
+                r: 180,
+                g: 40,
+                b: 255,
+            },
+            LedPattern::Pulse,
+            "DEMO",
+        ),
+        Locked => (
+            Rgb { r: 255, g: 0, b: 0 },
+            LedPattern::BlinkDouble,
+            "LOCKED",
+        ),
+        Ota => (
+            Rgb {
+                r: 255,
+                g: 255,
+                b: 255,
+            },
+            LedPattern::Rainbow,
+            "OTA",
+        ),
         Error => (Rgb { r: 255, g: 0, b: 0 }, LedPattern::Blink4Hz, "ERROR"),
     }
 }
@@ -228,10 +268,14 @@ mod tests {
 
     #[test]
     fn pulse_ramps_and_falls() {
-        let c = Rgb { r: 40, g: 80, b: 255 };
+        let c = Rgb {
+            r: 40,
+            g: 80,
+            b: 255,
+        };
         assert_eq!(pulse(c, 0), Rgb::BLACK);
         assert_eq!(pulse(c, 1000), c); // full brightness mid-cycle
-        // Symmetric at +500 ms: bright = 500 * 255 / 1000 = 127.
+                                       // Symmetric at +500 ms: bright = 500 * 255 / 1000 = 127.
         let half = Rgb {
             r: (40u16 * 127 / 255) as u8,
             g: (80u16 * 127 / 255) as u8,
@@ -247,18 +291,41 @@ mod tests {
         assert_eq!(rainbow(0), Rgb { r: 0, g: 255, b: 0 });
         assert_eq!(rainbow(1700), Rgb { r: 255, g: 0, b: 0 }); // 85
         assert_eq!(rainbow(3400), Rgb { r: 0, g: 0, b: 255 }); // 170
-        assert_eq!(rainbow(1000), Rgb { r: 150, g: 105, b: 0 }); // 50
+        assert_eq!(
+            rainbow(1000),
+            Rgb {
+                r: 150,
+                g: 105,
+                b: 0
+            }
+        ); // 50
     }
 
     #[test]
     fn state_table_matches_c() {
         assert_eq!(
             led_state_entry(LedState::Boot),
-            (Rgb { r: 40, g: 80, b: 255 }, LedPattern::Pulse, "BOOT")
+            (
+                Rgb {
+                    r: 40,
+                    g: 80,
+                    b: 255
+                },
+                LedPattern::Pulse,
+                "BOOT"
+            )
         );
         assert_eq!(
             led_state_entry(LedState::NoGps),
-            (Rgb { r: 255, g: 200, b: 0 }, LedPattern::Blink1Hz, "NO_GPS")
+            (
+                Rgb {
+                    r: 255,
+                    g: 200,
+                    b: 0
+                },
+                LedPattern::Blink1Hz,
+                "NO_GPS"
+            )
         );
         assert_eq!(
             led_state_entry(LedState::GpsOk),
@@ -266,7 +333,11 @@ mod tests {
         );
         assert_eq!(
             led_state_entry(LedState::Locked),
-            (Rgb { r: 255, g: 0, b: 0 }, LedPattern::BlinkDouble, "LOCKED")
+            (
+                Rgb { r: 255, g: 0, b: 0 },
+                LedPattern::BlinkDouble,
+                "LOCKED"
+            )
         );
         assert_eq!(led_state_entry(LedState::Ota).2, "OTA");
         assert_eq!(led_state_entry(LedState::Error).1, LedPattern::Blink4Hz);
@@ -296,7 +367,14 @@ mod tests {
         let mut sm = LedStateMachine::new();
         sm.set_state(LedState::NoGps);
         // First tick -> tick_count = 1 -> phase 100 < 500 -> on.
-        assert_eq!(sm.tick(0), Rgb { r: 255, g: 200, b: 0 });
+        assert_eq!(
+            sm.tick(0),
+            Rgb {
+                r: 255,
+                g: 200,
+                b: 0
+            }
+        );
         // Fifth tick -> tick_count = 5 -> phase 500 -> off.
         for _ in 0..4 {
             sm.tick(0);

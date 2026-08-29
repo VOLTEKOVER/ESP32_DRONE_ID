@@ -14,5 +14,5 @@ extern crate std;
 pub mod parser;
 pub mod source;
 
-pub use parser::{NMEA_BUF_SIZE, NmeaParser};
+pub use parser::{NmeaParser, NMEA_BUF_SIZE};
 pub use source::NmeaSource;

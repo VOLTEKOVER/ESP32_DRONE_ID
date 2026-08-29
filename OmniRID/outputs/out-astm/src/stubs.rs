@@ -32,7 +32,13 @@ mod tests {
     fn stubs_report_not_implemented() {
         let uas = opendroneid_sys::init_uas_data();
         let mut buf = [0u8; 256];
-        assert_eq!(encode_gb42590(&uas, &mut buf), Err(EncodeError::NotImplemented));
-        assert_eq!(encode_frdid(&uas, &mut buf), Err(EncodeError::NotImplemented));
+        assert_eq!(
+            encode_gb42590(&uas, &mut buf),
+            Err(EncodeError::NotImplemented)
+        );
+        assert_eq!(
+            encode_frdid(&uas, &mut buf),
+            Err(EncodeError::NotImplemented)
+        );
     }
 }

@@ -283,7 +283,13 @@ mod tests {
     fn hash_mismatch_rejected() {
         let body = b"firmware";
         let err = validate_ota_upload(
-            req(0, body.len(), Some(expected_hex(b"other").as_bytes()), None, 16),
+            req(
+                0,
+                body.len(),
+                Some(expected_hex(b"other").as_bytes()),
+                None,
+                16,
+            ),
             |_| true,
             chunks(body),
         );
@@ -318,11 +324,7 @@ mod tests {
     #[test]
     fn missing_expected_hash_rejected() {
         let body = b"firmware";
-        let err = validate_ota_upload(
-            req(0, body.len(), None, None, 16),
-            |_| true,
-            chunks(body),
-        );
+        let err = validate_ota_upload(req(0, body.len(), None, None, 16), |_| true, chunks(body));
         assert_eq!(err, Err(OtaError::MissingExpectedHash));
     }
 
@@ -332,7 +334,13 @@ mod tests {
         let sig = sign(body);
         assert_eq!(
             validate_ota_upload(
-                req(1, body.len(), Some(expected_hex(body).as_bytes()), Some(sig.as_bytes()), 64),
+                req(
+                    1,
+                    body.len(),
+                    Some(expected_hex(body).as_bytes()),
+                    Some(sig.as_bytes()),
+                    64
+                ),
                 |_| true,
                 chunks(body),
             ),
@@ -436,7 +444,13 @@ mod tests {
             seq.push(RecvChunk::Timeout);
         }
         let err = validate_ota_upload(
-            req(0, fed.len() + 10, Some(expected_hex(fed).as_bytes()), None, 16),
+            req(
+                0,
+                fed.len() + 10,
+                Some(expected_hex(fed).as_bytes()),
+                None,
+                16,
+            ),
             |_| true,
             seq,
         );
@@ -447,7 +461,13 @@ mod tests {
     fn fatal_socket_error_aborts_as_incomplete() {
         let fed = b"partial";
         let err = validate_ota_upload(
-            req(0, fed.len() + 10, Some(expected_hex(fed).as_bytes()), None, 16),
+            req(
+                0,
+                fed.len() + 10,
+                Some(expected_hex(fed).as_bytes()),
+                None,
+                16,
+            ),
             |_| true,
             vec![RecvChunk::Data(fed), RecvChunk::Fatal],
         );
@@ -512,8 +532,7 @@ mod tests {
     }
 
     fn b64_encode(data: &[u8]) -> String {
-        const TAB: &[u8; 64] =
-            b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+        const TAB: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
         let mut out = String::new();
         for chunk in data.chunks(3) {
             let b0 = chunk[0];

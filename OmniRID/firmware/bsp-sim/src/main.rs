@@ -7,21 +7,23 @@ use rid_core::kalman::Kalman3d;
 use rid_core::readiness;
 use rid_core::scheduler::{LedState, Scheduler, GPS_STALE_TIMEOUT_MS};
 use rid_interface::{
-    fixed_str, Config, CStr, GpsData, Identity, InputSample, OperatorLocation, Protocol, Region,
+    fixed_str, CStr, Config, GpsData, Identity, InputSample, OperatorLocation, Protocol, Region,
     Transmitter, OPT_IDENTITY_READY_GATE, OPT_KALMAN_FILTER,
 };
 
 /// Simulated WiFi interface MAC (like `wifi_tx_init` reads from eFuse).
 const MAC: [u8; 6] = [0xDE, 0xAD, 0xBE, 0xEF, 0x00, 0x01];
 
-fn build_identity() -> Identity {    Identity {
+fn build_identity() -> Identity {
+    Identity {
         uas_id: fixed_str("TEST-UAS-123"),
         operator_id: fixed_str("OP-001234"),
         self_id_text: fixed_str("Test flight"),
         uas_id_2: fixed_str("TEST-UAS-2"),
         ..Identity::default()
     }
-}fn build_gps() -> GpsData {
+}
+fn build_gps() -> GpsData {
     GpsData {
         latitude: 45.4642,
         longitude: 9.19,
@@ -151,7 +153,9 @@ impl Transmitter for AstmTx {
             Ok(len) => {
                 println!(
                     "    [WIFI_BCN] len={} ctr={} frame={:02X?}",
-                    len, self.wifi_counter, &buf[..len]
+                    len,
+                    self.wifi_counter,
+                    &buf[..len]
                 );
                 self.wifi_counter = self.wifi_counter.wrapping_add(1);
             }
@@ -164,7 +168,12 @@ impl Transmitter for AstmTx {
         let mut buf = [0u8; 1024];
         match out_astm::wifi::build_nan_action_frame(&out.uas, &MAC, counter, &mut buf) {
             Ok(len) => {
-                println!("    [WIFI_NAN] len={} ctr={} frame={:02X?}", len, counter, &buf[..len]);
+                println!(
+                    "    [WIFI_NAN] len={} ctr={} frame={:02X?}",
+                    len,
+                    counter,
+                    &buf[..len]
+                );
             }
             Err(e) => println!("    [WIFI_NAN] frame error: {e:?}"),
         }
@@ -207,7 +216,14 @@ fn run_output() {
     let out = out_astm::build_uas(&gps, &id, &cfg, None);
     let mut buf = [0u8; out_astm::pack::MAX_PACK_LEN];
     let len = out_astm::pack::build_pack(&out.uas, &mut buf).unwrap();
-    println!("std={} fallback={} pack len={} byte0={:#04x} n={}", hub::standard_name(out.standard), out.fallback, len, buf[0], buf[2]);
+    println!(
+        "std={} fallback={} pack len={} byte0={:#04x} n={}",
+        hub::standard_name(out.standard),
+        out.fallback,
+        len,
+        buf[0],
+        buf[2]
+    );
 
     // Decode roundtrip through the C library (odid_message_process_pack path).
     let mut enc = opendroneid_sys::MessagePackEncoded {
@@ -242,7 +258,11 @@ fn run_output() {
         op_id,
     );
 
-    let mut tx = AstmTx { ble4_rotation: 0, wifi_counter: 0, mono_us: 0 };
+    let mut tx = AstmTx {
+        ble4_rotation: 0,
+        wifi_counter: 0,
+        mono_us: 0,
+    };
     println!("wifi beacon frame + nan action frame (2 packets each):");
     tx.wifi_bcn(&gps, &id, &cfg);
     tx.wifi_nan(&gps, &id, &cfg, 0x00);

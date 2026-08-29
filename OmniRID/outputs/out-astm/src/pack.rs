@@ -1,13 +1,13 @@
-﻿//! WiFi message-pack assembly, port of `odid_message_build_pack` from
+//! WiFi message-pack assembly, port of `odid_message_build_pack` from
 //! `wifi.c`. The per-message encoding is done by the official C library
 //! through `opendroneid-sys`.
 
 use opendroneid_sys::{
     encode_auth, encode_basic_id, encode_location, encode_operator_id, encode_self_id,
-    encode_system, AuthEncoded, BasicIdEncoded, LocationEncoded, MessageEncoded,
-    OperatorIdEncoded, SelfIdEncoded, SystemEncoded, UasData, ODID_AUTH_MAX_PAGES,
-    ODID_BASIC_ID_MAX_MESSAGES, ODID_MESSAGE_SIZE, ODID_MESSAGETYPE_PACKED, ODID_PACK_MAX_MESSAGES,
-    ODID_PROTOCOL_VERSION, ODID_SUCCESS,
+    encode_system, AuthEncoded, BasicIdEncoded, LocationEncoded, MessageEncoded, OperatorIdEncoded,
+    SelfIdEncoded, SystemEncoded, UasData, ODID_AUTH_MAX_PAGES, ODID_BASIC_ID_MAX_MESSAGES,
+    ODID_MESSAGETYPE_PACKED, ODID_MESSAGE_SIZE, ODID_PACK_MAX_MESSAGES, ODID_PROTOCOL_VERSION,
+    ODID_SUCCESS,
 };
 
 /// Maximum message-pack size in bytes (3 header bytes + 9 * 25).
@@ -115,8 +115,7 @@ pub fn build_pack(uas: &UasData, buf: &mut [u8]) -> Result<usize, PackError> {
     buf[1] = ODID_MESSAGE_SIZE as u8;
     buf[2] = n as u8;
     for i in 0..n {
-        buf[3 + i * ODID_MESSAGE_SIZE..3 + (i + 1) * ODID_MESSAGE_SIZE]
-            .copy_from_slice(&msgs[i].0);
+        buf[3 + i * ODID_MESSAGE_SIZE..3 + (i + 1) * ODID_MESSAGE_SIZE].copy_from_slice(&msgs[i].0);
     }
     Ok(len)
 }
@@ -202,7 +201,10 @@ mod tests {
         assert_eq!(buf[1], ODID_MESSAGE_SIZE as u8);
         assert_eq!(buf[2], 6);
         assert_eq!(decode_message_type(buf[3]), ODID_MESSAGETYPE_BASIC_ID);
-        assert_eq!(decode_message_type(buf[3 + ODID_MESSAGE_SIZE]), ODID_MESSAGETYPE_BASIC_ID);
+        assert_eq!(
+            decode_message_type(buf[3 + ODID_MESSAGE_SIZE]),
+            ODID_MESSAGETYPE_BASIC_ID
+        );
         assert_eq!(
             decode_message_type(buf[3 + 2 * ODID_MESSAGE_SIZE]),
             ODID_MESSAGETYPE_LOCATION
@@ -240,7 +242,10 @@ mod tests {
         let ret = unsafe { opendroneid_sys::decodeMessagePack(&mut back, &enc) };
         assert_eq!(ret, opendroneid_sys::ODID_SUCCESS);
         assert_eq!(back.basic_id_valid[0], 1);
-        assert_eq!(back.basic_id[0].id_type, opendroneid_sys::ODID_IDTYPE_SERIAL_NUMBER);
+        assert_eq!(
+            back.basic_id[0].id_type,
+            opendroneid_sys::ODID_IDTYPE_SERIAL_NUMBER
+        );
         assert!(eq_chars(&back.basic_id[0].uas_id, b"ESP32-RID-001"));
         assert_eq!(back.basic_id_valid[1], 1);
         assert_eq!(back.location_valid, 1);
@@ -348,4 +353,3 @@ mod tests {
         assert_eq!(decode_message_type(buf[3]), ODID_MESSAGETYPE_BASIC_ID);
     }
 }
-

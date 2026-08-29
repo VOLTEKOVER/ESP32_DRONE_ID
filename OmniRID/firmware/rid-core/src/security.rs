@@ -243,7 +243,7 @@ mod tests {
         assert!(!hex_to_bytes(b"gg12ff00", &mut out)); // bad char
         assert!(!hex_to_bytes(b"AB12FF00", &mut [0u8; 3])); // length mismatch
         assert!(!hex_to_bytes(b"0x", &mut [0u8; 1])); // non-hex digit
-        // Uppercase input decodes.
+                                                      // Uppercase input decodes.
         let mut up = [0u8; 4];
         assert!(hex_to_bytes(b"AB12FF00", &mut up));
         assert_eq!(up, [0xAB, 0x12, 0xFF, 0x00]);
@@ -252,8 +252,14 @@ mod tests {
     #[test]
     fn verify_sha256_known_vector() {
         // SHA-256 of "abc" is well known.
-        assert!(verify_sha256(b"abc", b"ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"));
-        assert!(!verify_sha256(b"abd", b"ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"));
+        assert!(verify_sha256(
+            b"abc",
+            b"ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+        ));
+        assert!(!verify_sha256(
+            b"abd",
+            b"ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+        ));
         assert!(!verify_sha256(b"abc", b""));
     }
 
@@ -287,7 +293,11 @@ mod tests {
         assert!(verify_signed_body(body, sig_b64.as_bytes(), &keys_v1));
 
         // Tampered body must fail.
-        assert!(!verify_signed_body(b"{\"locked\":0}", sig_b64.as_bytes(), &keys_pem));
+        assert!(!verify_signed_body(
+            b"{\"locked\":0}",
+            sig_b64.as_bytes(),
+            &keys_pem
+        ));
         // Empty signature must fail.
         assert!(!verify_signed_body(body, b"", &keys_pem));
     }

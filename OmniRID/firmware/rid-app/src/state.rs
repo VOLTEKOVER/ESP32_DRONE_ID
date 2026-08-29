@@ -59,7 +59,10 @@ pub fn state_to_json(s: &State) -> String {
     m.insert("gps_valid".into(), Value::from(s.gps_valid));
     m.insert("lat".into(), num6(s.gps.latitude));
     m.insert("lon".into(), num6(s.gps.longitude));
-    m.insert("standard".into(), Value::from(standard_name(s.active_standard)));
+    m.insert(
+        "standard".into(),
+        Value::from(standard_name(s.active_standard)),
+    );
     m.insert("standard_fallback".into(), Value::from(s.standard_fallback));
     m.insert("alt".into(), num1(s.gps.altitude_msl as f64));
     m.insert("speed".into(), num1(s.gps.speed as f64));
@@ -80,7 +83,10 @@ pub fn state_to_json(s: &State) -> String {
     m.insert("gps_updates".into(), Value::from(s.stats.gps_updates));
     m.insert("gps_discarded".into(), Value::from(s.stats.gps_discarded));
     m.insert("parse_errors".into(), Value::from(s.stats.parse_errors));
-    m.insert("signatures_total".into(), Value::from(s.stats.signatures_total));
+    m.insert(
+        "signatures_total".into(),
+        Value::from(s.stats.signatures_total),
+    );
     m.insert("signatures_ok".into(), Value::from(s.stats.signatures_ok));
     m.insert("wifi_tx_fail".into(), Value::from(s.stats.wifi_tx_fail));
     m.insert("ble_tx_fail".into(), Value::from(s.stats.ble_tx_fail));

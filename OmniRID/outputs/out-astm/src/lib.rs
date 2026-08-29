@@ -1,4 +1,4 @@
-﻿//! ASTM F3411-22a broadcast encoder.
+//! ASTM F3411-22a broadcast encoder.
 //!
 //! Port of the encode side of `odid_common.c` / `rid_output.c`:
 //! - `uas::build_uas_data` fills the normative `ODID_UAS_Data` from the neutral
@@ -23,7 +23,7 @@
 use core::ffi::{c_char, c_int};
 
 use opendroneid_sys::{
-    ODID_AUTH_MAX_PAGES, ODID_ID_SIZE, ODID_PACK_MAX_MESSAGES, ODID_STR_SIZE, UasData,
+    UasData, ODID_AUTH_MAX_PAGES, ODID_ID_SIZE, ODID_PACK_MAX_MESSAGES, ODID_STR_SIZE,
 };
 use rid_interface::odid::{AuthPack, AUTH_PAGE_NONZERO_DATA_SIZE};
 use rid_interface::region::Standard;
@@ -114,9 +114,8 @@ pub fn resolve_auth(identity: &Identity, signed: Option<&AuthPack>) -> Option<Au
                 pack.pages[p].auth_type = identity.ext_auth_type;
                 pack.pages[p].last_page_index = identity.ext_auth_last_page;
                 pack.pages[p].length = identity.ext_auth_length;
-                pack.pages[p].auth_data[..AUTH_PAGE_NONZERO_DATA_SIZE].copy_from_slice(
-                    &identity.ext_auth_pages[p][..AUTH_PAGE_NONZERO_DATA_SIZE],
-                );
+                pack.pages[p].auth_data[..AUTH_PAGE_NONZERO_DATA_SIZE]
+                    .copy_from_slice(&identity.ext_auth_pages[p][..AUTH_PAGE_NONZERO_DATA_SIZE]);
             }
             return Some(pack);
         }
@@ -149,7 +148,10 @@ pub fn build_uas_data(
         d.basic_id_valid[1] = 1;
         d.basic_id[1].id_type = identity.id_type_2 as c_int;
         d.basic_id[1].ua_type = identity.ua_type_2 as c_int;
-        copy_chars(&mut d.basic_id[1].uas_id, &identity.uas_id_2[..ODID_ID_SIZE]);
+        copy_chars(
+            &mut d.basic_id[1].uas_id,
+            &identity.uas_id_2[..ODID_ID_SIZE],
+        );
     }
 
     d.location_valid = 1;
@@ -192,12 +194,19 @@ pub fn build_uas_data(
 
     if let Some(auth) = resolve_auth(identity, signed_auth) {
         let auth_pages = auth.count as usize;
-        let fixed = 1
-            + if !identity.uas_id_2.c_is_empty() { 1 } else { 0 }
-            + 1
-            + if !identity.self_id_text.c_is_empty() { 1 } else { 0 }
-            + 1
-            + 1;
+        let fixed =
+            1 + if !identity.uas_id_2.c_is_empty() {
+                1
+            } else {
+                0
+            } + 1
+                + if !identity.self_id_text.c_is_empty() {
+                    1
+                } else {
+                    0
+                }
+                + 1
+                + 1;
         if auth_pages > 0 && auth_pages <= ODID_PACK_MAX_MESSAGES - fixed {
             for p in 0..auth_pages {
                 d.auth[p].data_page = auth.pages[p].data_page;
@@ -205,7 +214,8 @@ pub fn build_uas_data(
                 d.auth[p].last_page_index = auth.pages[p].last_page_index;
                 d.auth[p].length = auth.pages[p].length;
                 d.auth[p].timestamp = auth.pages[p].timestamp;
-                d.auth[p].auth_data
+                d.auth[p]
+                    .auth_data
                     .copy_from_slice(&auth.pages[p].auth_data[..AUTH_PAGE_NONZERO_DATA_SIZE + 1]);
                 d.auth_valid[p] = 1;
             }
@@ -277,8 +287,14 @@ mod tests {
         assert_eq!(d.location.direction, 90.0);
         assert_eq!(d.location.speed_vertical, 0.0);
         // fix_type 4 + 12 sats -> 3 m horiz / 10 m vert
-        assert_eq!(d.location.horiz_accuracy, opendroneid_sys::ODID_HOR_ACC_3_METER);
-        assert_eq!(d.location.vert_accuracy, opendroneid_sys::ODID_VER_ACC_10_METER);
+        assert_eq!(
+            d.location.horiz_accuracy,
+            opendroneid_sys::ODID_HOR_ACC_3_METER
+        );
+        assert_eq!(
+            d.location.vert_accuracy,
+            opendroneid_sys::ODID_VER_ACC_10_METER
+        );
 
         assert_eq!(d.system_valid, 1);
         assert_eq!(d.system.operator_latitude, 45.30);
@@ -423,4 +439,3 @@ mod tests {
         assert_eq!(out.uas.basic_id_valid[0], 1);
     }
 }
-

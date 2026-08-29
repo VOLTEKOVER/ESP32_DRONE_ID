@@ -10,25 +10,100 @@
 //! crate and register it here; no transport, input or UI code needs changes.
 
 use rid_interface::region::Standard;
-use rid_interface::{
-    GpsData, Identity, MAX_STR_LEN, Region, RegionRules, UasBuild,
-};
+use rid_interface::{GpsData, Identity, Region, RegionRules, UasBuild, MAX_STR_LEN};
 
 /// Region -> standard binding (exclusive) and message gating rules.
 /// Port of `g_region_rules[]` (column order: standard, op_id, self, b2,
 /// req_op, req_id).
 const REGION_RULES: [RegionRules; Region::COUNT] = [
-    RegionRules { standard: Standard::Astm, operator_id_en: true, self_id_en: true, basic_id_2_en: true, require_operator_id: true, require_uas_id: true },  // AUTO
-    RegionRules { standard: Standard::Astm, operator_id_en: true, self_id_en: true, basic_id_2_en: true, require_operator_id: true, require_uas_id: true },  // EUR
-    RegionRules { standard: Standard::Astm, operator_id_en: true, self_id_en: true, basic_id_2_en: true, require_operator_id: true, require_uas_id: true },  // FAA
-    RegionRules { standard: Standard::Astm, operator_id_en: true, self_id_en: true, basic_id_2_en: true, require_operator_id: false, require_uas_id: true }, // JPN
-    RegionRules { standard: Standard::Astm, operator_id_en: true, self_id_en: true, basic_id_2_en: true, require_operator_id: false, require_uas_id: true }, // SGP
-    RegionRules { standard: Standard::Astm, operator_id_en: true, self_id_en: true, basic_id_2_en: true, require_operator_id: false, require_uas_id: true }, // KOR
-    RegionRules { standard: Standard::ChnGb, operator_id_en: false, self_id_en: false, basic_id_2_en: false, require_operator_id: false, require_uas_id: true }, // CHN
-    RegionRules { standard: Standard::Astm, operator_id_en: true, self_id_en: true, basic_id_2_en: true, require_operator_id: true, require_uas_id: true },  // CAN
-    RegionRules { standard: Standard::Astm, operator_id_en: true, self_id_en: true, basic_id_2_en: true, require_operator_id: true, require_uas_id: true },  // AUS
-    RegionRules { standard: Standard::Astm, operator_id_en: true, self_id_en: true, basic_id_2_en: true, require_operator_id: false, require_uas_id: true }, // BRA
-    RegionRules { standard: Standard::Astm, operator_id_en: true, self_id_en: true, basic_id_2_en: true, require_operator_id: false, require_uas_id: true }, // NZL
+    RegionRules {
+        standard: Standard::Astm,
+        operator_id_en: true,
+        self_id_en: true,
+        basic_id_2_en: true,
+        require_operator_id: true,
+        require_uas_id: true,
+    }, // AUTO
+    RegionRules {
+        standard: Standard::Astm,
+        operator_id_en: true,
+        self_id_en: true,
+        basic_id_2_en: true,
+        require_operator_id: true,
+        require_uas_id: true,
+    }, // EUR
+    RegionRules {
+        standard: Standard::Astm,
+        operator_id_en: true,
+        self_id_en: true,
+        basic_id_2_en: true,
+        require_operator_id: true,
+        require_uas_id: true,
+    }, // FAA
+    RegionRules {
+        standard: Standard::Astm,
+        operator_id_en: true,
+        self_id_en: true,
+        basic_id_2_en: true,
+        require_operator_id: false,
+        require_uas_id: true,
+    }, // JPN
+    RegionRules {
+        standard: Standard::Astm,
+        operator_id_en: true,
+        self_id_en: true,
+        basic_id_2_en: true,
+        require_operator_id: false,
+        require_uas_id: true,
+    }, // SGP
+    RegionRules {
+        standard: Standard::Astm,
+        operator_id_en: true,
+        self_id_en: true,
+        basic_id_2_en: true,
+        require_operator_id: false,
+        require_uas_id: true,
+    }, // KOR
+    RegionRules {
+        standard: Standard::ChnGb,
+        operator_id_en: false,
+        self_id_en: false,
+        basic_id_2_en: false,
+        require_operator_id: false,
+        require_uas_id: true,
+    }, // CHN
+    RegionRules {
+        standard: Standard::Astm,
+        operator_id_en: true,
+        self_id_en: true,
+        basic_id_2_en: true,
+        require_operator_id: true,
+        require_uas_id: true,
+    }, // CAN
+    RegionRules {
+        standard: Standard::Astm,
+        operator_id_en: true,
+        self_id_en: true,
+        basic_id_2_en: true,
+        require_operator_id: true,
+        require_uas_id: true,
+    }, // AUS
+    RegionRules {
+        standard: Standard::Astm,
+        operator_id_en: true,
+        self_id_en: true,
+        basic_id_2_en: true,
+        require_operator_id: false,
+        require_uas_id: true,
+    }, // BRA
+    RegionRules {
+        standard: Standard::Astm,
+        operator_id_en: true,
+        self_id_en: true,
+        basic_id_2_en: true,
+        require_operator_id: false,
+        require_uas_id: true,
+    }, // NZL
 ];
 
 /// Port of `g_region_names[]`.
@@ -102,7 +177,7 @@ pub fn build_uas(gps: &GpsData, identity: &Identity, region: Region) -> UasBuild
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rid_interface::{CStr, fixed_str};
+    use rid_interface::{fixed_str, CStr};
 
     fn identity() -> Identity {
         Identity {

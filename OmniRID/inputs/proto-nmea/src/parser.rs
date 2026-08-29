@@ -240,7 +240,10 @@ impl NmeaParser {
 
     /// Port of `parse_gga()`.
     fn parse_gga(&mut self, fields: &[&[u8]], count: usize) {
-        if fields[2].is_empty() || fields[3].is_empty() || fields[4].is_empty() || fields[5].is_empty()
+        if fields[2].is_empty()
+            || fields[3].is_empty()
+            || fields[4].is_empty()
+            || fields[5].is_empty()
             || fields[6].is_empty()
         {
             return;
@@ -263,7 +266,11 @@ impl NmeaParser {
 
     /// Port of `parse_rmc()`.
     fn parse_rmc(&mut self, fields: &[&[u8]], count: usize) {
-        if count <= 3 || count <= 4 || count <= 5 || fields[3].is_empty() || fields[4].is_empty()
+        if count <= 3
+            || count <= 4
+            || count <= 5
+            || fields[3].is_empty()
+            || fields[4].is_empty()
             || fields[5].is_empty()
         {
             return;
@@ -304,10 +311,8 @@ mod tests {
     #[test]
     fn gga_full_fix() {
         // $GPGGA: lat 48°07.038'N lon 011°31.000'E, fix=3, 8 sats, alt 545.4m
-        let gps = parse(
-            b"$GPGGA,123519,4807.038,N,01131.000,E,3,08,0.9,545.4,M,46.9,M,,*47\r\n",
-        )
-        .expect("valid fix");
+        let gps = parse(b"$GPGGA,123519,4807.038,N,01131.000,E,3,08,0.9,545.4,M,46.9,M,,*47\r\n")
+            .expect("valid fix");
         assert_eq!(gps.fix_type, 3);
         assert!((gps.latitude - 48.1173).abs() < 1e-9);
         assert!((gps.longitude - 11.5166666667).abs() < 1e-9);

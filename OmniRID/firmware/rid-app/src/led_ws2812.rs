@@ -70,7 +70,11 @@ mod tests {
 
     #[test]
     fn scale_rgb_uses_scalar() {
-        let rgb = Rgb { r: 255, g: 128, b: 0 };
+        let rgb = Rgb {
+            r: 255,
+            g: 128,
+            b: 0,
+        };
         assert_eq!(scale_rgb(rgb, 100), rgb);
         // g_brightness = 50 * 255 / 100 = 127.
         assert_eq!(
@@ -86,7 +90,11 @@ mod tests {
 
     #[test]
     fn frame_is_grb() {
-        let rgb = Rgb { r: 255, g: 128, b: 64 };
+        let rgb = Rgb {
+            r: 255,
+            g: 128,
+            b: 64,
+        };
         assert_eq!(rgb_to_grb(rgb), [128, 255, 64]);
         assert_eq!(ws2812_frame(rgb, 100), [128, 255, 64]);
     }
@@ -96,30 +104,69 @@ mod tests {
         // hue 0 -> red.
         assert_eq!(hsv_to_rgb(0, 255, 255), Rgb { r: 255, g: 0, b: 0 });
         // hue 43 -> region 1 -> yellow.
-        assert_eq!(hsv_to_rgb(43, 255, 255), Rgb { r: 255, g: 255, b: 0 });
+        assert_eq!(
+            hsv_to_rgb(43, 255, 255),
+            Rgb {
+                r: 255,
+                g: 255,
+                b: 0
+            }
+        );
         // hue 85 -> region 1 end: sat 255, remainder 252.
         assert_eq!(hsv_to_rgb(85, 255, 255), Rgb { r: 3, g: 255, b: 0 });
         // hue 127 (region 2) -> cyan-ish: remainder = (127-86)*6 = 246.
         // p = 0, t = 255 - 255*(255-246)/255 = 246 -> (0, 255, 246).
-        assert_eq!(hsv_to_rgb(127, 255, 255), Rgb { r: 0, g: 255, b: 246 });
+        assert_eq!(
+            hsv_to_rgb(127, 255, 255),
+            Rgb {
+                r: 0,
+                g: 255,
+                b: 246
+            }
+        );
     }
 
     #[test]
     fn hsv_low_saturation_is_gray() {
         assert_eq!(
             hsv_to_rgb(1023, 0, 255),
-            Rgb { r: 255, g: 255, b: 255 }
+            Rgb {
+                r: 255,
+                g: 255,
+                b: 255
+            }
         );
         // sat 0 at any hue -> white at full value.
-        assert_eq!(hsv_to_rgb(512, 0, 100), Rgb { r: 100, g: 100, b: 100 });
+        assert_eq!(
+            hsv_to_rgb(512, 0, 100),
+            Rgb {
+                r: 100,
+                g: 100,
+                b: 100
+            }
+        );
     }
 
     #[test]
     fn hsv_default_region_is_magenta_family() {
         // hue 512 -> region 11 -> default (val, p, q).
         // remainder = (512-473)*6 = 234, q = 255*(255-234)/255 = 21.
-        assert_eq!(hsv_to_rgb(512, 255, 255), Rgb { r: 255, g: 0, b: 21 });
+        assert_eq!(
+            hsv_to_rgb(512, 255, 255),
+            Rgb {
+                r: 255,
+                g: 0,
+                b: 21
+            }
+        );
         // hue 1000 -> region 23 -> default; remainder = 66, q = 189.
-        assert_eq!(hsv_to_rgb(1000, 255, 255), Rgb { r: 255, g: 0, b: 189 });
+        assert_eq!(
+            hsv_to_rgb(1000, 255, 255),
+            Rgb {
+                r: 255,
+                g: 0,
+                b: 189
+            }
+        );
     }
 }

@@ -18,8 +18,8 @@ extern crate alloc;
 pub mod capabilities;
 pub mod controller;
 
-pub use capabilities::{Capabilities, capabilities_json};
+pub use capabilities::{capabilities_json, Capabilities};
 pub use controller::{
-    Controller, SetConfigOutcome, core_config, derive_ids_from_mac, is_placeholder_id,
-    mavlink_tx_enabled,
+    core_config, derive_ids_from_mac, is_placeholder_id, mavlink_tx_enabled, Controller,
+    SetConfigOutcome,
 };

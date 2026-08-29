@@ -43,10 +43,10 @@ impl<C: CanRead> GpsSource for DronecanSource<C> {
 
 #[cfg(test)]
 mod tests {
-use super::*;
-use crate::parser::test_support::{multi_frame, pack_fix2, Fix2Fields};
-use rid_interface::Protocol;
-use std::cell::RefCell;
+    use super::*;
+    use crate::parser::test_support::{multi_frame, pack_fix2, Fix2Fields};
+    use rid_interface::Protocol;
+    use std::cell::RefCell;
     use std::rc::Rc;
     use std::vec::Vec;
 
@@ -106,7 +106,10 @@ use std::cell::RefCell;
         let frames = fix2_transfer();
         let buf = MockCan::from(frames[..3].to_vec());
         let mut src = DronecanSource::new(buf.clone());
-        assert!(src.sample(&Config::default(), 1000, 1000).dronecan.is_none());
+        assert!(src
+            .sample(&Config::default(), 1000, 1000)
+            .dronecan
+            .is_none());
         buf.0.borrow_mut().extend_from_slice(&frames[3..]);
         let s = src.sample(&Config::default(), 1200, 1200);
         assert!(s.dronecan.is_some());

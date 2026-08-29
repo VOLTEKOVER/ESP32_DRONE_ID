@@ -1,4 +1,4 @@
-﻿//! Pure-Rust DroneCAN/UAVCAN v0 parser.
+//! Pure-Rust DroneCAN/UAVCAN v0 parser.
 //!
 //! Port of `rid_dronecan.c` (ESP32_DRONE_REMOTE_ID_Firmware). The C source is
 //! a stub: `decode_fix2` requires a single frame of at least 32 bytes, which a
@@ -239,8 +239,7 @@ impl TransferState {
     fn write_payload(&mut self, f: &Frame) -> bool {
         if f.sot {
             // The first frame carries the transfer CRC (2 bytes, LE).
-            self.this_transfer_crc =
-                (f.data[0] as u16) | ((f.data[1] as u16) << 8);
+            self.this_transfer_crc = (f.data[0] as u16) | ((f.data[1] as u16) << 8);
             let n = f.payload_len - TRANSFER_CRC_BYTES;
             if n > MAX_TRANSFER_SIZE {
                 return false;
@@ -317,8 +316,7 @@ impl DronecanParser {
         let tid_timed_out = t.is_timed_out(now_ms);
         let first_frame = f.sot;
         let not_previous_tid = forward_distance(f.tid, t.tid) > 1;
-        let need_restart =
-            not_initialized || tid_timed_out || (first_frame && not_previous_tid);
+        let need_restart = not_initialized || tid_timed_out || (first_frame && not_previous_tid);
 
         if need_restart {
             // tba.remove() + restart(frame).
@@ -360,11 +358,7 @@ impl DronecanParser {
         if f.eot {
             t.prev_transfer_ms = t.this_transfer_ms; // updateTransferTimings()
             let complete = t.buffer_write_pos;
-            let crc_ok = check_payload_crc(
-                &t.buf[..complete],
-                t.this_transfer_crc,
-                FIX2_SIGNATURE,
-            );
+            let crc_ok = check_payload_crc(&t.buf[..complete], t.this_transfer_crc, FIX2_SIGNATURE);
             t.prepare_for_next();
             if crc_ok {
                 Self::decode_fix2(
@@ -425,7 +419,12 @@ impl DronecanParser {
 
         let p = NED_VEL_BYTE;
         let vn = f32::from_le_bytes([payload[p], payload[p + 1], payload[p + 2], payload[p + 3]]);
-        let ve = f32::from_le_bytes([payload[p + 4], payload[p + 5], payload[p + 6], payload[p + 7]]);
+        let ve = f32::from_le_bytes([
+            payload[p + 4],
+            payload[p + 5],
+            payload[p + 6],
+            payload[p + 7],
+        ]);
 
         let sats = payload[SATS_STATUS_BYTE] & 0x3F;
         let status = (payload[SATS_STATUS_BYTE] >> 6) & 0x3;
@@ -565,7 +564,7 @@ pub(crate) mod test_support {
         for i in 0..nframes {
             let mut data = [0u8; 8];
             let count;
-        if i == 0 {
+            if i == 0 {
                 // First frame: CRC first, then payload.
                 let crc = transfer_crc(payload);
                 data[0] = crc as u8;
@@ -664,10 +663,12 @@ mod tests {
     #[test]
     fn crc_mismatch_discards_the_transfer() {
         let mut p = DronecanParser::new();
-        let frames = multi_frame(1, 0, &default_payload(), &[(
-            3,
-            &|f: &mut CanFrame| f.data[1] ^= 0xFF,
-        )]);
+        let frames = multi_frame(
+            1,
+            0,
+            &default_payload(),
+            &[(3, &|f: &mut CanFrame| f.data[1] ^= 0xFF)],
+        );
         feed_all(&mut p, &frames, 1000);
         assert!(p.get(1000).is_none());
     }
@@ -675,10 +676,15 @@ mod tests {
     #[test]
     fn wrong_toggle_discards_the_transfer() {
         let mut p = DronecanParser::new();
-        let frames = multi_frame(1, 0, &default_payload(), &[(
+        let frames = multi_frame(
             1,
-            &|f: &mut CanFrame| f.data[7] &= !0x20, // clear toggle on frame 1
-        )]);
+            0,
+            &default_payload(),
+            &[(
+                1,
+                &|f: &mut CanFrame| f.data[7] &= !0x20, // clear toggle on frame 1
+            )],
+        );
         feed_all(&mut p, &frames, 1000);
         assert!(p.get(1000).is_none());
     }
@@ -790,7 +796,7 @@ mod tests {
         let mut p = DronecanParser::new();
         let fields = Fix2Fields {
             lat_deg_1e8: -4_530_405_000, // -45.30405 deg
-            lon_deg_1e8: -938_750_000, // -9.3875 deg
+            lon_deg_1e8: -938_750_000,   // -9.3875 deg
             ..Fix2Fields::default()
         };
         let frames = multi_frame(1, 0, &pack_fix2(&fields), &[]);

@@ -6,7 +6,7 @@
 
 use rid_interface::{MAX_KEY_LEN, NUM_KEYS};
 
-use crate::config::{BspConfig, NUM_LIGHTING_PINS, clamp_region, cstr};
+use crate::config::{clamp_region, cstr, BspConfig, NUM_LIGHTING_PINS};
 
 /// Abstract non-volatile key/value store, mirroring the ESP-IDF NVS subset
 /// used by `nvs_storage.c`.
@@ -64,16 +64,12 @@ fn save_blob_i16(nvs: &mut impl NvsStore, key: &str, value: &[i16]) {
 fn i8_bytes(v: &[i8]) -> &[u8] {
     // SAFETY: `i8` and `u8` have identical size/alignment and there is no
     // padding, so viewing as bytes is well-defined.
-    unsafe {
-        core::slice::from_raw_parts(v.as_ptr() as *const u8, v.len())
-    }
+    unsafe { core::slice::from_raw_parts(v.as_ptr() as *const u8, v.len()) }
 }
 
 /// Reinterprets a byte slice as `[i8; N]` (byte-identical layout).
 fn bytes_i8(v: &[u8]) -> &[i8] {
-    unsafe {
-        core::slice::from_raw_parts(v.as_ptr() as *const i8, v.len())
-    }
+    unsafe { core::slice::from_raw_parts(v.as_ptr() as *const i8, v.len()) }
 }
 
 /// Builds the `pubkey%d` NVS key (1-based, like the C `snprintf`).
@@ -382,8 +378,8 @@ mod tests {
     use super::*;
     use crate::config::BspConfig;
     use std::collections::HashMap;
-    use std::vec::Vec;
     use std::string::{String, ToString};
+    use std::vec::Vec;
 
     enum Value {
         Str(String),
@@ -416,7 +412,8 @@ mod tests {
             }
         }
         fn set_str(&mut self, key: &str, value: &str) {
-            self.0.insert(key.to_string(), Value::Str(value.to_string()));
+            self.0
+                .insert(key.to_string(), Value::Str(value.to_string()));
         }
         fn get_u8(&mut self, key: &str) -> Option<u8> {
             match self.0.get(key) {

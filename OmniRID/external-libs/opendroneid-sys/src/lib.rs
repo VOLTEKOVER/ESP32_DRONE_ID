@@ -1,4 +1,4 @@
-﻿//! Raw bindings to the vendored official Open Drone ID C library.
+//! Raw bindings to the vendored official Open Drone ID C library.
 //!
 //! The C source is compiled unchanged by `build.rs` (see `vendor/`); this crate
 //! only mirrors its `opendroneid.h` ABI. The normative (non-packed) data
@@ -33,8 +33,8 @@ pub const ODID_AUTH_PAGE_ZERO_DATA_SIZE: usize = 17;
 /// `ODID_AUTH_PAGE_NONZERO_DATA_SIZE`
 pub const ODID_AUTH_PAGE_NONZERO_DATA_SIZE: usize = 23;
 /// `MAX_AUTH_LENGTH`
-pub const MAX_AUTH_LENGTH: usize = ODID_AUTH_PAGE_ZERO_DATA_SIZE
-    + ODID_AUTH_PAGE_NONZERO_DATA_SIZE * (ODID_AUTH_MAX_PAGES - 1);
+pub const MAX_AUTH_LENGTH: usize =
+    ODID_AUTH_PAGE_ZERO_DATA_SIZE + ODID_AUTH_PAGE_NONZERO_DATA_SIZE * (ODID_AUTH_MAX_PAGES - 1);
 /// `ODID_BASIC_ID_MAX_MESSAGES`
 pub const ODID_BASIC_ID_MAX_MESSAGES: usize = 2;
 /// `ODID_PACK_MAX_MESSAGES`
@@ -655,12 +655,27 @@ mod layout {
     #[test]
     fn data_struct_sizes_match_c() {
         assert_eq!(unsafe { odid_sz_ODID_UAS_Data() }, size_of::<UasData>());
-        assert_eq!(unsafe { odid_sz_ODID_BasicID_data() }, size_of::<BasicIdData>());
-        assert_eq!(unsafe { odid_sz_ODID_Location_data() }, size_of::<LocationData>());
+        assert_eq!(
+            unsafe { odid_sz_ODID_BasicID_data() },
+            size_of::<BasicIdData>()
+        );
+        assert_eq!(
+            unsafe { odid_sz_ODID_Location_data() },
+            size_of::<LocationData>()
+        );
         assert_eq!(unsafe { odid_sz_ODID_Auth_data() }, size_of::<AuthData>());
-        assert_eq!(unsafe { odid_sz_ODID_SelfID_data() }, size_of::<SelfIdData>());
-        assert_eq!(unsafe { odid_sz_ODID_System_data() }, size_of::<SystemData>());
-        assert_eq!(unsafe { odid_sz_ODID_OperatorID_data() }, size_of::<OperatorIdData>());
+        assert_eq!(
+            unsafe { odid_sz_ODID_SelfID_data() },
+            size_of::<SelfIdData>()
+        );
+        assert_eq!(
+            unsafe { odid_sz_ODID_System_data() },
+            size_of::<SystemData>()
+        );
+        assert_eq!(
+            unsafe { odid_sz_ODID_OperatorID_data() },
+            size_of::<OperatorIdData>()
+        );
         assert_eq!(
             unsafe { odid_sz_ODID_MessagePack_data() },
             size_of::<MessagePackData>()
@@ -669,32 +684,80 @@ mod layout {
 
     #[test]
     fn data_struct_offsets_match_c() {
-        assert_eq!(offset_of!(LocationData, status), unsafe { odid_off_ODID_Location_data_Status() });
-        assert_eq!(offset_of!(LocationData, direction), unsafe { odid_off_ODID_Location_data_Direction() });
-        assert_eq!(offset_of!(LocationData, latitude), unsafe { odid_off_ODID_Location_data_Latitude() });
-        assert_eq!(offset_of!(LocationData, longitude), unsafe { odid_off_ODID_Location_data_Longitude() });
-        assert_eq!(offset_of!(LocationData, altitude_baro), unsafe { odid_off_ODID_Location_data_AltitudeBaro() });
-        assert_eq!(offset_of!(LocationData, altitude_geo), unsafe { odid_off_ODID_Location_data_AltitudeGeo() });
-        assert_eq!(offset_of!(LocationData, height_type), unsafe { odid_off_ODID_Location_data_HeightType() });
-        assert_eq!(offset_of!(LocationData, height), unsafe { odid_off_ODID_Location_data_Height() });
+        assert_eq!(offset_of!(LocationData, status), unsafe {
+            odid_off_ODID_Location_data_Status()
+        });
+        assert_eq!(offset_of!(LocationData, direction), unsafe {
+            odid_off_ODID_Location_data_Direction()
+        });
+        assert_eq!(offset_of!(LocationData, latitude), unsafe {
+            odid_off_ODID_Location_data_Latitude()
+        });
+        assert_eq!(offset_of!(LocationData, longitude), unsafe {
+            odid_off_ODID_Location_data_Longitude()
+        });
+        assert_eq!(offset_of!(LocationData, altitude_baro), unsafe {
+            odid_off_ODID_Location_data_AltitudeBaro()
+        });
+        assert_eq!(offset_of!(LocationData, altitude_geo), unsafe {
+            odid_off_ODID_Location_data_AltitudeGeo()
+        });
+        assert_eq!(offset_of!(LocationData, height_type), unsafe {
+            odid_off_ODID_Location_data_HeightType()
+        });
+        assert_eq!(offset_of!(LocationData, height), unsafe {
+            odid_off_ODID_Location_data_Height()
+        });
 
-        assert_eq!(offset_of!(AuthData, data_page), unsafe { odid_off_ODID_Auth_data_DataPage() });
-        assert_eq!(offset_of!(AuthData, auth_type), unsafe { odid_off_ODID_Auth_data_AuthType() });
-        assert_eq!(offset_of!(AuthData, last_page_index), unsafe { odid_off_ODID_Auth_data_LastPageIndex() });
-        assert_eq!(offset_of!(AuthData, length), unsafe { odid_off_ODID_Auth_data_Length() });
-        assert_eq!(offset_of!(AuthData, timestamp), unsafe { odid_off_ODID_Auth_data_Timestamp() });
-        assert_eq!(offset_of!(AuthData, auth_data), unsafe { odid_off_ODID_Auth_data_AuthData() });
+        assert_eq!(offset_of!(AuthData, data_page), unsafe {
+            odid_off_ODID_Auth_data_DataPage()
+        });
+        assert_eq!(offset_of!(AuthData, auth_type), unsafe {
+            odid_off_ODID_Auth_data_AuthType()
+        });
+        assert_eq!(offset_of!(AuthData, last_page_index), unsafe {
+            odid_off_ODID_Auth_data_LastPageIndex()
+        });
+        assert_eq!(offset_of!(AuthData, length), unsafe {
+            odid_off_ODID_Auth_data_Length()
+        });
+        assert_eq!(offset_of!(AuthData, timestamp), unsafe {
+            odid_off_ODID_Auth_data_Timestamp()
+        });
+        assert_eq!(offset_of!(AuthData, auth_data), unsafe {
+            odid_off_ODID_Auth_data_AuthData()
+        });
 
-        assert_eq!(offset_of!(SystemData, operator_latitude), unsafe { odid_off_ODID_System_data_OperatorLatitude() });
-        assert_eq!(offset_of!(SystemData, operator_longitude), unsafe { odid_off_ODID_System_data_OperatorLongitude() });
-        assert_eq!(offset_of!(SystemData, area_count), unsafe { odid_off_ODID_System_data_AreaCount() });
-        assert_eq!(offset_of!(SystemData, area_radius), unsafe { odid_off_ODID_System_data_AreaRadius() });
-        assert_eq!(offset_of!(SystemData, area_ceiling), unsafe { odid_off_ODID_System_data_AreaCeiling() });
-        assert_eq!(offset_of!(SystemData, area_floor), unsafe { odid_off_ODID_System_data_AreaFloor() });
-        assert_eq!(offset_of!(SystemData, category_eu), unsafe { odid_off_ODID_System_data_CategoryEU() });
-        assert_eq!(offset_of!(SystemData, class_eu), unsafe { odid_off_ODID_System_data_ClassEU() });
-        assert_eq!(offset_of!(SystemData, operator_altitude_geo), unsafe { odid_off_ODID_System_data_OperatorAltitudeGeo() });
-        assert_eq!(offset_of!(SystemData, timestamp), unsafe { odid_off_ODID_System_data_Timestamp() });
+        assert_eq!(offset_of!(SystemData, operator_latitude), unsafe {
+            odid_off_ODID_System_data_OperatorLatitude()
+        });
+        assert_eq!(offset_of!(SystemData, operator_longitude), unsafe {
+            odid_off_ODID_System_data_OperatorLongitude()
+        });
+        assert_eq!(offset_of!(SystemData, area_count), unsafe {
+            odid_off_ODID_System_data_AreaCount()
+        });
+        assert_eq!(offset_of!(SystemData, area_radius), unsafe {
+            odid_off_ODID_System_data_AreaRadius()
+        });
+        assert_eq!(offset_of!(SystemData, area_ceiling), unsafe {
+            odid_off_ODID_System_data_AreaCeiling()
+        });
+        assert_eq!(offset_of!(SystemData, area_floor), unsafe {
+            odid_off_ODID_System_data_AreaFloor()
+        });
+        assert_eq!(offset_of!(SystemData, category_eu), unsafe {
+            odid_off_ODID_System_data_CategoryEU()
+        });
+        assert_eq!(offset_of!(SystemData, class_eu), unsafe {
+            odid_off_ODID_System_data_ClassEU()
+        });
+        assert_eq!(offset_of!(SystemData, operator_altitude_geo), unsafe {
+            odid_off_ODID_System_data_OperatorAltitudeGeo()
+        });
+        assert_eq!(offset_of!(SystemData, timestamp), unsafe {
+            odid_off_ODID_System_data_Timestamp()
+        });
     }
 
     #[test]
@@ -716,7 +779,10 @@ mod layout {
     fn init_uas_data_matches_odid_init() {
         // odid_initUasData = memset(0) + odid_init*Data defaults.
         let mut d = init_uas_data();
-        assert_eq!(d.system.area_count, 1, "odid_initSystemData sets AreaCount=1");
+        assert_eq!(
+            d.system.area_count, 1,
+            "odid_initSystemData sets AreaCount=1"
+        );
         assert_eq!(d.system.area_ceiling, INV_ALT);
         assert_eq!(d.system.area_floor, INV_ALT);
         assert_eq!(d.system.operator_altitude_geo, INV_ALT);
@@ -738,9 +804,7 @@ mod layout {
         d.location.altitude_baro = 0.0;
         d.location.altitude_geo = 0.0;
         d.location.height = 0.0;
-        let zeroed = unsafe {
-            core::mem::zeroed::<UasData>()
-        };
+        let zeroed = unsafe { core::mem::zeroed::<UasData>() };
         assert_eq!(d.as_bytes(), zeroed.as_bytes());
     }
 }
@@ -749,7 +813,9 @@ impl UasData {
     /// Byte view of the struct (used by the tests).
     #[cfg(test)]
     fn as_bytes(&self) -> &[u8] {
-        unsafe { core::slice::from_raw_parts((self as *const UasData).cast::<u8>(), size_of::<UasData>()) }
+        unsafe {
+            core::slice::from_raw_parts((self as *const UasData).cast::<u8>(), size_of::<UasData>())
+        }
     }
 }
 
@@ -818,7 +884,10 @@ mod ffi_tests {
             id_type: 0,
             uas_id: [0; ODID_ID_SIZE + 1],
         };
-        assert_eq!(unsafe { decodeBasicIDMessage(&mut back, &enc) }, ODID_SUCCESS);
+        assert_eq!(
+            unsafe { decodeBasicIDMessage(&mut back, &enc) },
+            ODID_SUCCESS
+        );
         assert_eq!(back.id_type, d.basic_id[0].id_type);
         assert_eq!(back.ua_type, d.basic_id[0].ua_type);
         assert!(eq_chars(&back.uas_id, b"ESP32-RID-001"));
@@ -856,7 +925,10 @@ mod ffi_tests {
             operator_altitude_geo: 0.0,
             timestamp: 0,
         };
-        assert_eq!(unsafe { decodeSystemMessage(&mut back, &enc) }, ODID_SUCCESS);
+        assert_eq!(
+            unsafe { decodeSystemMessage(&mut back, &enc) },
+            ODID_SUCCESS
+        );
         assert_eq!(back.operator_latitude, 45.30405);
         assert_eq!(back.operator_longitude, 11.95375);
         assert_eq!(back.area_count, 1);
@@ -929,8 +1001,13 @@ mod ffi_tests {
         assert_eq!(out.proto_version_message_type, 0xF2);
         assert_eq!(out.single_message_size, ODID_MESSAGE_SIZE as u8);
         assert_eq!(out.msg_pack_size, 2);
-        assert_eq!(decode_message_type(out.messages[0].0[0]), ODID_MESSAGETYPE_BASIC_ID);
-        assert_eq!(decode_message_type(out.messages[1].0[0]), ODID_MESSAGETYPE_LOCATION);
+        assert_eq!(
+            decode_message_type(out.messages[0].0[0]),
+            ODID_MESSAGETYPE_BASIC_ID
+        );
+        assert_eq!(
+            decode_message_type(out.messages[1].0[0]),
+            ODID_MESSAGETYPE_LOCATION
+        );
     }
 }
-

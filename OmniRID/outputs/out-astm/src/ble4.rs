@@ -1,4 +1,4 @@
-﻿//! BLE 4.0 legacy message rotation, port of the encode part of
+//! BLE 4.0 legacy message rotation, port of the encode part of
 //! `build_legacy_adv` from `ble_tx.c`.
 //!
 //! One 25-byte ODID message fits per 31-byte advertisement, so the valid
@@ -8,9 +8,9 @@
 
 use opendroneid_sys::{
     encode_auth, encode_basic_id, encode_location, encode_operator_id, encode_self_id,
-    encode_system, AuthEncoded, BasicIdEncoded, LocationEncoded, MessageEncoded,
-    OperatorIdEncoded, SelfIdEncoded, SystemEncoded, UasData, ODID_AUTH_MAX_PAGES,
-    ODID_BASIC_ID_MAX_MESSAGES, ODID_MESSAGE_SIZE, ODID_SUCCESS,
+    encode_system, AuthEncoded, BasicIdEncoded, LocationEncoded, MessageEncoded, OperatorIdEncoded,
+    SelfIdEncoded, SystemEncoded, UasData, ODID_AUTH_MAX_PAGES, ODID_BASIC_ID_MAX_MESSAGES,
+    ODID_MESSAGE_SIZE, ODID_SUCCESS,
 };
 
 /// Number of currently valid messages, counted in the same order as the C loop.
@@ -192,9 +192,18 @@ mod tests {
         let m1 = next_message(&d, &mut rotation).unwrap();
         let m2 = next_message(&d, &mut rotation).unwrap();
         let m3 = next_message(&d, &mut rotation).unwrap();
-        assert_eq!(decode_message_type(m0.0[0]), opendroneid_sys::ODID_MESSAGETYPE_BASIC_ID);
-        assert_eq!(decode_message_type(m1.0[0]), opendroneid_sys::ODID_MESSAGETYPE_LOCATION);
-        assert_eq!(decode_message_type(m2.0[0]), opendroneid_sys::ODID_MESSAGETYPE_SYSTEM);
+        assert_eq!(
+            decode_message_type(m0.0[0]),
+            opendroneid_sys::ODID_MESSAGETYPE_BASIC_ID
+        );
+        assert_eq!(
+            decode_message_type(m1.0[0]),
+            opendroneid_sys::ODID_MESSAGETYPE_LOCATION
+        );
+        assert_eq!(
+            decode_message_type(m2.0[0]),
+            opendroneid_sys::ODID_MESSAGETYPE_SYSTEM
+        );
         // Wraps back to the first message.
         assert_eq!(m3.0, m0.0);
         assert_eq!(rotation, 4);
@@ -212,7 +221,10 @@ mod tests {
         // 255 % 3 = 0 -> basic id again.
         let m = next_message(&d, &mut rotation).unwrap();
         assert_eq!(rotation, 0, "u8 wraps around");
-        assert_eq!(decode_message_type(m.0[0]), opendroneid_sys::ODID_MESSAGETYPE_BASIC_ID);
+        assert_eq!(
+            decode_message_type(m.0[0]),
+            opendroneid_sys::ODID_MESSAGETYPE_BASIC_ID
+        );
     }
 
     #[test]
@@ -245,4 +257,3 @@ mod tests {
         assert_eq!(&m1.0[2..5], b"ID2");
     }
 }
-

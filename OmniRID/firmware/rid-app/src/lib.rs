@@ -27,32 +27,34 @@ pub mod webui;
 
 pub use ble4::build_legacy_adv;
 pub use cli::{
-    MAX_ARGS, ConfigSetError, KalmanUsageError, TxModeError, apply_demo_mode, apply_kalman,
-    config_set_field, parse_i64_base0, parse_line, parse_log_level, parse_protocol_name, proto_name,
-    set_tx_mode,
+    apply_demo_mode, apply_kalman, config_set_field, parse_i64_base0, parse_line, parse_log_level,
+    parse_protocol_name, proto_name, set_tx_mode, ConfigSetError, KalmanUsageError, TxModeError,
+    MAX_ARGS,
 };
 pub use config::{BspConfig, AUTH_KEY_MAX_LEN, NUM_LIGHTING_PINS};
 pub use json::{apply_json, config_to_json, parse_region_name, region_name};
 pub use led_status::{
-    LedPattern, LedState, LedStateMachine, Rgb, TX_FLASH_MS, blink_1hz, blink_4hz, blink_double,
-    led_state_entry, pulse, rainbow, solid,
+    blink_1hz, blink_4hz, blink_double, led_state_entry, pulse, rainbow, solid, LedPattern,
+    LedState, LedStateMachine, Rgb, TX_FLASH_MS,
 };
 pub use led_ws2812::{brightness_scalar, hsv_to_rgb, rgb_to_grb, scale_rgb, ws2812_frame};
 pub use lighting::{
-    LightingChannel, LightingPattern, channel_active, channels_from_config, pattern_active,
+    channel_active, channels_from_config, pattern_active, LightingChannel, LightingPattern,
 };
-pub use nvs::{NvsStore, erase, load, reset_preserve_keys, save};
+pub use nvs::{erase, load, reset_preserve_keys, save, NvsStore};
 pub use ota::{
-    OTA_BODY_CAP_DEFAULT, OTA_MAX_IDLE_STALLS, OtaError, OtaUpload, RecvChunk, ota_body_cap,
-    validate_ota_upload,
+    ota_body_cap, validate_ota_upload, OtaError, OtaUpload, RecvChunk, OTA_BODY_CAP_DEFAULT,
+    OTA_MAX_IDLE_STALLS,
 };
 // Security lives in `rid_core::security` (complete port of `rid_security.c`
 // including `verify_signed_body`, Ed25519 + PEM/DER/PUBLIC_KEYV1); re-exported
 // here so the application layer exposes it.
-pub use rid_core::security::{b64_decode, bytes_to_hex, hex_to_bytes, verify_sha256, verify_signed_body};
-pub use state::{FW_VERSION, State, standard_name, state_to_json};
-pub use web::{LogRing, SigRate, json_escape, level_from_line};
+pub use rid_core::security::{
+    b64_decode, bytes_to_hex, hex_to_bytes, verify_sha256, verify_signed_body,
+};
+pub use state::{standard_name, state_to_json, State, FW_VERSION};
+pub use web::{json_escape, level_from_line, LogRing, SigRate};
 pub use web_config::{
-    CommandKind, CommandOutcome, ConfigWrite, command_kind, command_needs_auth, handle_command,
-    normalize_command, signed_action_decision,
+    command_kind, command_needs_auth, handle_command, normalize_command, signed_action_decision,
+    CommandKind, CommandOutcome, ConfigWrite,
 };

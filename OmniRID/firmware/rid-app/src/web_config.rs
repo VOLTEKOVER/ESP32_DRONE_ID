@@ -7,8 +7,8 @@
 //! The C `get_lock_level()` (eFuse magic -> 2, else `cfg.lock_level`) is
 //! evaluated by the caller and passed in as `lock_level`.
 
-use rid_interface::{FixedKeyStr, NUM_KEYS};
 use rid_core::security::verify_signed_body;
+use rid_interface::{FixedKeyStr, NUM_KEYS};
 
 use crate::web::SigRate;
 
@@ -240,13 +240,27 @@ mod tests {
         let mut rate = SigRate::new();
         let sig = sign(b"factory_reset");
         assert_eq!(
-            signed_action_decision(1, b"factory_reset", Some(sig.as_bytes()), keys(), &mut rate, 1000),
+            signed_action_decision(
+                1,
+                b"factory_reset",
+                Some(sig.as_bytes()),
+                keys(),
+                &mut rate,
+                1000
+            ),
             ConfigWrite::Ok
         );
         // A signature over anything else is rejected.
         let other = sign(b"reset");
         assert_eq!(
-            signed_action_decision(1, b"factory_reset", Some(other.as_bytes()), keys(), &mut rate, 1000),
+            signed_action_decision(
+                1,
+                b"factory_reset",
+                Some(other.as_bytes()),
+                keys(),
+                &mut rate,
+                1000
+            ),
             ConfigWrite::InvalidSignature
         );
     }
@@ -351,8 +365,7 @@ mod tests {
     }
 
     fn b64_encode(data: &[u8]) -> String {
-        const TAB: &[u8; 64] =
-            b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+        const TAB: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
         let mut out = String::new();
         for chunk in data.chunks(3) {
             let b0 = chunk[0];

@@ -77,7 +77,10 @@ fn main() {
     // esp_rid_init: placeholder IDs are replaced from the WiFi MAC.
     let mac = [0xDE, 0xAD, 0xBE, 0xEF, 0xAB, 0xCD];
     ctl.derive_default_ids(&mac);
-    println!("\n[init] derived IDs from MAC {:02X}:{:02X}", mac[4], mac[5]);
+    println!(
+        "\n[init] derived IDs from MAC {:02X}:{:02X}",
+        mac[4], mac[5]
+    );
 
     // esp_rid_set_config: switch region and watch the standard binding.
     let mut cfg = ctl.config().clone();
@@ -95,7 +98,11 @@ fn main() {
     println!("\n  t[ms]  valid  tx  led     proto  standard");
     for i in 0..30u32 {
         let now_ms = i * 100;
-        let input = source.sample(&app::core_config(ctl.config()), now_ms, now_ms as u64 * 1000);
+        let input = source.sample(
+            &app::core_config(ctl.config()),
+            now_ms,
+            now_ms as u64 * 1000,
+        );
         let outcome = ctl.step(&input, &mut tx);
         if outcome.led != last_led.unwrap_or(LedState::NoGps) || i % 5 == 0 {
             println!(
@@ -112,7 +119,11 @@ fn main() {
     }
     println!(
         "\n[loop] transmissions={} bcn={} nan={} ble4={} ble5={}",
-        ctl.state().transmissions_count, tx.bcn, tx.nan, tx.ble4, tx.ble5
+        ctl.state().transmissions_count,
+        tx.bcn,
+        tx.nan,
+        tx.ble4,
+        tx.ble5
     );
 
     // /api/status

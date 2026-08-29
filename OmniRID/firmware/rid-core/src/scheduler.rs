@@ -111,7 +111,12 @@ impl Scheduler {
     }
 
     /// Port of `update_transmissions()` in `esp_remote_id.c`.
-    fn update_transmissions(&mut self, config: &Config, now_us: u64, out: &mut impl Transmitter) -> bool {
+    fn update_transmissions(
+        &mut self,
+        config: &Config,
+        now_us: u64,
+        out: &mut impl Transmitter,
+    ) -> bool {
         if !self.state.gps_valid && !config.bcast_powerup {
             return false;
         }
@@ -136,7 +141,12 @@ impl Scheduler {
         if config.tx_modes & TRANSMIT_WIFI_NAN != 0
             && rate_allowed(&mut self.last_tx_wifi_nan, now_us, config.wifi_nan_rate_hz)
         {
-            out.wifi_nan(&self.state.gps, &self.state.identity, config, self.nan_counter);
+            out.wifi_nan(
+                &self.state.gps,
+                &self.state.identity,
+                config,
+                self.nan_counter,
+            );
             self.nan_counter = self.nan_counter.wrapping_add(1);
             self.state.wifi_nan_count += 1;
             self.state.transmissions_count += 1;
@@ -165,7 +175,12 @@ impl Scheduler {
     }
 
     /// Port of one `rid_task` loop iteration.
-    pub fn tick(&mut self, input: &InputSample, config: &Config, out: &mut impl Transmitter) -> TickOutcome {
+    pub fn tick(
+        &mut self,
+        input: &InputSample,
+        config: &Config,
+        out: &mut impl Transmitter,
+    ) -> TickOutcome {
         let cfg_opts = config.options;
         let proto = input.proto;
 
@@ -341,7 +356,9 @@ impl Scheduler {
         // Absolute GPS timeout (independent of Kalman predictions).
         let now_ms = input.now_ms;
         let mut gps_stale = false;
-        if self.state.gps_valid && now_ms.wrapping_sub(self.state.last_update_ms) > GPS_STALE_TIMEOUT_MS {
+        if self.state.gps_valid
+            && now_ms.wrapping_sub(self.state.last_update_ms) > GPS_STALE_TIMEOUT_MS
+        {
             self.state.gps_valid = false;
             gps_stale = true;
         }
@@ -406,9 +423,7 @@ impl Default for Scheduler {
 mod tests {
     use super::*;
     use rid_interface::input::InputSample;
-    use rid_interface::{
-        fixed_str, CStr, GpsData, Identity, OperatorLocation, Region,
-    };
+    use rid_interface::{fixed_str, CStr, GpsData, Identity, OperatorLocation, Region};
 
     /// Recording transmitter: counts calls per channel.
     #[derive(Default)]
@@ -469,7 +484,7 @@ mod tests {
         assert_eq!(s.state.transmissions_count, 1);
         assert_eq!(rec.bcn, 1);
         assert_eq!(rec.ble4, 0); // only WIFI_BCN default
-        // Default identity carries the config placeholder.
+                                 // Default identity carries the config placeholder.
         assert!(s.state.identity.uas_id.c_starts_with("ESP32-RID-"));
         // Takeoff captured at 3D fix.
         assert!(s.state.takeoff_captured);
@@ -567,7 +582,11 @@ mod tests {
         s.tick(&sample(1000, Some(fix())), &cfg, &mut rec);
         assert!(s.state.gps_valid);
         // No new fix: after > 10 s the fix is stale.
-        let out = s.tick(&sample(1000 + GPS_STALE_TIMEOUT_MS + 1, None), &cfg, &mut rec);
+        let out = s.tick(
+            &sample(1000 + GPS_STALE_TIMEOUT_MS + 1, None),
+            &cfg,
+            &mut rec,
+        );
         assert!(out.gps_stale);
         assert!(!s.state.gps_valid);
         assert_eq!(out.led, LedState::NoGps);
@@ -704,7 +723,10 @@ mod tests {
             ..Config::default()
         };
         s.apply_config(&cfg);
-        assert_eq!(s.state.active_standard, crate::hub::active_standard(Region::Chn));
+        assert_eq!(
+            s.state.active_standard,
+            crate::hub::active_standard(Region::Chn)
+        );
         assert!(s.state.standard_fallback);
     }
 

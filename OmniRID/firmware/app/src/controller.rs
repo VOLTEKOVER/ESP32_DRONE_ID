@@ -4,10 +4,12 @@
 //! and the MAVLink TX task enable condition. The loop itself runs through
 //! `rid_core::scheduler::Scheduler`.
 
-use rid_app::config::{BspConfig, cstr};
+use rid_app::config::{cstr, BspConfig};
 use rid_core::scheduler::{Scheduler, TickOutcome};
-use rid_interface::{Config, InputSample, Standard, State, Transmitter, fixed_str,
-    OPT_MAVLINK_ARM_STATUS, OPT_MAVLINK_OP_LOC_LOOP};
+use rid_interface::{
+    fixed_str, Config, InputSample, Standard, State, Transmitter, OPT_MAVLINK_ARM_STATUS,
+    OPT_MAVLINK_OP_LOC_LOOP,
+};
 
 /// Derives the hub-facing `Config` from the full BSP config (the subset the
 /// scheduler/hub use; transport/pin/lighting fields stay BSP-side).
@@ -201,10 +203,9 @@ fn state_snapshot(state: &State) -> rid_app::state::State {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rid_app::config::{NUM_LIGHTING_PINS, cstr};
+    use rid_app::config::{cstr, NUM_LIGHTING_PINS};
     use rid_interface::{
-        CStr, GpsData, Identity, Protocol, Region, TRANSMIT_BLE4, MAX_KEY_LEN,
-        NUM_KEYS,
+        CStr, GpsData, Identity, Protocol, Region, MAX_KEY_LEN, NUM_KEYS, TRANSMIT_BLE4,
     };
 
     #[derive(Default)]

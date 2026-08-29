@@ -53,7 +53,7 @@ impl<U: UartRead> GpsSource for MavlinkSource<U> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::parser::{crc_calculate, crc_accumulate};
+    use crate::parser::{crc_accumulate, crc_calculate};
     use std::cell::RefCell;
     use std::rc::Rc;
     use std::vec::Vec;

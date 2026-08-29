@@ -6,7 +6,7 @@
 
 use alloc::vec::Vec;
 use rid_interface::{
-    Protocol, TRANSMIT_BLE4, TRANSMIT_BLE5, TRANSMIT_WIFI_BCN, TRANSMIT_WIFI_NAN, MAX_STR_LEN,
+    Protocol, MAX_STR_LEN, TRANSMIT_BLE4, TRANSMIT_BLE5, TRANSMIT_WIFI_BCN, TRANSMIT_WIFI_NAN,
 };
 use rid_interface::{OPT_DEMO_MODE, OPT_KALMAN_FILTER};
 
@@ -55,7 +55,11 @@ pub enum ConfigSetError {
 /// Port of the `config set <field> <value>` branch of `cmd_config()`. Applies
 /// the value to `cfg` exactly like the C (`strtol`/`strtoul` with base 0,
 /// `strtod`, case-insensitive field names, strings truncated to 20 + NUL).
-pub fn config_set_field(cfg: &mut BspConfig, field: &str, value: &str) -> Result<(), ConfigSetError> {
+pub fn config_set_field(
+    cfg: &mut BspConfig,
+    field: &str,
+    value: &str,
+) -> Result<(), ConfigSetError> {
     if field.eq_ignore_ascii_case("uas_id")
         || field.eq_ignore_ascii_case("operator_id")
         || field.eq_ignore_ascii_case("self_id")
@@ -241,13 +245,14 @@ pub fn parse_i64_base0(s: &str) -> i64 {
     if rest.is_empty() {
         return 0;
     }
-    let (radix, digits) = if let Some(h) = rest.strip_prefix("0x").or_else(|| rest.strip_prefix("0X")) {
-        (16, h)
-    } else if rest.len() > 1 && rest.starts_with('0') {
-        (8, &rest[1..])
-    } else {
-        (10, rest)
-    };
+    let (radix, digits) =
+        if let Some(h) = rest.strip_prefix("0x").or_else(|| rest.strip_prefix("0X")) {
+            (16, h)
+        } else if rest.len() > 1 && rest.starts_with('0') {
+            (8, &rest[1..])
+        } else {
+            (10, rest)
+        };
     let mut acc: i64 = 0;
     for c in digits.chars() {
         match c.to_digit(radix) {
@@ -286,7 +291,10 @@ mod tests {
 
     #[test]
     fn parse_line_tokens() {
-        assert_eq!(parse_line("config set uas_id ABC"), ["config", "set", "uas_id", "ABC"]);
+        assert_eq!(
+            parse_line("config set uas_id ABC"),
+            ["config", "set", "uas_id", "ABC"]
+        );
         assert_eq!(parse_line("  status  \n"), ["status"]);
         assert_eq!(parse_line("  "), Vec::<&str>::new());
         assert_eq!(parse_line(""), Vec::<&str>::new());
@@ -294,7 +302,10 @@ mod tests {
 
     #[test]
     fn parse_line_caps_at_max_args() {
-        let many = (0..30u32).map(|i| i.to_string()).collect::<Vec<_>>().join(" ");
+        let many = (0..30u32)
+            .map(|i| i.to_string())
+            .collect::<Vec<_>>()
+            .join(" ");
         let args = parse_line(&many);
         assert_eq!(args.len(), MAX_ARGS - 1);
     }
@@ -393,7 +404,10 @@ mod tests {
         assert_eq!(c.tx_modes, 0x0F);
         assert_eq!(set_tx_mode(&mut c, "all", false), Ok(()));
         assert_eq!(c.tx_modes, 0);
-        assert_eq!(set_tx_mode(&mut c, "lora", true), Err(TxModeError::UnknownMode));
+        assert_eq!(
+            set_tx_mode(&mut c, "lora", true),
+            Err(TxModeError::UnknownMode)
+        );
     }
 
     #[test]

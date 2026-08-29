@@ -121,14 +121,29 @@ mod tests {
     fn blink_armed_requires_armed() {
         assert!(!on(LightingPattern::BlinkArmed, 0));
         assert!(pattern_active(LightingPattern::BlinkArmed, 0, true, false));
-        assert!(!pattern_active(LightingPattern::BlinkArmed, 500, true, false));
-        assert!(pattern_active(LightingPattern::BlinkArmed, 1000, true, false));
+        assert!(!pattern_active(
+            LightingPattern::BlinkArmed,
+            500,
+            true,
+            false
+        ));
+        assert!(pattern_active(
+            LightingPattern::BlinkArmed,
+            1000,
+            true,
+            false
+        ));
     }
 
     #[test]
     fn flash_on_gps_requires_fix() {
         assert!(!on(LightingPattern::FlashOnGps, 0));
-        assert!(pattern_active(LightingPattern::FlashOnGps, 9999, false, true));
+        assert!(pattern_active(
+            LightingPattern::FlashOnGps,
+            9999,
+            false,
+            true
+        ));
     }
 
     #[test]
@@ -165,11 +180,20 @@ mod tests {
         let patterns = [0u8, 3, 1, 0, 0];
         let offsets = [0i16, 0, 100, 0, 0];
         let chans = channels_from_config(&pins, &patterns, &offsets);
-        assert_eq!(chans[0], Some(LightingChannel { pattern: LightingPattern::Off, phase_offset_ms: 0 }));
+        assert_eq!(
+            chans[0],
+            Some(LightingChannel {
+                pattern: LightingPattern::Off,
+                phase_offset_ms: 0
+            })
+        );
         assert_eq!(chans[1], None);
         assert_eq!(
             chans[2],
-            Some(LightingChannel { pattern: LightingPattern::Solid, phase_offset_ms: 100 })
+            Some(LightingChannel {
+                pattern: LightingPattern::Solid,
+                phase_offset_ms: 100
+            })
         );
         assert_eq!(chans[3], None);
         assert_eq!(chans[4], None);
@@ -177,7 +201,8 @@ mod tests {
 
     #[test]
     fn pattern_byte_is_cast_verbatim() {
-        let chans = channels_from_config(&[3, -1, -1, -1, -1], &[4, 0, 0, 0, 0], &[-45, 0, 0, 0, 0]);
+        let chans =
+            channels_from_config(&[3, -1, -1, -1, -1], &[4, 0, 0, 0, 0], &[-45, 0, 0, 0, 0]);
         assert_eq!(chans[0].unwrap().pattern, LightingPattern::BlinkArmed);
         assert_eq!(chans[0].unwrap().phase_offset_ms, -45);
     }

@@ -416,7 +416,11 @@ impl MavlinkParser {
                     return Framing::Incomplete;
                 }
                 self.parse_state = ParseState::Idle;
-                return if bad_crc { Framing::BadCrc } else { Framing::Ok };
+                return if bad_crc {
+                    Framing::BadCrc
+                } else {
+                    Framing::Ok
+                };
             }
             ParseState::SignatureWait | ParseState::SignatureWaitBadCrc => {
                 self.signature[SIGNATURE_BLOCK_LEN - self.signature_wait] = c;
@@ -509,15 +513,13 @@ impl MavlinkParser {
             }
             MSG_ID_OPEN_DRONE_ID_OPERATOR_ID => {
                 let n = MAX_STR_LEN.min(self.len as usize - 23);
-                self.identity.operator_id[..n]
-                    .copy_from_slice(&self.payload[23..23 + n]);
+                self.identity.operator_id[..n].copy_from_slice(&self.payload[23..23 + n]);
                 self.identity.operator_id[n..].fill(0);
                 self.last_identity_update = now_ms;
             }
             MSG_ID_OPEN_DRONE_ID_SELF_ID => {
                 let n = MAX_STR_LEN.min(self.len as usize - 23);
-                self.identity.self_id_text[..n]
-                    .copy_from_slice(&self.payload[23..23 + n]);
+                self.identity.self_id_text[..n].copy_from_slice(&self.payload[23..23 + n]);
                 self.identity.self_id_text[n..].fill(0);
                 self.identity.self_id_desc_type = rd_u8(&self.payload, 22);
                 self.identity.has_self_id = true;
@@ -586,7 +588,8 @@ impl MavlinkParser {
 
     /// `mavlink_parser_get_identity(identity)`: fresh within 10000 ms.
     pub fn get_identity(&self, now_ms: u32) -> Option<Identity> {
-        if self.last_identity_update != 0 && now_ms.wrapping_sub(self.last_identity_update) < 10000 {
+        if self.last_identity_update != 0 && now_ms.wrapping_sub(self.last_identity_update) < 10000
+        {
             Some(self.identity)
         } else {
             None
@@ -721,8 +724,14 @@ mod tests {
     #[test]
     fn crc_matches_mcrf4xx_reference() {
         let samples: [&[u8]; 4] = [
-            &[0x09, 0x00, 0x01, 0x01, 0x00, 0x00, 0x00, 0x51, 0x06, 0x08, 0x00, 0x00, 0x00, 0x04, 0x03],
-            &[0x54, 0x68, 0x65, 0x20, 0x71, 0x75, 0x69, 0x63, 0x6b, 0x20, 0x62, 0x72, 0x6f, 0x77, 0x6e],
+            &[
+                0x09, 0x00, 0x01, 0x01, 0x00, 0x00, 0x00, 0x51, 0x06, 0x08, 0x00, 0x00, 0x00, 0x04,
+                0x03,
+            ],
+            &[
+                0x54, 0x68, 0x65, 0x20, 0x71, 0x75, 0x69, 0x63, 0x6b, 0x20, 0x62, 0x72, 0x6f, 0x77,
+                0x6e,
+            ],
             &[0x00],
             &[],
         ];
@@ -867,7 +876,10 @@ mod tests {
         basic[22] = 1;
         basic[23] = 2;
         basic[24..44].copy_from_slice(b"ABCDEFGHIJ0123456789");
-        p.feed(&pack_v2(MSG_ID_OPEN_DRONE_ID_BASIC_ID, &basic, 1, 1, 0, 114), 1000);
+        p.feed(
+            &pack_v2(MSG_ID_OPEN_DRONE_ID_BASIC_ID, &basic, 1, 1, 0, 114),
+            1000,
+        );
         let id = p.get_identity(1000).expect("identity present");
         assert_eq!(&id.uas_id[..20], b"ABCDEFGHIJ0123456789");
         assert_eq!(id.uas_id[20], 0);
@@ -876,7 +888,10 @@ mod tests {
 
         let mut op = [0u8; 43];
         op[23..43].copy_from_slice(b"OP-12345678901234567");
-        p.feed(&pack_v2(MSG_ID_OPEN_DRONE_ID_OPERATOR_ID, &op, 1, 1, 1, 49), 2000);
+        p.feed(
+            &pack_v2(MSG_ID_OPEN_DRONE_ID_OPERATOR_ID, &op, 1, 1, 1, 49),
+            2000,
+        );
         let id = p.get_identity(2000).expect("identity present");
         assert_eq!(&id.operator_id[..20], b"OP-12345678901234567");
         assert_eq!(id.operator_id[20], 0);
@@ -884,7 +899,10 @@ mod tests {
         let mut self_id = [0u8; 46];
         self_id[22] = 5;
         self_id[23..43].copy_from_slice(b"HELLO WORLD         ");
-        p.feed(&pack_v2(MSG_ID_OPEN_DRONE_ID_SELF_ID, &self_id, 1, 1, 2, 249), 3000);
+        p.feed(
+            &pack_v2(MSG_ID_OPEN_DRONE_ID_SELF_ID, &self_id, 1, 1, 2, 249),
+            3000,
+        );
         let id = p.get_identity(3000).expect("identity present");
         assert_eq!(&id.self_id_text[..20], b"HELLO WORLD         ");
         assert_eq!(id.self_id_desc_type, 5);
@@ -900,7 +918,10 @@ mod tests {
         a0[28] = 3; // last_page_index
         a0[29] = 45; // length
         a0[30..53].copy_from_slice(b"PAGE0AAAAAAAAAAAAAAAAAA");
-        p.feed(&pack_v2(MSG_ID_OPEN_DRONE_ID_AUTHENTICATION, &a0, 1, 1, 0, 140), 1000);
+        p.feed(
+            &pack_v2(MSG_ID_OPEN_DRONE_ID_AUTHENTICATION, &a0, 1, 1, 0, 140),
+            1000,
+        );
         let id = p.get_identity(1000).expect("identity present");
         assert!(id.has_ext_auth);
         assert_eq!(id.ext_auth_type, 2);
@@ -915,7 +936,10 @@ mod tests {
         a1[27] = 1;
         a1[28] = 3;
         a1[30..53].copy_from_slice(b"PAGE1AAAAAAAAAAAAAAAAAA");
-        p.feed(&pack_v2(MSG_ID_OPEN_DRONE_ID_AUTHENTICATION, &a1, 1, 1, 1, 140), 2000);
+        p.feed(
+            &pack_v2(MSG_ID_OPEN_DRONE_ID_AUTHENTICATION, &a1, 1, 1, 1, 140),
+            2000,
+        );
         let id = p.get_identity(2000).expect("identity present");
         assert_eq!(id.ext_auth_pages_received, 0b11);
         assert_eq!(&id.ext_auth_pages[1][..23], b"PAGE1AAAAAAAAAAAAAAAAAA");
@@ -926,7 +950,10 @@ mod tests {
         let mut p = MavlinkParser::new();
         let mut a = [0u8; 53];
         a[27] = AUTH_MAX_PAGES as u8;
-        p.feed(&pack_v2(MSG_ID_OPEN_DRONE_ID_AUTHENTICATION, &a, 1, 1, 0, 140), 1000);
+        p.feed(
+            &pack_v2(MSG_ID_OPEN_DRONE_ID_AUTHENTICATION, &a, 1, 1, 0, 140),
+            1000,
+        );
         let id = p.get_identity(1000).expect("identity present");
         assert!(!id.has_ext_auth);
         assert_eq!(id.ext_auth_pages_received, 0);
@@ -962,13 +989,19 @@ mod tests {
 
         let mut basic = [0u8; 44];
         basic[24] = b'X';
-        p.feed(&pack_v2(MSG_ID_OPEN_DRONE_ID_BASIC_ID, &basic, 1, 1, 1, 114), 1000);
+        p.feed(
+            &pack_v2(MSG_ID_OPEN_DRONE_ID_BASIC_ID, &basic, 1, 1, 1, 114),
+            1000,
+        );
         assert!(p.get_identity(10999).is_some());
         assert!(p.get_identity(11000).is_none());
 
         let mut sys = [0u8; 54];
         sys[0..4].copy_from_slice(&450000000i32.to_le_bytes());
-        p.feed(&pack_v2(MSG_ID_OPEN_DRONE_ID_SYSTEM, &sys, 1, 1, 2, 77), 1000);
+        p.feed(
+            &pack_v2(MSG_ID_OPEN_DRONE_ID_SYSTEM, &sys, 1, 1, 2, 77),
+            1000,
+        );
         assert!(p.get_operator_location(30999).is_some());
         assert!(p.get_operator_location(31000).is_none());
     }
