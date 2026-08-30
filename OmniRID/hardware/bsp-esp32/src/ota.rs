@@ -5,7 +5,6 @@
 //! reboots on success.
 
 use esp_idf_svc as _;
-use esp_idf_svc::ota::{EspOta, FirmwareInfo, Rollback, Slot};
 use esp_idf_svc::sys::{self as sys};
 
 /// Check the OTA trigger GPIO and, if held low, enter OTA mode.
@@ -69,12 +68,7 @@ impl OtaHandle {
                 return None;
             }
             let mut handle: sys::esp_ota_handle_t = 0;
-            if sys::esp_ota_begin(
-                partition,
-                sys::ESP_OTA_SIZE_UNKNOWN as _,
-                &mut handle,
-            ) != sys::ESP_OK
-            {
+            if sys::esp_ota_begin(partition, u32::MAX, &mut handle) != sys::ESP_OK {
                 return None;
             }
             Some(Self { handle })

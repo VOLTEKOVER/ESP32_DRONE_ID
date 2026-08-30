@@ -17,11 +17,11 @@ pub struct EspNvsStorage {
 impl EspNvsStorage {
     /// Opens the `esp_rid` namespace on the default NVS partition.
     pub fn new() -> Self {
-        let partition = EspNvsPartition::<NvsDefault>::new();
+        let partition = EspNvsPartition::<NvsDefault>::take().expect("no NVS partition");
         Self { partition }
     }
 
-    fn open(&self) -> Result<esp_idf_svc::nvs::EspNvs, esp_idf_svc::sys::EspError> {
+    fn open(&self) -> Result<esp_idf_svc::nvs::EspNvs<NvsDefault>, esp_idf_svc::sys::EspError> {
         esp_idf_svc::nvs::EspNvs::new(self.partition.clone(), NS, true)
     }
 }
@@ -51,7 +51,6 @@ impl NvsStore for EspNvsStorage {
     fn set_str(&mut self, key: &str, value: &str) {
         if let Ok(h) = self.open() {
             let _ = h.set_str(key, value);
-            let _ = h.commit();
         }
     }
 
@@ -63,7 +62,6 @@ impl NvsStore for EspNvsStorage {
     fn set_u8(&mut self, key: &str, value: u8) {
         if let Ok(h) = self.open() {
             let _ = h.set_u8(key, value);
-            let _ = h.commit();
         }
     }
 
@@ -75,7 +73,6 @@ impl NvsStore for EspNvsStorage {
     fn set_i8(&mut self, key: &str, value: i8) {
         if let Ok(h) = self.open() {
             let _ = h.set_i8(key, value);
-            let _ = h.commit();
         }
     }
 
@@ -87,7 +84,6 @@ impl NvsStore for EspNvsStorage {
     fn set_u32(&mut self, key: &str, value: u32) {
         if let Ok(h) = self.open() {
             let _ = h.set_u32(key, value);
-            let _ = h.commit();
         }
     }
 
@@ -101,7 +97,6 @@ impl NvsStore for EspNvsStorage {
     fn set_f32(&mut self, key: &str, value: f32) {
         if let Ok(h) = self.open() {
             let _ = h.set_blob(key, &value.to_le_bytes());
-            let _ = h.commit();
         }
     }
 
@@ -115,7 +110,6 @@ impl NvsStore for EspNvsStorage {
     fn set_f64(&mut self, key: &str, value: f64) {
         if let Ok(h) = self.open() {
             let _ = h.set_blob(key, &value.to_le_bytes());
-            let _ = h.commit();
         }
     }
 
@@ -125,7 +119,7 @@ impl NvsStore for EspNvsStorage {
             Err(_) => return false,
         };
         match h.get_blob(key, out) {
-            Ok(true) => true,
+            Ok(Some(_)) => true,
             _ => false,
         }
     }
@@ -133,14 +127,12 @@ impl NvsStore for EspNvsStorage {
     fn set_blob(&mut self, key: &str, value: &[u8]) {
         if let Ok(h) = self.open() {
             let _ = h.set_blob(key, value);
-            let _ = h.commit();
         }
     }
 
     fn erase_all(&mut self) {
         if let Ok(h) = self.open() {
             let _ = h.erase_all();
-            let _ = h.commit();
         }
     }
 }
@@ -153,7 +145,7 @@ pub fn init() {
     .or_else(|_| unsafe {
         esp_idf_sys::nvs_flash_erase();
         esp_idf_sys::nvs_flash_init();
-        Ok(())
+        Ok::<(), esp_idf_svc::sys::EspError>(())
     })
     .expect("NVS init failed");
 }

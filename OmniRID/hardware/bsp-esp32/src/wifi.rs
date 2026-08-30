@@ -5,8 +5,10 @@
 
 use alloc::vec;
 use esp_idf_svc as _;
+use esp_idf_svc::hal::peripherals::Peripherals;
+use esp_idf_svc::nvs::EspDefaultNvsPartition;
 use esp_idf_svc::sys::{self as sys};
-use esp_idf_svc::wifi::{self as wifi_svc, AuthMethod, Configuration, EspWifi, Protocol, WifiMode};
+use esp_idf_svc::wifi::{self as wifi_svc, AuthMethod, Configuration, EspWifi, Protocol};
 use rid_interface::{Config, GpsData, Identity, Transmitter};
 use rid_app::config::cstr;
 
@@ -41,17 +43,16 @@ pub fn init(cfg: &rid_app::config::BspConfig) {
 
     let _ = sys::esp!(unsafe { sys::esp_event_loop_create_default() });
 
-    let _netif = esp_idf_svc::netif::EspNetif::new(WifiMode::Ap).expect("netif");
+    let peripherals = Peripherals::take().expect("peripherals");
+    let sysloop = esp_idf_svc::eventloop::EspSystemEventLoop::take()
+        .expect("failed to init sysloop");
+    let nvs = EspDefaultNvsPartition::take().expect("failed to init NVS partition");
 
-    let mut wifi = EspWifi::new(
-        Box::new(esp_idf_svc::netif::EspNetif::new(WifiMode::Ap).unwrap()),
-        Box::new(esp_idf_svc::netif::EspNetif::new(WifiMode::Sta).unwrap()),
-    )
-    .expect("wifi");
+    let mut wifi = EspWifi::new(peripherals.modem, sysloop, Some(nvs)).expect("wifi");
 
     // Read MAC.
     let mut mac = [0u8; 6];
-    unsafe { sys::esp_wifi_get_mac(WifiMode::Ap as _, mac.as_mut_ptr()) };
+    unsafe { sys::esp_wifi_get_mac(sys::wifi_interface_t_WIFI_IF_AP, mac.as_mut_ptr()) };
     state().mac = mac;
 
     let ssid = cstr(&cfg.wifi_ssid);
@@ -69,11 +70,12 @@ pub fn init(cfg: &rid_app::config::BspConfig) {
     };
 
     let ap_config = Configuration::AccessPoint(wifi_svc::AccessPointConfiguration {
-        ssid: ssid.into(),
-        password: pass.into(),
+        ssid: ssid.try_into().unwrap(),
+        password: pass.try_into().unwrap(),
         channel: cfg.wifi_channel as u8,
-        auth_hidden: false,
-        protocols: Protocol::P80211B,
+        ssid_hidden: false,
+        protocols: Protocol::P802D11B.into(),
+        auth_method: method,
         max_connections: 4,
         ..Default::default()
     });
@@ -81,8 +83,8 @@ pub fn init(cfg: &rid_app::config::BspConfig) {
     wifi.set_configuration(&ap_config).expect("wifi cfg");
     wifi.start().expect("wifi start");
 
-    // Set TX power (ESP-IDF uses 0.25 dBm units).
-    let power_quarter_dbm = (cfg.wifi_power_dbm * 4.0) as i32;
+    // Set TX power (ESP-IDF uses 0.25 dBm units). The binding takes i8.
+    let power_quarter_dbm = (cfg.wifi_power_dbm * 4.0) as i8;
     unsafe { sys::esp_wifi_set_max_tx_power(power_quarter_dbm) };
 
     state().initialized = true;

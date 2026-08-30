@@ -55,12 +55,18 @@ jobs:
           - chip: esp32
             feature: esp32
             target: xtensa-esp32-espidf
+            espup_targets: esp32
+            espup_riscv: "false"
           - chip: esp32s3
             feature: esp32s3
             target: xtensa-esp32s3-espidf
+            espup_targets: esp32s3
+            espup_riscv: "false"
           - chip: esp32c6
             feature: esp32c6
             target: riscv32imac-esp-espidf
+            espup_targets: esp32c6
+            espup_riscv: "true"
 
     defaults:
       run:
@@ -77,7 +83,12 @@ jobs:
         run: cargo install espup
 
       - name: Install ESP-IDF Rust ecosystem
-        run: espup install --targets esp32,esp32s3,esp32c6
+        run: |
+          RISCV=""
+          if [[ "${{ matrix.espup_riscv }}" == "true" ]]; then
+            RISCV="-r"
+          fi
+          espup install --targets "${{ matrix.espup_targets }}" $RISCV
 
       - name: Cache Cargo
         uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6

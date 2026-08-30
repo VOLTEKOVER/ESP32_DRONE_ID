@@ -33,7 +33,10 @@ pub fn init(r_gpio: i8, g_gpio: i8, b_gpio: i8) {
     timer_cfg.duty_resolution = sys::ledc_timer_bit_t_LEDC_TIMER_13_BIT;
     timer_cfg.timer_num = sys::ledc_timer_t_LEDC_TIMER_0;
     timer_cfg.freq_hz = 5000;
-    timer_cfg.clk_cfg = sys::ledc_clk_cfg_t_LEDC_AUTO_CLK;
+    // `LEDC_AUTO_CLK` has value 0 on every ESP32 family member, but its
+    // bindgen constant name differs per chip (ledc_clk_cfg_t_* vs
+    // ledc_clk_src_t_*).  Assigning the literal 0 compiles on all three.
+    timer_cfg.clk_cfg = 0 as _;
     unsafe { sys::ledc_timer_config(&timer_cfg); }
 
     // Configure each channel.

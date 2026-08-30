@@ -17,7 +17,14 @@ esp32c6 = []
 #   cargo build --features esp32,hardware   --target xtensa-esp32-espidf
 #   cargo build --features esp32s3,hardware --target xtensa-esp32s3-espidf
 #   cargo build --features esp32c6,hardware --target riscv32imac-esp-espidf
-hardware = ["dep:esp-idf-sys", "dep:esp-idf-svc", "dep:esp-idf-hal", "dep:spin"]
+hardware = ["dep:esp-idf-sys", "dep:esp-idf-svc", "dep:esp-idf-hal", "dep:spin", "dep:embedded-svc"]
+
+# Danger zone: wireless (WiFi/BLE) drivers for the Real-Time Operating
+# System (freeRTOS). The custom sdkconfig below enables the Bluetooth /
+# Bluedroid host stack and the USB Serial/JTAG driver; without it the
+# generated esp-idf-sys bindings omit all BLE and USB-Serial-JTAG symbols.
+[package.metadata.esp-idf-sys]
+esp_idf_sdkconfig_defaults = ["sdkconfig.defaults"]
 
 # Workspace standalone (fuori dal workspace radice, che lo esclude con
 # exclude = ["hardware"]): target triple diverso (xtensa/riscv32imc) e
@@ -36,4 +43,5 @@ app = { path = "../../firmware/app" }
 esp-idf-sys = { version = "0.37", features = ["std", "binstart"], optional = true }
 esp-idf-svc = { version = "0.52", features = ["std"], optional = true }
 esp-idf-hal = { version = "0.46", features = ["std"], optional = true }
-spin = { version = "0.9", default-features = false, optional = true }
+embedded-svc = { version = "0.29", optional = true }
+spin = { version = "0.9", default-features = false, features = ["mutex"], optional = true }

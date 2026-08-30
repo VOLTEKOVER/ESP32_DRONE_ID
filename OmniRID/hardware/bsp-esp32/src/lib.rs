@@ -55,8 +55,8 @@ use rid_interface::{Config, GpsData, Identity, Transmitter};
 #[cfg(feature = "hardware")]
 pub struct SharedState {
     pub ctl: Mutex<Controller>,
-    pub log_ring: Mutex<web::LogRing>,
-    pub sig_rate: Mutex<web::SigRate>,
+    pub log_ring: Mutex<rid_app::LogRing>,
+    pub sig_rate: Mutex<rid_app::SigRate>,
 }
 
 #[cfg(feature = "hardware")]
@@ -64,8 +64,8 @@ impl SharedState {
     pub fn new() -> Arc<Self> {
         Arc::new(Self {
             ctl: Mutex::new(Controller::new()),
-            log_ring: Mutex::new(web::LogRing::new()),
-            sig_rate: Mutex::new(web::SigRate::new()),
+            log_ring: Mutex::new(rid_app::LogRing::new()),
+            sig_rate: Mutex::new(rid_app::SigRate::new()),
         })
     }
 }

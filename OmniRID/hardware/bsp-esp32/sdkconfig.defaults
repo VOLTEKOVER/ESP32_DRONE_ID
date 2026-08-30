@@ -1,0 +1,20 @@
+# ESP-IDF SDK config for the Remote ID firmware.
+#
+# Without these the esp-idf-sys bindings omit every Bluetooth / Bluedroid
+# symbol (esp_bt_*, esp_ble_*, esp_bluedroid_*) and the USB Serial/JTAG
+# driver (usb_serial_jtag_*), which the bsp-esp32 firmware needs.
+#
+# CONFIG_BT_BLE_42_FEATURES_SUPPORTED is required so the legacy-adv symbols
+# (esp_ble_gap_start_advertising, esp_ble_adv_params_t,
+# esp_ble_gap_config_adv_data_raw) are emitted even on BLE-5 chips (s3/c6).
+# CONFIG_BT_BLE_50_FEATURES_SUPPORTED is left to its per-chip default
+# (y on esp32s3/esp32c6, unavailable on classic esp32).
+
+CONFIG_BT_ENABLED=y
+CONFIG_BT_BLUEDROID_ENABLED=y
+CONFIG_BT_CONTROLLER_ENABLED=y
+CONFIG_BT_BLE_ENABLED=y
+CONFIG_BT_GATTC_ENABLE=y
+CONFIG_BT_GATTS_ENABLE=y
+CONFIG_BT_BLE_SMP_ENABLE=y
+CONFIG_BT_BLE_42_FEATURES_SUPPORTED=y

@@ -65,11 +65,19 @@ pub fn set_power(dbm: i8) {
         return;
     }
     let clamped = dbm.clamp(-12, 9);
-    let level = ((clamped + 12) / 3) as sys::esp_power_level_t;
+    // ESP-IDF encodes TX power levels as small integers; cast to the binding's
+    // power-level type (name differs across IDF versions) via `as _`.
+    let level = (clamped + 12) / 3;
     unsafe {
-        sys::esp_ble_tx_power_set(sys::esp_ble_PWR_TYPE_DEFAULT as _, level);
-        sys::esp_ble_tx_power_set(sys::esp_ble_PWR_TYPE_ADV as _, level);
-        sys::esp_ble_tx_power_set(sys::esp_ble_PWR_TYPE_SCAN as _, level);
+        sys::esp_ble_tx_power_set(
+            sys::esp_ble_power_type_t_ESP_BLE_PWR_TYPE_DEFAULT as _,
+            level as _,
+        );
+        sys::esp_ble_tx_power_set(sys::esp_ble_power_type_t_ESP_BLE_PWR_TYPE_ADV as _, level as _);
+        sys::esp_ble_tx_power_set(
+            sys::esp_ble_power_type_t_ESP_BLE_PWR_TYPE_SCAN as _,
+            level as _,
+        );
     }
 }
 
@@ -132,10 +140,20 @@ pub fn transmit_legacy(msg_data: &[u8], rotation: u8) -> bool {
 /// Transmit BLE 5.0 extended advertising with the full ODID message pack.
 /// Port of `ble_tx_transmit_lr`.
 ///
-/// On chips without BLE 5 extended advertising (e.g. ESP32-C3), this
-/// falls back to legacy advertising with the first 25 bytes.
+/// Extended advertising (`esp_ble_gap_ext_adv_*`) only exists on BLE-5 SoCs
+/// (ESP32-S3/C6).  On classic ESP32 these bindings are absent, so this falls
+/// back to legacy advertising with the first 25 bytes.
 pub fn transmit_extended(pack: &[u8]) -> bool {
     if !is_available() {
+        return false;
+    }
+
+    #[cfg(not(any(feature = "esp32s3", feature = "esp32c6")))]
+    {
+        // Classic ESP32 has no extended advertising; fall back to legacy with
+        // the first 25 bytes.  (The application already avoids `ble5` there via
+        // `caps`, so this path is effectively unused.)
+        let _ = pack;
         return false;
     }
 

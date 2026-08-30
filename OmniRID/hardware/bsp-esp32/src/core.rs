@@ -66,7 +66,7 @@ where
             name.as_ptr() as *const _,
             TASK_STACK_SIZE,
             arg,
-            priority as i32,
+            priority as u32,
             &mut handle,
             core as i32,
         )

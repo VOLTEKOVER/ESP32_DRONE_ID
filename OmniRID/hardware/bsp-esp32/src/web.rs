@@ -5,68 +5,64 @@
 
 use alloc::string::String;
 use alloc::vec::Vec;
+use embedded_svc::io::Read;
 use esp_idf_svc as _;
-use esp_idf_svc::http::server::{EspHttpServer, Request};
+use esp_idf_svc::http::server::EspHttpServer;
+use esp_idf_svc::http::Method;
 use esp_idf_svc::sys::EspError;
-use rid_app::webui;
 use rid_app::web;
+use rid_app::webui;
 
 use crate::SharedState;
 
 /// Start the HTTP server with all API routes.
+///
+/// `EspHttpServer::new` starts the server immediately (there is no separate
+/// `start()` step).  Each `fn_handler` closure returns `Result<(), EspIOError>`
+/// and pushes the response body through `into_response`'s `message` argument.
 pub fn start(state: &SharedState) -> Result<EspHttpServer<'static>, EspError> {
-    let mut server = EspHttpServer::new(&Default::default())?;
+    let mut server = EspHttpServer::new(&Default::default()).expect("httpd start");
 
     // Serve embedded web UI assets.
     for asset in webui::ASSETS {
         let path = asset.path;
-        server.fn_handler(path, esp_idf_svc::http::Method::Get, move |req| {
-            let content_type = asset.content_type;
-            req.into_response(
-                200,
-                Some(("Content-Type", content_type)),
-                |res| {
-                    res.write_all(asset.data.as_bytes())
-                        .map_err(|e| EspError::from(e.code()))
-                },
-            )
-        })?;
+        server
+            .fn_handler(path, Method::Get, move |req| {
+                let content_type = asset.content_type;
+                req.into_response(200, Some(asset.data), &[("Content-Type", content_type)])?;
+                Ok(())
+            })
+            .expect("register handler");
     }
 
     // GET /api/config
     {
         let state_ptr = state as *const SharedState;
-        server.fn_handler(
-            "/api/config",
-            esp_idf_svc::http::Method::Get,
-            move |req| {
+        server
+            .fn_handler("/api/config", Method::Get, move |req| {
                 let state = unsafe { &*state_ptr };
                 let lock = state.ctl.lock();
                 let json = lock.config_json();
                 req.into_response(
                     200,
-                    Some(("Content-Type", "application/json")),
-                    |res| {
-                        res.write_all(json.as_bytes())
-                            .map_err(|e| EspError::from(e.code()))
-                    },
-                )
-            },
-        )?;
+                    Some(json.as_str()),
+                    &[("Content-Type", "application/json")],
+                )?;
+                Ok(())
+            })
+            .expect("register handler");
     }
 
     // POST /api/config
     {
         let state_ptr = state as *const SharedState;
-        server.fn_handler(
-            "/api/config",
-            esp_idf_svc::http::Method::Post,
-            move |req| {
+        server
+            .fn_handler("/api/config", Method::Post, move |mut req| {
                 let state = unsafe { &*state_ptr };
                 let mut body = Vec::new();
                 let mut buf = [0u8; 1024];
                 loop {
-                    let n = req.read(&mut buf).unwrap_or(0);
+                    let n = req.read(&mut buf)?;
                     if n == 0 {
                         break;
                     }
@@ -86,67 +82,55 @@ pub fn start(state: &SharedState) -> Result<EspHttpServer<'static>, EspError> {
                         false
                     }
                 };
-                let resp = if result { r#"{"ok":true}"# } else { "{\"error\":\"invalid config\"}" };
+                let resp = if result { r#"{"ok":true}"# } else { r#"{"error":"invalid config"}"# };
                 req.into_response(
                     200,
-                    Some(("Content-Type", "application/json")),
-                    |res| {
-                        res.write_all(resp.as_bytes())
-                            .map_err(|e| EspError::from(e.code()))
-                    },
-                )
-            },
-        )?;
+                    Some(resp),
+                    &[("Content-Type", "application/json")],
+                )?;
+                Ok(())
+            })
+            .expect("register handler");
     }
 
     // GET /api/status
     {
         let state_ptr = state as *const SharedState;
-        server.fn_handler(
-            "/api/status",
-            esp_idf_svc::http::Method::Get,
-            move |req| {
+        server
+            .fn_handler("/api/status", Method::Get, move |req| {
                 let state = unsafe { &*state_ptr };
                 let lock = state.ctl.lock();
                 let json = lock.status_json();
                 req.into_response(
                     200,
-                    Some(("Content-Type", "application/json")),
-                    |res| {
-                        res.write_all(json.as_bytes())
-                            .map_err(|e| EspError::from(e.code()))
-                    },
-                )
-            },
-        )?;
+                    Some(json.as_str()),
+                    &[("Content-Type", "application/json")],
+                )?;
+                Ok(())
+            })
+            .expect("register handler");
     }
 
     // GET /api/capabilities
     {
-        server.fn_handler(
-            "/api/capabilities",
-            esp_idf_svc::http::Method::Get,
-            move |req| {
+        server
+            .fn_handler("/api/capabilities", Method::Get, move |req| {
                 let json = crate::capabilities::capabilities_json();
                 req.into_response(
                     200,
-                    Some(("Content-Type", "application/json")),
-                    |res| {
-                        res.write_all(json.as_bytes())
-                            .map_err(|e| EspError::from(e.code()))
-                    },
-                )
-            },
-        )?;
+                    Some(json.as_str()),
+                    &[("Content-Type", "application/json")],
+                )?;
+                Ok(())
+            })
+            .expect("register handler");
     }
 
     // POST /api/reset
     {
         let state_ptr = state as *const SharedState;
-        server.fn_handler(
-            "/api/reset",
-            esp_idf_svc::http::Method::Post,
-            move |req| {
+        server
+            .fn_handler("/api/reset", Method::Post, move |req| {
                 let state = unsafe { &*state_ptr };
                 {
                     let mut lock = state.ctl.lock();
@@ -155,23 +139,19 @@ pub fn start(state: &SharedState) -> Result<EspHttpServer<'static>, EspError> {
                 }
                 req.into_response(
                     200,
-                    Some(("Content-Type", "application/json")),
-                    |res| {
-                        res.write_all(b"{\"ok\":true}")
-                            .map_err(|e| EspError::from(e.code()))
-                    },
-                )
-            },
-        )?;
+                    Some(r#"{"ok":true}"#),
+                    &[("Content-Type", "application/json")],
+                )?;
+                Ok(())
+            })
+            .expect("register handler");
     }
 
     // GET /api/logs
     {
         let state_ptr = state as *const SharedState;
-        server.fn_handler(
-            "/api/logs",
-            esp_idf_svc::http::Method::Get,
-            move |req| {
+        server
+            .fn_handler("/api/logs", Method::Get, move |req| {
                 let state = unsafe { &*state_ptr };
                 let lock = state.log_ring.lock();
                 let mut buf = [0u8; web::LOG_BUF_SIZE];
@@ -179,28 +159,23 @@ pub fn start(state: &SharedState) -> Result<EspHttpServer<'static>, EspError> {
                 let json = String::from_utf8_lossy(&buf[..n]);
                 req.into_response(
                     200,
-                    Some(("Content-Type", "application/json")),
-                    |res| {
-                        res.write_all(json.as_bytes())
-                            .map_err(|e| EspError::from(e.code()))
-                    },
-                )
-            },
-        )?;
+                    Some(json.as_ref()),
+                    &[("Content-Type", "application/json")],
+                )?;
+                Ok(())
+            })
+            .expect("register handler");
     }
 
     // POST /ota
     {
-        let state_ptr = state as *const SharedState;
-        server.fn_handler(
-            "/ota",
-            esp_idf_svc::http::Method::Post,
-            move |req| {
+        server
+            .fn_handler("/ota", Method::Post, move |mut req| {
                 // Read body.
                 let mut body = Vec::new();
                 let mut buf = [0u8; 4096];
                 loop {
-                    let n = req.read(&mut buf).unwrap_or(0);
+                    let n = req.read(&mut buf)?;
                     if n == 0 {
                         break;
                     }
@@ -210,15 +185,13 @@ pub fn start(state: &SharedState) -> Result<EspHttpServer<'static>, EspError> {
                 let resp = r#"{"error":"OTA via API not yet wired - use /update"}"#;
                 req.into_response(
                     200,
-                    Some(("Content-Type", "application/json")),
-                    |res| {
-                        res.write_all(resp.as_bytes())
-                            .map_err(|e| EspError::from(e.code()))
-                    },
-                )
-            },
-        )?;
+                    Some(resp),
+                    &[("Content-Type", "application/json")],
+                )?;
+                Ok(())
+            })
+            .expect("register handler");
     }
 
-    server.start()
+    Ok(server)
 }

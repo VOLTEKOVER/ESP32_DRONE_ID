@@ -3,6 +3,11 @@
 //! Port of `rid_mavlink_usb.c`: provides a byte sink (`UsbCdcTx`) backed by
 //! the ESP-IDF USB Serial/JTAG driver.  Also provides a byte source (`UsbCdcRx`)
 //! for incoming MAVLink data from the flight controller.
+//!
+//! The USB Serial/JTAG peripheral only exists on ESP32-S3/C6 (not classic
+//! ESP32), so the whole module is only compiled for those targets.
+
+#![cfg(any(feature = "esp32s3", feature = "esp32c6"))]
 
 use esp_idf_svc as _;
 use esp_idf_svc::sys::{self as sys};

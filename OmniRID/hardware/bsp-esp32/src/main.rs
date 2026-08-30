@@ -96,6 +96,7 @@ mod imp {
             bsp_esp32::ble::init();
             bsp_esp32::led::init(cfg.led_r_gpio, cfg.led_g_gpio, cfg.led_b_gpio);
             if cfg.mavlink_usb_enable {
+                #[cfg(any(feature = "esp32s3", feature = "esp32c6"))]
                 bsp_esp32::usb::init();
             }
         }
