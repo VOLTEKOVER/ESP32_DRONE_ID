@@ -82,6 +82,9 @@ jobs:
       - name: Install espup
         run: cargo install espup
 
+      - name: Install ldproxy
+        run: cargo install ldproxy
+
       - name: Install ESP-IDF Rust ecosystem
         run: |
           RISCV=""
