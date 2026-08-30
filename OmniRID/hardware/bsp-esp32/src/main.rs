@@ -110,7 +110,7 @@ mod imp {
             let lock = state.ctl.lock();
             if lock.bsp_config.webserver_en != 0 {
                 drop(lock);
-                match bsp_esp32::web::start(&state) {
+                match bsp_esp32::web::start(state.clone()) {
                     Ok(srv) => Some(srv),
                     Err(e) => {
                         esp_println::println!("[MAIN] Web server failed: {:?}", e);

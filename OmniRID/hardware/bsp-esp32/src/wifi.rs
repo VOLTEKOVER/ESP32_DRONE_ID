@@ -3,13 +3,12 @@
 //!
 //! Port of `wifi.c` / `wifi_tx.c` from the C firmware.
 
-use alloc::vec;
 use esp_idf_svc as _;
 use esp_idf_svc::hal::peripherals::Peripherals;
 use esp_idf_svc::nvs::EspDefaultNvsPartition;
 use esp_idf_svc::sys::{self as sys};
 use esp_idf_svc::wifi::{self as wifi_svc, AuthMethod, Configuration, EspWifi, Protocol};
-use rid_interface::{Config, GpsData, Identity, Transmitter};
+use rid_interface::{Config, GpsData, Identity};
 use rid_app::config::cstr;
 
 /// Global WiFi state.

@@ -36,7 +36,7 @@ pub fn init() {
         sys::esp_bt_controller_mem_release(sys::esp_bt_mode_t_ESP_BT_MODE_CLASSIC_BT);
 
         let mut cfg: sys::esp_bt_controller_config_t =
-            sys::BT_CONTROLLER_INIT_CONFIG_DEFAULT();
+            sys::esp_bt_controller_get_initial_config();
         if sys::esp_bt_controller_init(&mut cfg) != sys::ESP_OK {
             return;
         }
@@ -118,7 +118,7 @@ pub fn transmit_legacy(msg_data: &[u8], rotation: u8) -> bool {
     unsafe {
         // Configure advertising data.
         sys::esp_ble_gap_config_adv_data_raw(
-            adv_data.as_ptr(),
+            adv_data.as_ptr() as *mut u8,
             len as _,
         );
 
@@ -131,7 +131,7 @@ pub fn transmit_legacy(msg_data: &[u8], rotation: u8) -> bool {
         params.channel_map = sys::esp_ble_adv_channel_t_ADV_CHNL_ALL as _;
         params.adv_filter_policy = sys::esp_ble_adv_filter_t_ADV_FILTER_ALLOW_SCAN_ANY_CON_ANY;
 
-        sys::esp_ble_gap_start_advertising(&params);
+        sys::esp_ble_gap_start_advertising(&mut params as *mut _);
     }
 
     true
@@ -148,52 +148,59 @@ pub fn transmit_extended(pack: &[u8]) -> bool {
         return false;
     }
 
+    // Classic ESP32 has no extended advertising; fall back to legacy with the
+    // first 25 bytes.  (The application already avoids `ble5` there via `caps`,
+    // so this path is effectively unused.)
     #[cfg(not(any(feature = "esp32s3", feature = "esp32c6")))]
     {
-        // Classic ESP32 has no extended advertising; fall back to legacy with
-        // the first 25 bytes.  (The application already avoids `ble5` there via
-        // `caps`, so this path is effectively unused.)
         let _ = pack;
         return false;
     }
 
-    unsafe {
-        // Instance 0: 1M PHY (visible to BLE 4.2 scanners).
-        let mut params: sys::esp_ble_gap_ext_adv_params_t = core::mem::zeroed();
-        params.type_ = sys::esp_ble_gap_set_ext_adv_prop_t_EXT_ADV_PROP_NONCONN_NONSCANNABLE_UNDIRECTED;
-        params.interval_min = 0x100;
-        params.interval_max = 0x100;
-        params.channel_map = sys::esp_ble_adv_channel_t_ADV_CHNL_ALL as _;
-        params.own_addr_type = sys::esp_ble_addr_type_t_BLE_ADDR_TYPE_RANDOM;
-        params.primary_phy = sys::esp_ble_gap_phy_t_BLE_GAP_PHY_1M as _;
-        params.secondary_phy = sys::esp_ble_gap_phy_t_BLE_GAP_PHY_1M as _;
+    // Extended advertising (`esp_ble_gap_ext_adv_*`) only exists on BLE-5 SoCs
+    // (ESP32-S3/C6).  The body below is gated so it is never compiled on
+    // classic ESP32, whose bindings lack the BLE-5 PHY enum constants.
+    #[cfg(any(feature = "esp32s3", feature = "esp32c6"))]
+    {
+        unsafe {
+            // Instance 0: 1M PHY (visible to BLE 4.2 scanners).
+            let mut params: sys::esp_ble_gap_ext_adv_params_t = core::mem::zeroed();
+            params.type_ = sys::esp_ble_gap_set_ext_adv_prop_t_EXT_ADV_PROP_NONCONN_NONSCANNABLE_UNDIRECTED;
+            params.interval_min = 0x100;
+            params.interval_max = 0x100;
+            params.channel_map = sys::esp_ble_adv_channel_t_ADV_CHNL_ALL as _;
+            params.own_addr_type = sys::esp_ble_addr_type_t_BLE_ADDR_TYPE_RANDOM;
+            params.primary_phy = sys::esp_ble_gap_phy_t_BLE_GAP_PHY_1M as _;
+            params.secondary_phy = sys::esp_ble_gap_phy_t_BLE_GAP_PHY_1M as _;
 
-        if sys::esp_ble_gap_ext_adv_set_params(0, &params) != sys::ESP_OK {
-            return false;
-        }
-        if sys::esp_ble_gap_config_ext_adv_data_raw(0, pack.len() as _, pack.as_ptr()) != sys::ESP_OK
-        {
-            return false;
-        }
+            if sys::esp_ble_gap_ext_adv_set_params(0, &params) != sys::ESP_OK {
+                return false;
+            }
+            if sys::esp_ble_gap_config_ext_adv_data_raw(0, pack.len() as _, pack.as_ptr())
+                != sys::ESP_OK
+            {
+                return false;
+            }
 
-        let mut adv: sys::esp_ble_gap_ext_adv_t = core::mem::zeroed();
-        adv.instance = 0;
-        adv.duration = 0;
-        adv.max_events = 0;
-        sys::esp_ble_gap_ext_adv_start(1, &adv);
+            let mut adv: sys::esp_ble_gap_ext_adv_t = core::mem::zeroed();
+            adv.instance = 0;
+            adv.duration = 0;
+            adv.max_events = 0;
+            sys::esp_ble_gap_ext_adv_start(1, &adv);
 
-        // Instance 1: Coded PHY (long-range, 200+ m range).
-        params.primary_phy = sys::esp_ble_gap_phy_t_BLE_GAP_PHY_CODED as _;
-        params.secondary_phy = sys::esp_ble_gap_phy_t_BLE_GAP_PHY_CODED as _;
+            // Instance 1: Coded PHY (long-range, 200+ m range).
+            params.primary_phy = sys::esp_ble_gap_phy_t_BLE_GAP_PHY_CODED as _;
+            params.secondary_phy = sys::esp_ble_gap_phy_t_BLE_GAP_PHY_CODED as _;
 
-        if sys::esp_ble_gap_ext_adv_set_params(1, &params) == sys::ESP_OK {
-            let _ = sys::esp_ble_gap_config_ext_adv_data_raw(
-                1,
-                pack.len() as _,
-                pack.as_ptr(),
-            );
-            adv.instance = 1;
-            let _ = sys::esp_ble_gap_ext_adv_start(1, &adv);
+            if sys::esp_ble_gap_ext_adv_set_params(1, &params) == sys::ESP_OK {
+                let _ = sys::esp_ble_gap_config_ext_adv_data_raw(
+                    1,
+                    pack.len() as _,
+                    pack.as_ptr(),
+                );
+                adv.instance = 1;
+                let _ = sys::esp_ble_gap_ext_adv_start(1, &adv);
+            }
         }
     }
 

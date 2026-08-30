@@ -5,9 +5,7 @@
 //! for incoming MAVLink data from the flight controller.
 //!
 //! The USB Serial/JTAG peripheral only exists on ESP32-S3/C6 (not classic
-//! ESP32), so the whole module is only compiled for those targets.
-
-#![cfg(any(feature = "esp32s3", feature = "esp32c6"))]
+//! ESP32), so `lib.rs` only declares this module for those targets.
 
 use esp_idf_svc as _;
 use esp_idf_svc::sys::{self as sys};
@@ -43,7 +41,7 @@ impl UartRead for UsbCdcRx {
         unsafe {
             let n = sys::usb_serial_jtag_read_bytes(
                 buf.as_mut_ptr() as *mut _,
-                buf.len(),
+                buf.len() as u32,
                 0, // non-blocking
             );
             if n > 0 { n as usize } else { 0 }

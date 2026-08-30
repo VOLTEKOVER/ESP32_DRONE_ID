@@ -4,6 +4,7 @@
 //! logic (JSON rendering, OTA validation, log ring) lives in `rid_app`.
 
 use alloc::string::String;
+use alloc::sync::Arc;
 use alloc::vec::Vec;
 use embedded_svc::io::Read;
 use esp_idf_svc as _;
@@ -20,7 +21,7 @@ use crate::SharedState;
 /// `EspHttpServer::new` starts the server immediately (there is no separate
 /// `start()` step).  Each `fn_handler` closure returns `Result<(), EspIOError>`
 /// and pushes the response body through `into_response`'s `message` argument.
-pub fn start(state: &SharedState) -> Result<EspHttpServer<'static>, EspError> {
+pub fn start(state: Arc<SharedState>) -> Result<EspHttpServer<'static>, EspError> {
     let mut server = EspHttpServer::new(&Default::default()).expect("httpd start");
 
     // Serve embedded web UI assets.
@@ -37,10 +38,9 @@ pub fn start(state: &SharedState) -> Result<EspHttpServer<'static>, EspError> {
 
     // GET /api/config
     {
-        let state_ptr = state as *const SharedState;
+        let state = state.clone();
         server
             .fn_handler("/api/config", Method::Get, move |req| {
-                let state = unsafe { &*state_ptr };
                 let lock = state.ctl.lock();
                 let json = lock.config_json();
                 req.into_response(
@@ -55,10 +55,9 @@ pub fn start(state: &SharedState) -> Result<EspHttpServer<'static>, EspError> {
 
     // POST /api/config
     {
-        let state_ptr = state as *const SharedState;
+        let state = state.clone();
         server
             .fn_handler("/api/config", Method::Post, move |mut req| {
-                let state = unsafe { &*state_ptr };
                 let mut body = Vec::new();
                 let mut buf = [0u8; 1024];
                 loop {
@@ -95,10 +94,9 @@ pub fn start(state: &SharedState) -> Result<EspHttpServer<'static>, EspError> {
 
     // GET /api/status
     {
-        let state_ptr = state as *const SharedState;
+        let state = state.clone();
         server
             .fn_handler("/api/status", Method::Get, move |req| {
-                let state = unsafe { &*state_ptr };
                 let lock = state.ctl.lock();
                 let json = lock.status_json();
                 req.into_response(
@@ -128,10 +126,9 @@ pub fn start(state: &SharedState) -> Result<EspHttpServer<'static>, EspError> {
 
     // POST /api/reset
     {
-        let state_ptr = state as *const SharedState;
+        let state = state.clone();
         server
             .fn_handler("/api/reset", Method::Post, move |req| {
-                let state = unsafe { &*state_ptr };
                 {
                     let mut lock = state.ctl.lock();
                     lock.factory_reset();
@@ -149,10 +146,9 @@ pub fn start(state: &SharedState) -> Result<EspHttpServer<'static>, EspError> {
 
     // GET /api/logs
     {
-        let state_ptr = state as *const SharedState;
+        let state = state.clone();
         server
             .fn_handler("/api/logs", Method::Get, move |req| {
-                let state = unsafe { &*state_ptr };
                 let lock = state.log_ring.lock();
                 let mut buf = [0u8; web::LOG_BUF_SIZE];
                 let n = lock.render_log_json(&mut buf);

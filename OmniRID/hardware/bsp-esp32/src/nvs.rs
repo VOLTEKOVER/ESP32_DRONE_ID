@@ -39,9 +39,11 @@ impl NvsStore for EspNvsStorage {
         };
         match h.get_str(key, out) {
             Ok(Some(s)) => {
-                let n = s.len().min(out.len().saturating_sub(1));
-                out[..n].copy_from_slice(s.as_bytes());
-                out[n..].fill(0);
+                let bytes = s.as_bytes();
+                let n = bytes.len().min(out.len().saturating_sub(1));
+                let (dst, rest) = out.split_at_mut(n);
+                dst.copy_from_slice(&bytes[..n]);
+                rest.fill(0);
                 true
             }
             _ => false,

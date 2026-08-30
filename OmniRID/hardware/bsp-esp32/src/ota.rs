@@ -68,7 +68,7 @@ impl OtaHandle {
                 return None;
             }
             let mut handle: sys::esp_ota_handle_t = 0;
-            if sys::esp_ota_begin(partition, u32::MAX, &mut handle) != sys::ESP_OK {
+            if sys::esp_ota_begin(partition, usize::MAX, &mut handle) != sys::ESP_OK {
                 return None;
             }
             Some(Self { handle })
@@ -82,7 +82,7 @@ impl OtaHandle {
         }
     }
 
-    fn finish(mut self) -> bool {
+    fn finish(self) -> bool {
         let ok = unsafe { sys::esp_ota_end(self.handle) == sys::ESP_OK };
         if ok {
             // Set the boot partition to the update partition.

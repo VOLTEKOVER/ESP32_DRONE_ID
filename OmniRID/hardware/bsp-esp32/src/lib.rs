@@ -24,7 +24,7 @@ pub mod led;
 pub mod nvs;
 #[cfg(feature = "hardware")]
 pub mod ota;
-#[cfg(feature = "hardware")]
+#[cfg(all(feature = "hardware", any(feature = "esp32s3", feature = "esp32c6")))]
 pub mod usb;
 #[cfg(feature = "hardware")]
 pub mod web;

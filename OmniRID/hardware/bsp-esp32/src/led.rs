@@ -40,11 +40,14 @@ pub fn init(r_gpio: i8, g_gpio: i8, b_gpio: i8) {
     unsafe { sys::ledc_timer_config(&timer_cfg); }
 
     // Configure each channel.
-    for (ch, gpio) in [
-        (&mut LED_R as *mut LedcChannel, r_gpio),
-        (&mut LED_G as *mut LedcChannel, g_gpio),
-        (&mut LED_B as *mut LedcChannel, b_gpio),
-    ] {
+    let leds: [(*mut LedcChannel, i8); 3] = unsafe {
+        [
+            (&mut LED_R as *mut LedcChannel, r_gpio),
+            (&mut LED_G as *mut LedcChannel, g_gpio),
+            (&mut LED_B as *mut LedcChannel, b_gpio),
+        ]
+    };
+    for (ch, gpio) in leds {
         if gpio < 0 {
             continue;
         }
