@@ -72,7 +72,8 @@ pub fn start(state: Arc<SharedState>) -> Result<EspHttpServer<'static>, EspError
                 let result = {
                     let mut lock = state.ctl.lock();
                     if rid_app::json::apply_json(&mut lock.bsp_config, json_str) {
-                        let outcome = lock.set_config(&lock.bsp_config.clone());
+                        let cfg = lock.bsp_config.clone();
+                        let outcome = lock.set_config(&cfg);
                         super::nvs_save(&lock.bsp_config);
                         if outcome.protocol_reinit_required {
                             // TODO: re-init UART
