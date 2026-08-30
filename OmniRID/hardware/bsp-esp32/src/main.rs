@@ -16,7 +16,6 @@ mod imp {
 
     /// Splash screen port of `print_splash()` from `main.c`.
     fn print_splash(mac: &[u8; 6]) {
-        log::info!();
         log::info!("  OmniRID -- Open DroneID Transmitter");
         log::info!("  WiFi AP    | ESP-RID");
         log::info!("  Config URL | http://192.168.4.1");
@@ -24,7 +23,6 @@ mod imp {
             "  MAC AP     | {:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}",
             mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]
         );
-        log::info!();
     }
 
     /// Fix MAC when eFuse is corrupted (common on ESP32-S0WD).
