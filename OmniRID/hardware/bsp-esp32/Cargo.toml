@@ -13,7 +13,10 @@ esp32 = []
 esp32s3 = []
 esp32c6 = []
 # Hardware feature: pulls in ESP-IDF sys/svc/hal for real ESP32 builds.
-# Use: cargo build --features esp32c6,hardware --target riscv32imac-unknown-none-elf
+# Use (one chip at a time, with the espup toolchain):
+#   cargo build --features esp32,hardware   --target xtensa-esp32-espidf
+#   cargo build --features esp32s3,hardware --target xtensa-esp32s3-espidf
+#   cargo build --features esp32c6,hardware --target riscv32imac-esp-espidf
 hardware = ["dep:esp-idf-sys", "dep:esp-idf-svc", "dep:esp-idf-hal", "dep:spin"]
 
 # Workspace standalone (fuori dal workspace radice, che lo esclude con
