@@ -16,15 +16,15 @@ mod imp {
 
     /// Splash screen port of `print_splash()` from `main.c`.
     fn print_splash(mac: &[u8; 6]) {
-        esp_println::println!();
-        esp_println::println!("  OmniRID -- Open DroneID Transmitter");
-        esp_println::println!("  WiFi AP    | ESP-RID");
-        esp_println::println!("  Config URL | http://192.168.4.1");
-        esp_println::println!(
+        log::info!();
+        log::info!("  OmniRID -- Open DroneID Transmitter");
+        log::info!("  WiFi AP    | ESP-RID");
+        log::info!("  Config URL | http://192.168.4.1");
+        log::info!(
             "  MAC AP     | {:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}",
             mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]
         );
-        esp_println::println!();
+        log::info!();
     }
 
     /// Fix MAC when eFuse is corrupted (common on ESP32-S0WD).
@@ -35,7 +35,7 @@ mod imp {
             if esp_idf_sys::esp_efuse_mac_get_default(mac.as_mut_ptr()) != esp_idf_sys::ESP_OK
                 || (mac[0] == 0 && mac[1] == 0 && mac[2] == 0)
             {
-                esp_println::println!("[MAIN] eFuse MAC CRC error — using fallback MAC");
+                log::info!("[MAIN] eFuse MAC CRC error — using fallback MAC");
                 let fallback = [0x24u8, 0x0A, 0xC4, 0x12, 0x34, 0x56];
                 esp_idf_sys::esp_base_mac_addr_set(fallback.as_ptr());
             }
@@ -56,7 +56,9 @@ mod imp {
 
     /// Monotonic millisecond clock.
     fn tick_ms() -> u32 {
-        unsafe { (esp_idf_sys::xTaskGetTickCount() * esp_idf_sys::portTICK_PERIOD_MS) as u32 }
+        // Monotonic milliseconds from the high-resolution timer.
+        // `portTICK_PERIOD_MS` is a C macro and is not emitted by bindgen.
+        unsafe { (esp_idf_sys::esp_timer_get_time() / 1000) as u32 }
     }
 
     /// Monotonic microsecond clock.
@@ -65,6 +67,9 @@ mod imp {
     }
 
     pub fn run() {
+        // Route the `log` crate to the IDF console before any logging.
+        esp_idf_svc::log::EspLogger::initialize_default();
+
         // 1. Init NVS (must be first).
         bsp_esp32::nvs::init();
 
@@ -113,7 +118,7 @@ mod imp {
                 match bsp_esp32::web::start(state.clone()) {
                     Ok(srv) => Some(srv),
                     Err(e) => {
-                        esp_println::println!("[MAIN] Web server failed: {:?}", e);
+                        log::info!("[MAIN] Web server failed: {:?}", e);
                         None
                     }
                 }
@@ -142,7 +147,7 @@ mod imp {
 
                     {
                         let mut lock = state_clone.ctl.lock();
-                        let outcome = lock.ctl.step(&input, &mut tx);
+                        let outcome = lock.step(&input, &mut tx);
 
                         if now_ms.wrapping_sub(last_led_update_ms) >= 200 {
                             last_led_update_ms = now_ms;
