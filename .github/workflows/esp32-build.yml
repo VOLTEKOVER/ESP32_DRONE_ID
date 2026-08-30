@@ -101,5 +101,20 @@ jobs:
         shell: bash
         working-directory: OmniRID/hardware/bsp-esp32
         run: |
-          source $HOME/export-esp.sh
-          cargo build --features ${{ matrix.feature }},hardware --target ${{ matrix.target }}
+          set -euo pipefail
+          # Xtensa chips (esp32, esp32s3) need the Espressif Rust fork ("esp"
+          # toolchain), which ships the *-espidf targets with prebuilt std.
+          if [[ "${{ matrix.chip }}" != "esp32c6" ]]; then
+            source "$HOME/export-esp.sh"
+            RUSTUP_TOOLCHAIN=esp \
+              cargo build --features "${{ matrix.feature }},hardware" --target "${{ matrix.target }}"
+            exit 0
+          fi
+          # RISC-V std builds (esp32c6) use the stable toolchain rebuilding
+          # the standard library from source (RUSTC_BOOTSTRAP enables -Z on
+          # stable). The espidf target is not preinstalled on stable.
+          source "$HOME/export-esp.sh"
+          rustup component add rust-src --toolchain stable
+          RUSTUP_TOOLCHAIN=stable RUSTC_BOOTSTRAP=1 \
+            cargo build -Z build-std=std,panic_abort \
+            --features "${{ matrix.feature }},hardware" --target "${{ matrix.target }}"
