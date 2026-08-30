@@ -37,17 +37,17 @@ impl NvsStore for EspNvsStorage {
         let Ok(h) = self.open() else {
             return false;
         };
-        match h.get_str(key, out) {
-            Ok(Some(s)) => {
-                let bytes = s.as_bytes();
-                let n = bytes.len().min(out.len().saturating_sub(1));
-                let (dst, rest) = out.split_at_mut(n);
-                dst.copy_from_slice(&bytes[..n]);
-                rest.fill(0);
-                true
-            }
-            _ => false,
-        }
+        // The `&str` returned by `get_str` borrows its buffer argument, so copy
+        // through a temporary and only then re-borrow `out`.
+        let mut tmp = [0u8; 256];
+        let n = match h.get_str(key, &mut tmp) {
+            Ok(Some(s)) => s.len().min(out.len().saturating_sub(1)),
+            _ => return false,
+        };
+        let (dst, rest) = out.split_at_mut(n);
+        dst.copy_from_slice(&tmp[..n]);
+        rest.fill(0);
+        true
     }
 
     fn set_str(&mut self, key: &str, value: &str) {

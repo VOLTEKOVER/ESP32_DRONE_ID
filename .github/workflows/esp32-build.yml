@@ -127,4 +127,5 @@ jobs:
           export RUSTC_BOOTSTRAP=1
           export RUSTUP_TOOLCHAIN
           cargo build -Z build-std=std,panic_abort \
+            --no-default-features \
             --features "${{ matrix.feature }},hardware" --target "${{ matrix.target }}"

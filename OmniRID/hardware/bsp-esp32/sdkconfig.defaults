@@ -18,3 +18,11 @@ CONFIG_BT_GATTC_ENABLE=y
 CONFIG_BT_GATTS_ENABLE=y
 CONFIG_BT_BLE_SMP_ENABLE=y
 CONFIG_BT_BLE_42_FEATURES_SUPPORTED=y
+
+# BLE 5.0 extended advertising (PHY enum + ext-adv API) is required by
+# `ble.rs::transmit_extended` on ESP32-S3/C6.  The option was renamed
+# `CONFIG_BT_BLE_50_EXTEND_ADV_EN` -> `CONFIG_BT_BLE_EXT_ADV` in newer IDF; we
+# set both (kconfig ignores the one that does not exist for the IDF in use).
+CONFIG_BT_BLE_50_FEATURES_SUPPORTED=y
+CONFIG_BT_BLE_50_EXTEND_ADV_EN=y
+CONFIG_BT_BLE_EXT_ADV=y

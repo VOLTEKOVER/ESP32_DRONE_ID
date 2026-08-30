@@ -35,8 +35,10 @@ pub fn init() {
         // Release classic BT memory (we only need BLE).
         sys::esp_bt_controller_mem_release(sys::esp_bt_mode_t_ESP_BT_MODE_CLASSIC_BT);
 
-        let mut cfg: sys::esp_bt_controller_config_t =
-            sys::esp_bt_controller_get_initial_config();
+        // The `BT_CONTROLLER_INIT_CONFIG_DEFAULT()` C macro is not bound by
+        // bindgen, so build the config from zeroed memory.  A zero stack size
+        // makes `esp_bt_controller_init` fall back to its own default.
+        let mut cfg: sys::esp_bt_controller_config_t = core::mem::zeroed();
         if sys::esp_bt_controller_init(&mut cfg) != sys::ESP_OK {
             return;
         }
