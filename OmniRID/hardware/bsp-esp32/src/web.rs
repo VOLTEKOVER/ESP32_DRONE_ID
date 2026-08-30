@@ -41,7 +41,7 @@ pub fn start(state: Arc<SharedState>) -> Result<EspHttpServer<'static>, EspError
     {
         let state = state.clone();
         server
-            .fn_handler("/api/config", Method::Get, move |req| {
+            .fn_handler("/api/config", Method::Get, move |req| -> Result<(), EspIOError> {
                 let lock = state.ctl.lock();
                 let json = lock.config_json();
                 req.into_response(
@@ -58,7 +58,7 @@ pub fn start(state: Arc<SharedState>) -> Result<EspHttpServer<'static>, EspError
     {
         let state = state.clone();
         server
-            .fn_handler("/api/config", Method::Post, move |mut req| {
+            .fn_handler("/api/config", Method::Post, move |mut req| -> Result<(), EspIOError> {
                 let mut body = Vec::new();
                 let mut buf = [0u8; 1024];
                 loop {
@@ -97,7 +97,7 @@ pub fn start(state: Arc<SharedState>) -> Result<EspHttpServer<'static>, EspError
     {
         let state = state.clone();
         server
-            .fn_handler("/api/status", Method::Get, move |req| {
+            .fn_handler("/api/status", Method::Get, move |req| -> Result<(), EspIOError> {
                 let lock = state.ctl.lock();
                 let json = lock.status_json();
                 req.into_response(
@@ -113,7 +113,7 @@ pub fn start(state: Arc<SharedState>) -> Result<EspHttpServer<'static>, EspError
     // GET /api/capabilities
     {
         server
-            .fn_handler("/api/capabilities", Method::Get, move |req| {
+            .fn_handler("/api/capabilities", Method::Get, move |req| -> Result<(), EspIOError> {
                 let json = crate::capabilities::capabilities_json();
                 req.into_response(
                     200,
@@ -129,7 +129,7 @@ pub fn start(state: Arc<SharedState>) -> Result<EspHttpServer<'static>, EspError
     {
         let state = state.clone();
         server
-            .fn_handler("/api/reset", Method::Post, move |req| {
+            .fn_handler("/api/reset", Method::Post, move |req| -> Result<(), EspIOError> {
                 {
                     let mut lock = state.ctl.lock();
                     lock.factory_reset();
@@ -149,7 +149,7 @@ pub fn start(state: Arc<SharedState>) -> Result<EspHttpServer<'static>, EspError
     {
         let state = state.clone();
         server
-            .fn_handler("/api/logs", Method::Get, move |req| {
+            .fn_handler("/api/logs", Method::Get, move |req| -> Result<(), EspIOError> {
                 let lock = state.log_ring.lock();
                 let mut buf = [0u8; web::LOG_BUF_SIZE];
                 let n = lock.render_log_json(&mut buf);
@@ -167,7 +167,7 @@ pub fn start(state: Arc<SharedState>) -> Result<EspHttpServer<'static>, EspError
     // POST /ota
     {
         server
-            .fn_handler("/ota", Method::Post, move |mut req| {
+            .fn_handler("/ota", Method::Post, move |mut req| -> Result<(), EspIOError> {
                 // Read body.
                 let mut body = Vec::new();
                 let mut buf = [0u8; 4096];
