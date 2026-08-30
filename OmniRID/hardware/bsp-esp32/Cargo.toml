@@ -32,6 +32,15 @@ esp_idf_sdkconfig_defaults = ["sdkconfig.defaults"]
 # il confine del workspace: sono consentite.
 [workspace]
 
+# PATCH esp-idf-svc: use the vendored copy in vendor/ with the high-level `bt`
+# module disabled.  The bsp-esp32 firmware only drives Bluetooth through the
+# raw `esp_idf_svc::sys` bindings (Bluedroid advertising in `ble.rs`); the
+# upstream `bt` module is excluded because it cannot be compiled on classic
+# ESP32 (its GATT-client uses BLE-5.0-only APIs).  See
+# vendor/esp-idf-svc/src/lib.rs.
+[patch.crates-io]
+esp-idf-svc = { path = "vendor/esp-idf-svc" }
+
 [dependencies]
 rid-app = { path = "../../firmware/rid-app" }
 rid-interface = { path = "../../firmware/rid-interface" }
