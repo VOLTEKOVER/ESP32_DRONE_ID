@@ -10,6 +10,7 @@ use embedded_svc::io::Read;
 use esp_idf_svc as _;
 use esp_idf_svc::http::server::EspHttpServer;
 use esp_idf_svc::http::Method;
+use esp_idf_svc::io::EspIOError;
 use esp_idf_svc::sys::EspError;
 use rid_app::web;
 use rid_app::webui;
@@ -28,7 +29,7 @@ pub fn start(state: Arc<SharedState>) -> Result<EspHttpServer<'static>, EspError
     for asset in webui::ASSETS {
         let path = asset.path;
         server
-            .fn_handler(path, Method::Get, move |req| {
+            .fn_handler(path, Method::Get, move |req| -> Result<(), EspIOError> {
                 let content_type = asset.content_type;
                 req.into_response(200, Some(asset.data), &[("Content-Type", content_type)])?;
                 Ok(())

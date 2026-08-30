@@ -167,13 +167,18 @@ pub fn transmit_extended(pack: &[u8]) -> bool {
         unsafe {
             // Instance 0: 1M PHY (visible to BLE 4.2 scanners).
             let mut params: sys::esp_ble_gap_ext_adv_params_t = core::mem::zeroed();
-            params.type_ = sys::esp_ble_gap_set_ext_adv_prop_t_EXT_ADV_PROP_NONCONN_NONSCANNABLE_UNDIRECTED;
+            // Numeric literals for the BLE-5 enum constants; the bindgen names
+            // are not always emitted on every IDF/sdkconfig combination, but
+            // the values are stable across IDF 5.x:
+            //   EXT_ADV_PROP_NONCONN_NONSCANNABLE_UNDIRECTED = 0x10
+            //   esp_ble_gap_phy_t:  BLE_GAP_PHY_1M = 0x01, BLE_GAP_PHY_CODED = 0x04
+            params.type_ = 0x10;
             params.interval_min = 0x100;
             params.interval_max = 0x100;
             params.channel_map = sys::esp_ble_adv_channel_t_ADV_CHNL_ALL as _;
             params.own_addr_type = sys::esp_ble_addr_type_t_BLE_ADDR_TYPE_RANDOM;
-            params.primary_phy = sys::esp_ble_gap_phy_t_BLE_GAP_PHY_1M as _;
-            params.secondary_phy = sys::esp_ble_gap_phy_t_BLE_GAP_PHY_1M as _;
+            params.primary_phy = 0x01;
+            params.secondary_phy = 0x01;
 
             if sys::esp_ble_gap_ext_adv_set_params(0, &params) != sys::ESP_OK {
                 return false;
@@ -191,8 +196,8 @@ pub fn transmit_extended(pack: &[u8]) -> bool {
             sys::esp_ble_gap_ext_adv_start(1, &adv);
 
             // Instance 1: Coded PHY (long-range, 200+ m range).
-            params.primary_phy = sys::esp_ble_gap_phy_t_BLE_GAP_PHY_CODED as _;
-            params.secondary_phy = sys::esp_ble_gap_phy_t_BLE_GAP_PHY_CODED as _;
+            params.primary_phy = 0x04;
+            params.secondary_phy = 0x04;
 
             if sys::esp_ble_gap_ext_adv_set_params(1, &params) == sys::ESP_OK {
                 let _ = sys::esp_ble_gap_config_ext_adv_data_raw(
